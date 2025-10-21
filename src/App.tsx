@@ -7,6 +7,11 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import PropertiesList from "./pages/Properties/PropertiesList";
+import PropertyForm from "./pages/Properties/PropertyForm";
+import PropertyDetails from "./pages/Properties/PropertyDetails";
+import ContractsList from "./pages/Contracts/ContractsList";
+import InvoicesList from "./pages/Invoices/InvoicesList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +28,31 @@ const App = () => (
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/imoveis" element={
+              <ProtectedRoute>
+                <PropertiesList />
+              </ProtectedRoute>
+            } />
+            <Route path="/imoveis/novo" element={
+              <ProtectedRoute>
+                <PropertyForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/imoveis/:id" element={
+              <ProtectedRoute>
+                <PropertyDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/contratos" element={
+              <ProtectedRoute>
+                <ContractsList />
+              </ProtectedRoute>
+            } />
+            <Route path="/faturas" element={
+              <ProtectedRoute>
+                <InvoicesList />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
