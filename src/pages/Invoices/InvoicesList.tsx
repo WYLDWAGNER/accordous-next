@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Receipt, Eye, DollarSign, Calendar, AlertCircle } from "lucide-react";
+import { Plus, Search, Receipt, Eye, DollarSign, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -92,6 +93,10 @@ const InvoicesList = () => {
     { paid: 0, pending: 0, total: 0 }
   );
 
+  const hasPendingInvoices = invoices?.some(
+    (invoice) => invoice.status === "pending" && new Date(invoice.due_date) < new Date()
+  );
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
@@ -100,6 +105,20 @@ const InvoicesList = () => {
         <Header title="Faturas" />
 
         <main className="flex-1 overflow-y-auto p-6">
+          {/* Alert for pending invoices */}
+          {hasPendingInvoices && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Ops! Temos faturas pendentes</strong>
+                <p className="text-sm mt-1">
+                  Notamos que você possui faturas pendentes. Para continuar aproveitando todos os recursos da plataforma, 
+                  por favor, confira suas faturas. Seu acesso está temporariamente limitado até a regularização dos pagamentos.
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card>
@@ -186,37 +205,42 @@ const InvoicesList = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Nº Fatura</TableHead>
-                        <TableHead>Cliente</TableHead>
                         <TableHead>Imóvel</TableHead>
-                        <TableHead>Competência</TableHead>
+                        <TableHead>Referência</TableHead>
                         <TableHead>Vencimento</TableHead>
                         <TableHead>Valor</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>Método de Pagamento</TableHead>
+                        <TableHead>Situação</TableHead>
                         <TableHead className="w-[80px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredInvoices.map((invoice) => (
                         <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">
-                            {invoice.invoice_number || `#${invoice.id.slice(0, 8)}`}
-                          </TableCell>
-                          <TableCell>{invoice.contracts?.tenant_name}</TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            {invoice.properties?.name}
+                          <TableCell className="max-w-xs truncate font-medium">
+                            {invoice.properties?.address}
                           </TableCell>
                           <TableCell>
                             {new Date(invoice.reference_month).toLocaleDateString("pt-BR", {
-                              month: "long",
+                              day: "2-digit",
+                              month: "2-digit",
                               year: "numeric",
                             })}
                           </TableCell>
                           <TableCell>
-                            {new Date(invoice.due_date).toLocaleDateString("pt-BR")}
+                            {new Date(invoice.due_date).toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })}
                           </TableCell>
                           <TableCell className="font-semibold">
                             R$ {Number(invoice.total_amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            {invoice.payment_method === "bank_transfer" ? "Transferência Bancária" : 
+                             invoice.payment_method === "pix" ? "PIX" : 
+                             invoice.payment_method || "-"}
                           </TableCell>
                           <TableCell>
                             {getStatusBadge(invoice.status, invoice.due_date)}
