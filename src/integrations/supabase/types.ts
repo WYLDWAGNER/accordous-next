@@ -74,6 +74,134 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          address: string | null
+          company: string | null
+          contact_type: string
+          created_at: string | null
+          document: string | null
+          email: string | null
+          id: string
+          lead_score: number | null
+          name: string
+          notes: string | null
+          phone: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          company?: string | null
+          contact_type: string
+          created_at?: string | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          lead_score?: number | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          company?: string | null
+          contact_type?: string
+          created_at?: string | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          lead_score?: number | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          adjustment_index: string | null
+          contract_number: string | null
+          created_at: string | null
+          end_date: string | null
+          guarantee_type: string | null
+          guarantee_value: number | null
+          id: string
+          payment_day: number | null
+          payment_method: string | null
+          pre_paid: boolean | null
+          property_id: string
+          rental_value: number
+          start_date: string
+          status: string
+          tenant_document: string | null
+          tenant_email: string | null
+          tenant_name: string
+          tenant_phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          adjustment_index?: string | null
+          contract_number?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          guarantee_type?: string | null
+          guarantee_value?: number | null
+          id?: string
+          payment_day?: number | null
+          payment_method?: string | null
+          pre_paid?: boolean | null
+          property_id: string
+          rental_value: number
+          start_date: string
+          status?: string
+          tenant_document?: string | null
+          tenant_email?: string | null
+          tenant_name: string
+          tenant_phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          adjustment_index?: string | null
+          contract_number?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          guarantee_type?: string | null
+          guarantee_value?: number | null
+          id?: string
+          payment_day?: number | null
+          payment_method?: string | null
+          pre_paid?: boolean | null
+          property_id?: string
+          rental_value?: number
+          start_date?: string
+          status?: string
+          tenant_document?: string | null
+          tenant_email?: string | null
+          tenant_name?: string
+          tenant_phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_summaries: {
         Row: {
           action_items: Json | null
@@ -177,6 +305,108 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          bank_data: Json | null
+          condo_fee: number | null
+          contract_id: string
+          created_at: string | null
+          due_date: string
+          electricity_amount: number | null
+          extra_charges: Json | null
+          gas_amount: number | null
+          guarantee_installment: number | null
+          guarantee_installment_number: number | null
+          history: Json | null
+          id: string
+          internet_amount: number | null
+          invoice_number: string | null
+          issue_date: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          property_id: string
+          reference_month: string
+          rental_amount: number
+          status: string
+          total_amount: number
+          updated_at: string | null
+          user_id: string
+          water_amount: number | null
+        }
+        Insert: {
+          bank_data?: Json | null
+          condo_fee?: number | null
+          contract_id: string
+          created_at?: string | null
+          due_date: string
+          electricity_amount?: number | null
+          extra_charges?: Json | null
+          gas_amount?: number | null
+          guarantee_installment?: number | null
+          guarantee_installment_number?: number | null
+          history?: Json | null
+          id?: string
+          internet_amount?: number | null
+          invoice_number?: string | null
+          issue_date?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          property_id: string
+          reference_month: string
+          rental_amount?: number
+          status?: string
+          total_amount: number
+          updated_at?: string | null
+          user_id: string
+          water_amount?: number | null
+        }
+        Update: {
+          bank_data?: Json | null
+          condo_fee?: number | null
+          contract_id?: string
+          created_at?: string | null
+          due_date?: string
+          electricity_amount?: number | null
+          extra_charges?: Json | null
+          gas_amount?: number | null
+          guarantee_installment?: number | null
+          guarantee_installment_number?: number | null
+          history?: Json | null
+          id?: string
+          internet_amount?: number | null
+          invoice_number?: string | null
+          issue_date?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          property_id?: string
+          reference_month?: string
+          rental_amount?: number
+          status?: string
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string
+          water_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           budget_range: string | null
@@ -193,6 +423,7 @@ export type Database = {
           sentiment: string | null
           status: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           budget_range?: string | null
@@ -209,6 +440,7 @@ export type Database = {
           sentiment?: string | null
           status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           budget_range?: string | null
@@ -225,6 +457,7 @@ export type Database = {
           sentiment?: string | null
           status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -296,6 +529,93 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          built_area: number | null
+          city: string
+          classification: string | null
+          complement: string | null
+          construction_year: number | null
+          country: string | null
+          created_at: string | null
+          id: string
+          land_area: number | null
+          name: string
+          nearby_facilities: Json | null
+          neighborhood: string | null
+          number: string | null
+          owner_contact: string | null
+          owner_email: string | null
+          owner_name: string | null
+          postal_code: string | null
+          property_type: string
+          registry_data: string | null
+          state: string
+          status: string
+          total_area: number | null
+          updated_at: string | null
+          useful_area: number | null
+          user_id: string
+        }
+        Insert: {
+          address: string
+          built_area?: number | null
+          city: string
+          classification?: string | null
+          complement?: string | null
+          construction_year?: number | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          land_area?: number | null
+          name: string
+          nearby_facilities?: Json | null
+          neighborhood?: string | null
+          number?: string | null
+          owner_contact?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          postal_code?: string | null
+          property_type: string
+          registry_data?: string | null
+          state: string
+          status?: string
+          total_area?: number | null
+          updated_at?: string | null
+          useful_area?: number | null
+          user_id: string
+        }
+        Update: {
+          address?: string
+          built_area?: number | null
+          city?: string
+          classification?: string | null
+          complement?: string | null
+          construction_year?: number | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          land_area?: number | null
+          name?: string
+          nearby_facilities?: Json | null
+          neighborhood?: string | null
+          number?: string | null
+          owner_contact?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          postal_code?: string | null
+          property_type?: string
+          registry_data?: string | null
+          state?: string
+          status?: string
+          total_area?: number | null
+          updated_at?: string | null
+          useful_area?: number | null
+          user_id?: string
         }
         Relationships: []
       }
