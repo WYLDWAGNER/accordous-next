@@ -1,41 +1,72 @@
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sidebar } from "@/components/Layout/Sidebar";
+import { Header } from "@/components/Layout/Header";
+import { StatCard } from "@/components/Dashboard/StatCard";
+import { CalculatorCard } from "@/components/Dashboard/CalculatorCard";
+import { PropertySummaryCard } from "@/components/Dashboard/PropertySummaryCard";
+import { InvoicesTable } from "@/components/Dashboard/InvoicesTable";
+import { FileText, DollarSign, FileCheck, Users2, Calculator, TrendingUp, Calendar, Percent } from "lucide-react";
 
 const Index = () => {
-  const { user, signOut } = useAuth();
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold">Plataforma de Gestão de Imóveis</CardTitle>
-          <CardDescription>Bem-vindo, {user?.user_metadata?.full_name || user?.email}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Acesso Ativo</h2>
-            <p className="text-muted-foreground">
-              Você está conectado à plataforma de gestão de imóveis e contratos de locação.
-              O sistema está pronto para uso.
-            </p>
-            <div className="rounded-lg border bg-muted/50 p-4">
-              <h3 className="font-medium mb-2">Próximos Passos:</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Cadastre seus imóveis</li>
-                <li>Registre contratos de locação</li>
-                <li>Gerencie faturas e cobranças</li>
-                <li>Acompanhe documentos e relatórios</li>
-              </ul>
-            </div>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Dashboard" />
+        
+        <main className="flex-1 overflow-y-auto p-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <StatCard
+              icon={FileText}
+              title="Anúncios"
+              stats={[
+                { label: "Propostas", value: "0", color: "bg-blue-500" },
+                { label: "Anúncios", value: "0", color: "bg-blue-500" },
+              ]}
+            />
+            
+            <StatCard
+              icon={DollarSign}
+              title="Cobranças"
+              stats={[
+                { label: "Em aberto", value: "R$ 29.637,61", color: "bg-orange-500" },
+                { label: "Recebidas", value: "R$ 70.054,27", color: "bg-green-500" },
+              ]}
+            />
+            
+            <StatCard
+              icon={FileCheck}
+              title="Contratos"
+              stats={[
+                { label: "Ativos", value: "72", color: "bg-blue-500" },
+                { label: "A vencer", value: "31", color: "bg-orange-500" },
+              ]}
+            />
+            
+            <StatCard
+              icon={Users2}
+              title="Leads"
+              stats={[
+                { label: "Novas respostas", value: "0", color: "bg-blue-500" },
+                { label: "Agendados", value: "0", color: "bg-green-500" },
+              ]}
+            />
           </div>
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={signOut}>
-              Sair
-            </Button>
+
+          {/* Calculators and Summary Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+            <CalculatorCard icon={TrendingUp} title="Calculadora de Inflação" />
+            <CalculatorCard icon={Percent} title="Calculadora de Juros/Multa" />
+            <CalculatorCard icon={Calculator} title="Calculadora de financiamento" />
+            <CalculatorCard icon={Calendar} title="Visitas agendadas" />
+            <PropertySummaryCard unavailable={3} contracted={48} available={26} />
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Invoices Table */}
+          <InvoicesTable />
+        </main>
+      </div>
     </div>
   );
 };
