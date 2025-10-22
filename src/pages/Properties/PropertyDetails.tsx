@@ -266,6 +266,18 @@ const PropertyDetails = () => {
                     </Card>
                   )}
                 </div>
+
+                {/* Botão Editar */}
+                <div className="mt-4 pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate(`/imoveis/${id}/editar`)}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar Informações do Imóvel
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

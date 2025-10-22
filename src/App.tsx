@@ -41,6 +41,11 @@ const App = () => (
                 <PropertyForm />
               </ProtectedRoute>
             } />
+            <Route path="/imoveis/:id/editar" element={
+              <ProtectedRoute>
+                <PropertyForm />
+              </ProtectedRoute>
+            } />
             <Route path="/imoveis/:id" element={
               <ProtectedRoute>
                 <PropertyDetails />

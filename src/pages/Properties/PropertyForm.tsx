@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import { Button } from "@/components/ui/button";
@@ -36,9 +36,11 @@ const propertySchema = z.object({
 
 const PropertyForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(!!id);
   const [formData, setFormData] = useState({
     name: "",
     property_type: "",
@@ -59,6 +61,55 @@ const PropertyForm = () => {
     owner_email: "",
     registry_data: "",
   });
+
+  useEffect(() => {
+    if (id) {
+      loadPropertyData();
+    }
+  }, [id]);
+
+  const loadPropertyData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data) {
+        setFormData({
+          name: data.name || "",
+          property_type: data.property_type || "",
+          classification: data.classification || "",
+          status: data.status || "available",
+          address: data.address || "",
+          number: data.number || "",
+          neighborhood: data.neighborhood || "",
+          city: data.city || "",
+          state: data.state || "",
+          postal_code: data.postal_code || "",
+          complement: data.complement || "",
+          useful_area: data.useful_area?.toString() || "",
+          total_area: data.total_area?.toString() || "",
+          construction_year: data.construction_year?.toString() || "",
+          owner_name: data.owner_name || "",
+          owner_contact: data.owner_contact || "",
+          owner_email: data.owner_email || "",
+          registry_data: data.registry_data || "",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Não foi possível carregar os dados do imóvel.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,14 +152,30 @@ const PropertyForm = () => {
       if (validatedData.owner_email) insertData.owner_email = validatedData.owner_email;
       if (formData.registry_data) insertData.registry_data = formData.registry_data;
 
-      const { error } = await supabase.from("properties").insert([insertData]);
+      if (id) {
+        // Update existing property
+        const { error } = await supabase
+          .from("properties")
+          .update(insertData)
+          .eq("id", id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Imóvel cadastrado!",
-        description: "O imóvel foi cadastrado com sucesso.",
-      });
+        toast({
+          title: "Imóvel atualizado!",
+          description: "O imóvel foi atualizado com sucesso.",
+        });
+      } else {
+        // Insert new property
+        const { error } = await supabase.from("properties").insert([insertData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Imóvel cadastrado!",
+          description: "O imóvel foi cadastrado com sucesso.",
+        });
+      }
 
       navigate("/imoveis");
     } catch (error) {
@@ -134,12 +201,26 @@ const PropertyForm = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  if (isLoadingData) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
+            <p className="mt-4 text-muted-foreground">Carregando dados...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Cadastrar Imóvel" />
+        <Header title={id ? "Editar Imóvel" : "Cadastrar Imóvel"} />
 
         <main className="flex-1 overflow-y-auto p-6">
           <form onSubmit={handleSubmit}>
@@ -401,7 +482,7 @@ const PropertyForm = () => {
                 </Button>
                 <Button type="submit" disabled={isLoading}>
                   <Save className="mr-2 h-4 w-4" />
-                  {isLoading ? "Salvando..." : "Cadastrar Imóvel"}
+                  {isLoading ? "Salvando..." : (id ? "Atualizar Imóvel" : "Cadastrar Imóvel")}
                 </Button>
               </div>
             </div>
