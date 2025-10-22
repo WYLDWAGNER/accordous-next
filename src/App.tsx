@@ -11,6 +11,7 @@ import PropertiesList from "./pages/Properties/PropertiesList";
 import PropertyForm from "./pages/Properties/PropertyForm";
 import PropertyDetails from "./pages/Properties/PropertyDetails";
 import ContractsList from "./pages/Contracts/ContractsList";
+import ContractWizard from "./pages/Contracts/ContractWizard";
 import InvoicesList from "./pages/Invoices/InvoicesList";
 import ReportsList from "./pages/Reports/ReportsList";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,11 @@ const App = () => (
             <Route path="/contratos" element={
               <ProtectedRoute>
                 <ContractsList />
+              </ProtectedRoute>
+            } />
+            <Route path="/contratos/novo/:propertyId" element={
+              <ProtectedRoute>
+                <ContractWizard />
               </ProtectedRoute>
             } />
             <Route path="/faturas" element={

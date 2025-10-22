@@ -392,7 +392,9 @@ const PropertyDetails = () => {
                       <p className="text-sm text-muted-foreground text-center mb-4">
                         Este imóvel não possui um contrato ativo no momento.
                       </p>
-                      <Button>Criar Novo Contrato</Button>
+                      <Button onClick={() => navigate(`/contratos/novo/${id}`)}>
+                        Criar Novo Contrato
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
