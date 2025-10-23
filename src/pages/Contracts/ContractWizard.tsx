@@ -26,8 +26,12 @@ const ContractWizard = () => {
     // Step 1: Tenant data
     tenant_name: "",
     tenant_document: "",
+    tenant_rg: "",
     tenant_email: "",
     tenant_phone: "",
+    tenant_profession: "",
+    tenant_emergency_phone: "",
+    co_tenants: [] as Array<{ name: string; document: string; relationship: string }>,
     
     // Step 2: Contract data
     contract_number: "",
@@ -108,8 +112,12 @@ const ContractWizard = () => {
         property_id: propertyId,
         tenant_name: formData.tenant_name,
         tenant_document: formData.tenant_document || null,
+        tenant_rg: formData.tenant_rg || null,
         tenant_email: formData.tenant_email || null,
         tenant_phone: formData.tenant_phone,
+        tenant_profession: formData.tenant_profession || null,
+        tenant_emergency_phone: formData.tenant_emergency_phone || null,
+        co_tenants: formData.co_tenants.length > 0 ? formData.co_tenants : null,
         contract_number: formData.contract_number || null,
         start_date: formData.start_date,
         end_date: formData.end_date || null,
@@ -162,14 +170,25 @@ const ContractWizard = () => {
                 placeholder="Nome completo do inquilino"
               />
             </div>
-            <div>
-              <Label htmlFor="tenant_document">CPF/CNPJ</Label>
-              <Input
-                id="tenant_document"
-                value={formData.tenant_document}
-                onChange={(e) => updateFormData("tenant_document", e.target.value)}
-                placeholder="000.000.000-00"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tenant_document">CPF/CNPJ</Label>
+                <Input
+                  id="tenant_document"
+                  value={formData.tenant_document}
+                  onChange={(e) => updateFormData("tenant_document", e.target.value)}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="tenant_rg">RG</Label>
+                <Input
+                  id="tenant_rg"
+                  value={formData.tenant_rg}
+                  onChange={(e) => updateFormData("tenant_rg", e.target.value)}
+                  placeholder="00.000.000-0"
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="tenant_email">Email</Label>
@@ -181,14 +200,100 @@ const ContractWizard = () => {
                 placeholder="email@exemplo.com"
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tenant_phone">Telefone *</Label>
+                <Input
+                  id="tenant_phone"
+                  value={formData.tenant_phone}
+                  onChange={(e) => updateFormData("tenant_phone", e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div>
+                <Label htmlFor="tenant_emergency_phone">Telefone de Emergência</Label>
+                <Input
+                  id="tenant_emergency_phone"
+                  value={formData.tenant_emergency_phone}
+                  onChange={(e) => updateFormData("tenant_emergency_phone", e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+            </div>
             <div>
-              <Label htmlFor="tenant_phone">Telefone *</Label>
+              <Label htmlFor="tenant_profession">Profissão</Label>
               <Input
-                id="tenant_phone"
-                value={formData.tenant_phone}
-                onChange={(e) => updateFormData("tenant_phone", e.target.value)}
-                placeholder="(00) 00000-0000"
+                id="tenant_profession"
+                value={formData.tenant_profession}
+                onChange={(e) => updateFormData("tenant_profession", e.target.value)}
+                placeholder="Profissão do inquilino"
               />
+            </div>
+
+            {/* Co-tenants Section */}
+            <div className="pt-4 border-t">
+              <div className="flex justify-between items-center mb-3">
+                <Label>Outras pessoas que vão morar no imóvel</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    updateFormData("co_tenants", [
+                      ...formData.co_tenants,
+                      { name: "", document: "", relationship: "" }
+                    ]);
+                  }}
+                >
+                  + Adicionar Pessoa
+                </Button>
+              </div>
+              {formData.co_tenants.map((coTenant, index) => (
+                <div key={index} className="grid grid-cols-3 gap-3 mb-3 p-3 border rounded-lg">
+                  <Input
+                    placeholder="Nome"
+                    value={coTenant.name}
+                    onChange={(e) => {
+                      const updated = [...formData.co_tenants];
+                      updated[index].name = e.target.value;
+                      updateFormData("co_tenants", updated);
+                    }}
+                  />
+                  <Input
+                    placeholder="CPF"
+                    value={coTenant.document}
+                    onChange={(e) => {
+                      const updated = [...formData.co_tenants];
+                      updated[index].document = e.target.value;
+                      updateFormData("co_tenants", updated);
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Parentesco"
+                      value={coTenant.relationship}
+                      onChange={(e) => {
+                        const updated = [...formData.co_tenants];
+                        updated[index].relationship = e.target.value;
+                        updateFormData("co_tenants", updated);
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        updateFormData(
+                          "co_tenants",
+                          formData.co_tenants.filter((_, i) => i !== index)
+                        );
+                      }}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -361,18 +466,46 @@ const ContractWizard = () => {
                 </div>
                 {formData.tenant_document && (
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Documento:</dt>
+                    <dt className="text-muted-foreground">CPF/CNPJ:</dt>
                     <dd className="font-medium">{formData.tenant_document}</dd>
+                  </div>
+                )}
+                {formData.tenant_rg && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">RG:</dt>
+                    <dd className="font-medium">{formData.tenant_rg}</dd>
+                  </div>
+                )}
+                {formData.tenant_profession && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Profissão:</dt>
+                    <dd className="font-medium">{formData.tenant_profession}</dd>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Telefone:</dt>
                   <dd className="font-medium">{formData.tenant_phone}</dd>
                 </div>
+                {formData.tenant_emergency_phone && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Telefone de Emergência:</dt>
+                    <dd className="font-medium">{formData.tenant_emergency_phone}</dd>
+                  </div>
+                )}
                 {formData.tenant_email && (
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Email:</dt>
                     <dd className="font-medium">{formData.tenant_email}</dd>
+                  </div>
+                )}
+                {formData.co_tenants.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <dt className="text-muted-foreground font-semibold mb-2">Outras pessoas no imóvel:</dt>
+                    {formData.co_tenants.map((coTenant, index) => (
+                      <dd key={index} className="ml-4 mb-1">
+                        {coTenant.name} {coTenant.relationship && `(${coTenant.relationship})`}
+                      </dd>
+                    ))}
                   </div>
                 )}
               </dl>

@@ -128,6 +128,7 @@ export type Database = {
       contracts: {
         Row: {
           adjustment_index: string | null
+          co_tenants: Json | null
           contract_number: string | null
           created_at: string | null
           end_date: string | null
@@ -143,13 +144,17 @@ export type Database = {
           status: string
           tenant_document: string | null
           tenant_email: string | null
+          tenant_emergency_phone: string | null
           tenant_name: string
           tenant_phone: string | null
+          tenant_profession: string | null
+          tenant_rg: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           adjustment_index?: string | null
+          co_tenants?: Json | null
           contract_number?: string | null
           created_at?: string | null
           end_date?: string | null
@@ -165,13 +170,17 @@ export type Database = {
           status?: string
           tenant_document?: string | null
           tenant_email?: string | null
+          tenant_emergency_phone?: string | null
           tenant_name: string
           tenant_phone?: string | null
+          tenant_profession?: string | null
+          tenant_rg?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           adjustment_index?: string | null
+          co_tenants?: Json | null
           contract_number?: string | null
           created_at?: string | null
           end_date?: string | null
@@ -187,8 +196,11 @@ export type Database = {
           status?: string
           tenant_document?: string | null
           tenant_email?: string | null
+          tenant_emergency_phone?: string | null
           tenant_name?: string
           tenant_phone?: string | null
+          tenant_profession?: string | null
+          tenant_rg?: string | null
           updated_at?: string | null
           user_id?: string
         }
