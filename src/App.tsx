@@ -14,6 +14,7 @@ import ContractsList from "./pages/Contracts/ContractsList";
 import ContractWizard from "./pages/Contracts/ContractWizard";
 import InvoicesList from "./pages/Invoices/InvoicesList";
 import ReportsList from "./pages/Reports/ReportsList";
+import DocumentsList from "./pages/Documents/DocumentsList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,11 @@ const App = () => (
             <Route path="/relatorios" element={
               <ProtectedRoute>
                 <ReportsList />
+              </ProtectedRoute>
+            } />
+            <Route path="/documentos" element={
+              <ProtectedRoute>
+                <DocumentsList />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
