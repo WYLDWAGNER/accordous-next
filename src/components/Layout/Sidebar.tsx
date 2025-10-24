@@ -13,6 +13,7 @@ import {
   ChevronDown,
   HelpCircle,
   LogOut,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -31,6 +32,7 @@ const menuItems = [
     ],
   },
   { icon: FileText, label: "Documentos", path: "/documentos" },
+  { icon: Calendar, label: "Visitas Agendadas", path: "/visitas" },
   { icon: Users, label: "CRM", path: "/crm" },
   { icon: Receipt, label: "Faturas", path: "/faturas" },
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },

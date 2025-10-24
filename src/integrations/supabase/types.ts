@@ -631,6 +631,72 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_visits: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          property_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          visit_date: string
+          visit_time: string
+          visitor_email: string | null
+          visitor_name: string
+          visitor_phone: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          visit_date: string
+          visit_time: string
+          visitor_email?: string | null
+          visitor_name: string
+          visitor_phone: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          visit_date?: string
+          visit_time?: string
+          visitor_email?: string | null
+          visitor_name?: string
+          visitor_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_visits_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_visits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
