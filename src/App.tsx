@@ -17,6 +17,7 @@ import InvoicesList from "./pages/Invoices/InvoicesList";
 import ReportsList from "./pages/Reports/ReportsList";
 import DocumentsList from "./pages/Documents/DocumentsList";
 import ScheduledVisits from "./pages/Visits/ScheduledVisits";
+import UsersList from "./pages/Users/UsersList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,11 @@ const App = () => (
             <Route path="/visitas" element={
               <ProtectedRoute>
                 <ScheduledVisits />
+              </ProtectedRoute>
+            } />
+            <Route path="/usuarios" element={
+              <ProtectedRoute>
+                <UsersList />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
