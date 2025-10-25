@@ -104,74 +104,45 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess }: UserFormDialogP
     setLoading(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Sessão não encontrada");
+      }
+
       if (user) {
-        // Update existing user
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
+        // Update existing user via edge function
+        const { data, error } = await supabase.functions.invoke('admin-update-user', {
+          body: {
+            user_id: user.id,
             full_name: formData.full_name.trim(),
+            role: formData.role,
             is_active: formData.is_active,
-          })
-          .eq("id", user.id);
+            password: formData.password || undefined,
+          },
+        });
 
-        if (profileError) throw profileError;
-
-        // Update role
-        const { error: roleDeleteError } = await supabase
-          .from("user_roles")
-          .delete()
-          .eq("user_id", user.id);
-
-        if (roleDeleteError) throw roleDeleteError;
-
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: user.id, role: formData.role } as any);
-
-        if (roleError) throw roleError;
-
-        // Update password if provided
-        if (formData.password) {
-          const { error: passwordError } = await supabase.auth.admin.updateUserById(user.id, {
-            password: formData.password,
-          });
-
-          if (passwordError) throw passwordError;
-        }
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
 
         toast({
           title: "Usuário atualizado",
           description: "As informações do usuário foram atualizadas com sucesso.",
         });
       } else {
-        // Create new user
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email.trim(),
-          password: formData.password,
-          email_confirm: true,
-          user_metadata: {
+        // Create new user via edge function
+        const { data, error } = await supabase.functions.invoke('admin-create-user', {
+          body: {
+            email: formData.email.trim(),
+            password: formData.password,
             full_name: formData.full_name.trim(),
+            role: formData.role,
+            is_active: formData.is_active,
           },
         });
 
-        if (authError) throw authError;
-        if (!authData.user) throw new Error("Falha ao criar usuário");
-
-        // Create profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: authData.user.id,
-          full_name: formData.full_name.trim(),
-          is_active: formData.is_active,
-        });
-
-        if (profileError) throw profileError;
-
-        // Assign role
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: authData.user.id, role: formData.role } as any);
-
-        if (roleError) throw roleError;
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
 
         toast({
           title: "Usuário criado",

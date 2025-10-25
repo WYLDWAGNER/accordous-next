@@ -95,12 +95,14 @@ const UsersList = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch auth users to get emails
-      const { data: { users: authUsers } = { users: [] }, error: authError } = 
-        await supabase.auth.admin.listUsers();
+      // Fetch auth users via edge function
+      const { data: authUsersData, error: authError } = await supabase.functions.invoke('admin-list-users');
       
+      let authUsers: any[] = [];
       if (authError) {
         console.error("Error fetching auth users:", authError);
+      } else if (authUsersData?.users) {
+        authUsers = authUsersData.users;
       }
 
       // Fetch user roles
@@ -200,10 +202,13 @@ const UsersList = () => {
     }
 
     try {
-      // Delete from auth.users (this will cascade to profiles and user_roles)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+      // Delete user via edge function
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { user_id: userId },
+      });
 
-      if (authError) throw authError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Usuário removido",
