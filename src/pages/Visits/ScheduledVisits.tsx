@@ -5,12 +5,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, MapPin, Phone, Mail, User, Home, AlertCircle } from "lucide-react";
+import { Calendar, Clock, MapPin, Phone, Mail, User, Home, AlertCircle, Settings, Save } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ScheduledVisit {
   id: string;
@@ -36,13 +46,73 @@ const ScheduledVisits = () => {
   const [visits, setVisits] = useState<ScheduledVisit[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [calendarUrl, setCalendarUrl] = useState("");
+  const [tempCalendarUrl, setTempCalendarUrl] = useState("");
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchVisits();
+    if (user) {
+      fetchVisits();
+      fetchCalendarConfig();
+    }
   }, [user]);
+
+  const fetchCalendarConfig = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("google_calendar_embed_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data && (data as any).google_calendar_embed_url) {
+        const url = (data as any).google_calendar_embed_url;
+        setCalendarUrl(url);
+        setTempCalendarUrl(url);
+      }
+    } catch (error) {
+      console.error("Error fetching calendar config:", error);
+    }
+  };
+
+  const saveCalendarConfig = async () => {
+    if (!user) return;
+
+    setSavingConfig(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ google_calendar_embed_url: tempCalendarUrl } as any)
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setCalendarUrl(tempCalendarUrl);
+      setIsConfigOpen(false);
+
+      toast({
+        title: "Configuração salva",
+        description: "A URL da sua agenda foi atualizada com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error saving calendar config:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a configuração.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingConfig(false);
+    }
+  };
 
   const fetchVisits = async () => {
     if (!user) return;
@@ -135,12 +205,81 @@ const ScheduledVisits = () => {
         <Header title="Visitas Agendadas" />
         <main className="flex-1 overflow-y-auto bg-background p-6">
           <div className="max-w-7xl mx-auto space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Visitas Agendadas</h1>
-              <p className="text-muted-foreground">
-                Gerencie as visitas aos seus imóveis agendadas pelo agente
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Visitas Agendadas</h1>
+                <p className="text-muted-foreground">
+                  Gerencie as visitas aos seus imóveis agendadas pelo agente
+                </p>
+              </div>
+              <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Configurar Agenda
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Integrar Agenda Google</DialogTitle>
+                    <DialogDescription>
+                      Cole o link de incorporação da sua agenda do Google Calendar.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="calendar-url">URL do Google Calendar</Label>
+                      <Input
+                        id="calendar-url"
+                        placeholder="https://calendar.google.com/calendar/embed?src=..."
+                        value={tempCalendarUrl}
+                        onChange={(e) => setTempCalendarUrl(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Para obter a URL, abra o Google Calendar, vá em Configurações {">"} Configurações da sua agenda {">"} Integrar agenda {">"} copie o código iframe ou apenas a URL.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setTempCalendarUrl(calendarUrl);
+                        setIsConfigOpen(false);
+                      }}
+                      disabled={savingConfig}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button onClick={saveCalendarConfig} disabled={savingConfig}>
+                      <Save className="mr-2 h-4 w-4" />
+                      {savingConfig ? "Salvando..." : "Salvar"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
+
+            {calendarUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Minha Agenda</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full overflow-hidden rounded-lg border">
+                    <iframe
+                      src={calendarUrl}
+                      style={{ border: 0 }}
+                      width="100%"
+                      height="600"
+                      frameBorder="0"
+                      scrolling="no"
+                      title="Google Calendar"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
