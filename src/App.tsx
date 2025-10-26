@@ -14,6 +14,7 @@ import ContractsList from "./pages/Contracts/ContractsList";
 import ContractWizard from "./pages/Contracts/ContractWizard";
 import ContractDetails from "./pages/Contracts/ContractDetails";
 import InvoicesList from "./pages/Invoices/InvoicesList";
+import InvoiceDetails from "./pages/Invoices/InvoiceDetails";
 import ReportsList from "./pages/Reports/ReportsList";
 import DocumentsList from "./pages/Documents/DocumentsList";
 import ScheduledVisits from "./pages/Visits/ScheduledVisits";
@@ -74,6 +75,11 @@ const App = () => (
             <Route path="/faturas" element={
               <ProtectedRoute>
                 <InvoicesList />
+              </ProtectedRoute>
+            } />
+            <Route path="/faturas/:id" element={
+              <ProtectedRoute>
+                <InvoiceDetails />
               </ProtectedRoute>
             } />
             <Route path="/relatorios" element={

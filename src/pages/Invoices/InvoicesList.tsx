@@ -8,16 +8,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Receipt, Eye, DollarSign, AlertCircle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Plus, Search, Receipt, Eye, DollarSign, AlertCircle, Zap, Calendar as CalendarIcon } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { toast } from "@/hooks/use-toast";
+import { GenerateInvoiceDialog } from "@/components/Invoices/GenerateInvoiceDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const ITEMS_PER_PAGE = 50;
 
 const InvoicesList = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
+  const [contractFilter, setContractFilter] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [referenceMonth, setReferenceMonth] = useState<Date>(new Date());
 
   const { data: invoices, isLoading } = useQuery({
     queryKey: ["invoices", user?.id],
@@ -27,15 +44,20 @@ const InvoicesList = () => {
         .select(`
           *,
           contracts (
+            id,
+            contract_number,
             tenant_name,
             tenant_email,
             tenant_phone
           ),
           properties (
+            id,
             name,
             address,
             city,
-            state
+            state,
+            owner_name,
+            owner_email
           )
         `)
         .eq("user_id", user?.id)
@@ -47,16 +69,75 @@ const InvoicesList = () => {
     enabled: !!user?.id,
   });
 
+  const { data: activeContractsCount } = useQuery({
+    queryKey: ["active-contracts-count", user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("contracts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user?.id)
+        .eq("status", "active");
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user?.id,
+  });
+
+  const generateAllMutation = useMutation({
+    mutationFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      const response = await supabase.functions.invoke('generate-invoices', {
+        body: {
+          mode: 'all',
+          reference_month: format(referenceMonth, 'yyyy-MM-dd'),
+          auto_billing: false
+        }
+      });
+
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast({
+        title: "Faturas geradas com sucesso!",
+        description: `${data.created} fatura(s) criada(s), ${data.skipped} ignorada(s).`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao gerar faturas",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredInvoices = invoices?.filter((invoice) => {
     const matchesSearch =
       invoice.contracts?.tenant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.properties?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.properties?.owner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.contracts?.contract_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
+    const matchesPaymentMethod = paymentMethodFilter === "all" || invoice.payment_method === paymentMethodFilter;
+    const matchesContract = !contractFilter || invoice.contracts?.contract_number?.toLowerCase().includes(contractFilter.toLowerCase());
+    const matchesOwner = !ownerFilter || invoice.properties?.owner_name?.toLowerCase().includes(ownerFilter.toLowerCase());
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesPaymentMethod && matchesContract && matchesOwner;
   });
+
+  const paginatedInvoices = filteredInvoices?.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const totalPages = Math.ceil((filteredInvoices?.length || 0) / ITEMS_PER_PAGE);
 
   const getStatusBadge = (status: string, dueDate: string) => {
     const isOverdue = new Date(dueDate) < new Date() && status === "pending";
@@ -98,7 +179,7 @@ const InvoicesList = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -119,11 +200,83 @@ const InvoicesList = () => {
             </Alert>
           )}
 
+          {/* Bulk Generation Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Geração em Massa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col md:flex-row gap-4 items-end">
+                <div className="flex-1 space-y-2">
+                  <label className="text-sm font-medium">Mês de Competência</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !referenceMonth && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {referenceMonth ? format(referenceMonth, "MMMM 'de' yyyy", { locale: ptBR }) : "Selecione o mês"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={referenceMonth}
+                        onSelect={(date) => date && setReferenceMonth(date)}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button className="md:w-auto w-full" disabled={!activeContractsCount}>
+                      <Zap className="mr-2 h-4 w-4" />
+                      Gerar Faturas para Todos os Contratos
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Gerar faturas em massa?</AlertDialogTitle>
+                      <AlertDialogDescription className="space-y-2">
+                        <p>Você está prestes a gerar faturas para todos os contratos ativos.</p>
+                        <div className="bg-muted p-4 rounded-lg space-y-1">
+                          <p className="font-medium">Resumo:</p>
+                          <p>• Contratos ativos: {activeContractsCount}</p>
+                          <p>• Competência: {format(referenceMonth, "MMMM 'de' yyyy", { locale: ptBR })}</p>
+                        </div>
+                        <p className="text-sm">Faturas duplicadas serão automaticamente ignoradas.</p>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => generateAllMutation.mutate()}
+                        disabled={generateAllMutation.isPending}
+                      >
+                        {generateAllMutation.isPending ? "Gerando..." : "Gerar Faturas"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Em Aberto</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Em Aberto</CardTitle>
                 <DollarSign className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
@@ -135,7 +288,7 @@ const InvoicesList = () => {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Recebido</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Recebido</CardTitle>
                 <DollarSign className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
@@ -147,8 +300,8 @@ const InvoicesList = () => {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Total</CardTitle>
-                <Receipt className="h-4 w-4 text-blue-500" />
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                <Receipt className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -159,35 +312,67 @@ const InvoicesList = () => {
           </div>
 
           {/* Actions Bar */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Buscar por inquilino, imóvel ou número da fatura..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="space-y-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por inquilino, imóvel, proprietário ou número..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              <GenerateInvoiceDialog />
+
+              <Link to="/faturas/nova">
+                <Button className="w-full md:w-auto">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nova Fatura Manual
+                </Button>
+              </Link>
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="paid">Pago</SelectItem>
-                <SelectItem value="cancelled">Cancelada</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col md:flex-row gap-4">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="cancelled">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Link to="/faturas/nova">
-              <Button className="w-full md:w-auto">
-                <Plus className="mr-2 h-4 w-4" />
-                Nova Fatura
-              </Button>
-            </Link>
+              <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Forma de Pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as formas</SelectItem>
+                  <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input
+                placeholder="Filtrar por contrato..."
+                value={contractFilter}
+                onChange={(e) => setContractFilter(e.target.value)}
+                className="w-full md:w-[200px]"
+              />
+
+              <Input
+                placeholder="Filtrar por proprietário..."
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                className="w-full md:w-[200px]"
+              />
+            </div>
           </div>
 
           {/* Invoices Table */}
@@ -199,66 +384,128 @@ const InvoicesList = () => {
               </div>
             </div>
           ) : filteredInvoices && filteredInvoices.length > 0 ? (
-            <Card>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Imóvel</TableHead>
-                        <TableHead>Referência</TableHead>
-                        <TableHead>Vencimento</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Método de Pagamento</TableHead>
-                        <TableHead>Situação</TableHead>
-                        <TableHead className="w-[80px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInvoices.map((invoice) => (
-                        <TableRow key={invoice.id}>
-                          <TableCell className="max-w-xs truncate font-medium">
-                            {invoice.properties?.address}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(invoice.reference_month).toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            })}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(invoice.due_date).toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            })}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            R$ {Number(invoice.total_amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell>
-                            {invoice.payment_method === "bank_transfer" ? "Transferência Bancária" : 
-                             invoice.payment_method === "pix" ? "PIX" : 
-                             invoice.payment_method || "-"}
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(invoice.status, invoice.due_date)}
-                          </TableCell>
-                          <TableCell>
-                            <Link to={`/faturas/${invoice.id}`}>
-                              <Button variant="ghost" size="icon">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                          </TableCell>
+            <>
+              <Card>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Proprietário</TableHead>
+                          <TableHead>Contrato</TableHead>
+                          <TableHead>Imóvel</TableHead>
+                          <TableHead>Competência</TableHead>
+                          <TableHead>Vencimento</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead>Pagamento</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[80px]"></TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedInvoices?.map((invoice) => (
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">
+                              {invoice.contracts?.tenant_name || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {invoice.properties?.owner_name || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {invoice.contracts?.contract_number || "-"}
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate">
+                              {invoice.properties?.name || invoice.properties?.address}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(invoice.reference_month), "MMM/yyyy", { locale: ptBR })}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(invoice.due_date), "dd/MM/yyyy")}
+                            </TableCell>
+                            <TableCell className="font-semibold">
+                              R$ {Number(invoice.total_amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {invoice.payment_method === "bank_transfer" ? "Transferência" : 
+                               invoice.payment_method === "pix" ? "PIX" :
+                               invoice.payment_method === "boleto" ? "Boleto" :
+                               invoice.payment_method || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(invoice.status, invoice.due_date)}
+                            </TableCell>
+                            <TableCell>
+                              <Link to={`/faturas/${invoice.id}`}>
+                                <Button variant="ghost" size="icon">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {totalPages > 1 && (
+                <div className="mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => {
+                          const distance = Math.abs(page - currentPage);
+                          return distance === 0 || distance === 1 || page === 1 || page === totalPages;
+                        })
+                        .map((page, idx, arr) => {
+                          if (idx > 0 && arr[idx - 1] !== page - 1) {
+                            return [
+                              <PaginationItem key={`ellipsis-${page}`}>
+                                <span className="px-4">...</span>
+                              </PaginationItem>,
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ];
+                          }
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                onClick={() => setCurrentPage(page)}
+                                isActive={currentPage === page}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
