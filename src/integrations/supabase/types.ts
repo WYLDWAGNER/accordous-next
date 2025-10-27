@@ -132,6 +132,7 @@ export type Database = {
           contract_number: string | null
           created_at: string | null
           end_date: string | null
+          extra_charges: Json | null
           guarantee_type: string | null
           guarantee_value: number | null
           id: string
@@ -158,6 +159,7 @@ export type Database = {
           contract_number?: string | null
           created_at?: string | null
           end_date?: string | null
+          extra_charges?: Json | null
           guarantee_type?: string | null
           guarantee_value?: number | null
           id?: string
@@ -184,6 +186,7 @@ export type Database = {
           contract_number?: string | null
           created_at?: string | null
           end_date?: string | null
+          extra_charges?: Json | null
           guarantee_type?: string | null
           guarantee_value?: number | null
           id?: string
@@ -525,6 +528,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           full_name: string | null
+          google_calendar_embed_url: string | null
           id: string
           is_active: boolean | null
           last_access: string | null
@@ -534,6 +538,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
+          google_calendar_embed_url?: string | null
           id: string
           is_active?: boolean | null
           last_access?: string | null
@@ -543,6 +548,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
+          google_calendar_embed_url?: string | null
           id?: string
           is_active?: boolean | null
           last_access?: string | null

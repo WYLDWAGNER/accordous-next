@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ExtraChargesDialog } from "@/components/Contracts/ExtraChargesDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ interface Contract {
   tenant_emergency_phone: string | null;
   co_tenants: any;
   property_id: string;
+  extra_charges?: any[];
 }
 
 interface Property {
@@ -69,6 +71,7 @@ export default function ContractDetails() {
   const [property, setProperty] = useState<Property | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [extraChargesOpen, setExtraChargesOpen] = useState(false);
 
   useEffect(() => {
     if (user && id) {
@@ -87,7 +90,7 @@ export default function ContractDetails() {
         .single();
 
       if (contractError) throw contractError;
-      setContract(contractData);
+      setContract(contractData as any);
 
       // Fetch property
       const { data: propertyData, error: propertyError } = await supabase
@@ -442,14 +445,26 @@ export default function ContractDetails() {
                 <Edit className="mr-2 h-4 w-4" />
                 Alterar conta
               </Button>
-              <Button variant="outline" disabled>
-                <Plus className="mr-2 h-4 w-4" />
-                Cobranças adicionais
-              </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setExtraChargesOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Cobranças adicionais
+                </Button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <ExtraChargesDialog
+        open={extraChargesOpen}
+        onOpenChange={setExtraChargesOpen}
+        contractId={contract.id}
+        contractEndDate={contract.end_date}
+        existingCharges={contract.extra_charges || []}
+        onUpdate={fetchContractDetails}
+      />
     </div>
   );
 }

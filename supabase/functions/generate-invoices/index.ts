@@ -159,8 +159,60 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Calculate extra charges for this month
+        const extraCharges = [];
+        let extraChargesTotal = 0;
+
+        if (contract.extra_charges && Array.isArray(contract.extra_charges)) {
+          const startDate = new Date(contract.start_date);
+          
+          for (const charge of contract.extra_charges) {
+            // Skip if not active
+            if (charge.status !== 'active') continue;
+
+            const chargeStartDate = new Date(charge.start_date);
+            
+            // Skip if charge hasn't started yet
+            if (refMonth < chargeStartDate) continue;
+
+            // Calculate months difference
+            const monthsDiff = 
+              (refMonth.getFullYear() - chargeStartDate.getFullYear()) * 12 + 
+              (refMonth.getMonth() - chargeStartDate.getMonth());
+
+            let shouldApplyCharge = false;
+
+            if (charge.charge_until_end) {
+              // Apply until contract end
+              if (contract.end_date) {
+                const contractEndDate = new Date(contract.end_date);
+                if (refMonth <= contractEndDate) {
+                  shouldApplyCharge = true;
+                }
+              } else {
+                // No end date, apply indefinitely
+                shouldApplyCharge = true;
+              }
+            } else if (charge.installments && monthsDiff < charge.installments) {
+              // Apply if within installments period
+              shouldApplyCharge = true;
+            }
+
+            if (shouldApplyCharge) {
+              extraCharges.push({
+                id: charge.id,
+                description: charge.description,
+                charge_type: charge.charge_type,
+                value_per_installment: charge.value_per_installment,
+                installment_number: monthsDiff + 1,
+              });
+              extraChargesTotal += Number(charge.value_per_installment);
+            }
+          }
+        }
+
         const rentalAmount = Number(contract.rental_value);
-        const totalAmount = rentalAmount + guaranteeInstallment;
+        const totalAmount = rentalAmount + guaranteeInstallment + extraChargesTotal;
 
         // Generate invoice number
         const invoiceNumber = `${prefix}-${String(invoiceCounter).padStart(4, '0')}`;
@@ -188,7 +240,7 @@ Deno.serve(async (req) => {
             gas_amount: 0,
             internet_amount: 0,
             condo_fee: 0,
-            extra_charges: [],
+            extra_charges: extraCharges,
             history: [{
               action: 'created',
               timestamp: new Date().toISOString(),

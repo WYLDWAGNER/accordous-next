@@ -399,6 +399,28 @@ const InvoiceDetails = () => {
                         </span>
                       </div>
                     )}
+                    
+                    {/* Extra Charges */}
+                    {invoice.extra_charges && Array.isArray(invoice.extra_charges) && invoice.extra_charges.length > 0 && (
+                      <>
+                        <Separator className="my-2" />
+                        <div className="space-y-2">
+                          <p className="font-semibold text-sm">Cobranças Adicionais</p>
+                          {invoice.extra_charges.map((charge: any) => (
+                            <div key={charge.id} className="flex justify-between pl-4">
+                              <span className="text-sm">
+                                {charge.description}
+                                {charge.installment_number && ` (${charge.installment_number}x)`}
+                              </span>
+                              <span className="font-medium text-sm">
+                                R$ {Number(charge.value_per_installment).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    
                     <Separator className="my-2" />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
