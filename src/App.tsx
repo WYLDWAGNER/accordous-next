@@ -21,6 +21,7 @@ import DocumentsList from "./pages/Documents/DocumentsList";
 import ScheduledVisits from "./pages/Visits/ScheduledVisits";
 import UsersList from "./pages/Users/UsersList";
 import NotFound from "./pages/NotFound";
+import LicenseManagement from "./pages/Admin/LicenseManagement";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,11 @@ const App = () => (
             <Route path="/usuarios" element={
               <ProtectedRoute>
                 <UsersList />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/licenses" element={
+              <ProtectedRoute>
+                <LicenseManagement />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
