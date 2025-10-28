@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useLicenseCheck } from "@/hooks/useLicenseCheck";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,8 +8,9 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
+  const license = useLicenseCheck();
 
-  if (loading) {
+  if (loading || license.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">

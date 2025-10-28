@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Checkout from "./pages/Checkout";
 import PropertiesList from "./pages/Properties/PropertiesList";
 import PropertyForm from "./pages/Properties/PropertyForm";
 import PropertyDetails from "./pages/Properties/PropertyDetails";
@@ -30,8 +31,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/checkout" element={<Checkout />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />

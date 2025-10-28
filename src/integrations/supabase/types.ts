@@ -527,6 +527,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          data_expiracao: string | null
           full_name: string | null
           google_calendar_embed_url: string | null
           id: string
@@ -537,6 +538,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          data_expiracao?: string | null
           full_name?: string | null
           google_calendar_embed_url?: string | null
           id: string
@@ -547,6 +549,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          data_expiracao?: string | null
           full_name?: string | null
           google_calendar_embed_url?: string | null
           id?: string
