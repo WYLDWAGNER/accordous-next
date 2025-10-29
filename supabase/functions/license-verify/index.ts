@@ -46,7 +46,8 @@ Deno.serve(async (req) => {
     }
 
     const expiresAt = profile?.data_expiracao;
-    const isValid = expiresAt ? new Date(expiresAt) >= new Date() : false;
+    // Se não há data de expiração, considera válido (usuário legado/perpétuo)
+    const isValid = expiresAt === null ? true : new Date(expiresAt) >= new Date();
 
     return new Response(
       JSON.stringify({
