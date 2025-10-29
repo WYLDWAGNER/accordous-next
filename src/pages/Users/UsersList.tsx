@@ -382,22 +382,20 @@ const UsersList = () => {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
 
-      <UserFormDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onSuccess={fetchUsers}
-      />
+          <UserFormDialog
+            open={isAddDialogOpen}
+            onOpenChange={setIsAddDialogOpen}
+            onSuccess={fetchUsers}
+          />
 
-      <UserFormDialog
-        open={!!editingUser}
-        onOpenChange={(open) => !open && setEditingUser(null)}
-        user={editingUser}
-        onSuccess={fetchUsers}
-      />
-    </div>
+          <UserFormDialog
+            open={!!editingUser}
+            onOpenChange={(open) => !open && setEditingUser(null)}
+            user={editingUser}
+            onSuccess={fetchUsers}
+          />
+        </AppLayout>
   );
 };
 
