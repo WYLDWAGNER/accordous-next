@@ -5,14 +5,16 @@ import { CalculatorCard } from "@/components/Dashboard/CalculatorCard";
 import { PropertySummaryCard } from "@/components/Dashboard/PropertySummaryCard";
 import { InvoicesTable } from "@/components/Dashboard/InvoicesTable";
 import { FileText, DollarSign, FileCheck, Users2, Calculator, TrendingUp, Calendar, Percent } from "lucide-react";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const Index = () => {
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Dashboard" />
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex h-screen w-full bg-gray-50">
+        <Sidebar />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header title="Dashboard" />
         
         <main className="flex-1 overflow-y-auto p-6">
           {/* Stats Grid */}
@@ -67,7 +69,8 @@ const Index = () => {
           <InvoicesTable />
         </main>
       </div>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 

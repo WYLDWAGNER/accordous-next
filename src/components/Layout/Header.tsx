@@ -1,6 +1,7 @@
-import { Bell, HelpCircle, User, Sun } from "lucide-react";
+import { Bell, HelpCircle, User, Sun, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface HeaderProps {
   title: string;
@@ -8,10 +9,13 @@ interface HeaderProps {
 
 export const Header = ({ title }: HeaderProps) => {
   return (
-    <div className="flex h-16 items-center justify-between border-b bg-white px-6">
-      <h1 className="text-2xl font-bold">{title}</h1>
+    <div className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
+      <div className="flex items-center gap-2">
+        <SidebarTrigger className="md:hidden" />
+        <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
+      </div>
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-3">
         <Select defaultValue="30">
           <SelectTrigger className="w-[180px]">
             <SelectValue />

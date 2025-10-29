@@ -19,6 +19,17 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  Sidebar as SidebarUI,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -45,6 +56,7 @@ export const Sidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
   const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis"]);
+  const { open } = useSidebar();
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>
@@ -53,98 +65,92 @@ export const Sidebar = () => {
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r bg-white">
+    <SidebarUI className="border-r bg-white">
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
         <Building2 className="h-6 w-6 text-primary" />
-        <span className="ml-2 text-lg font-semibold">Accordous</span>
+        {open && <span className="ml-2 text-lg font-semibold">Accordous</span>}
       </div>
 
-      {/* Menu Items */}
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className="space-y-1 px-3">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
 
-            if (item.submenu) {
-              const isOpen = openMenus.includes(item.label);
-              return (
-                <Collapsible key={item.label} open={isOpen} onOpenChange={() => toggleMenu(item.label)}>
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start font-normal",
-                        "hover:bg-accent"
-                      )}
-                    >
-                      <Icon className="mr-3 h-4 w-4" />
-                      <span className="flex-1 text-left">{item.label}</span>
-                      <ChevronDown
-                        className={cn(
-                          "h-4 w-4 transition-transform",
-                          isOpen && "rotate-180"
-                        )}
-                      />
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 pl-9 pt-1">
-                    {item.submenu.map((subItem) => (
-                      <Link key={subItem.path} to={subItem.path}>
-                        <Button
-                          variant="ghost"
-                          className={cn(
-                            "w-full justify-start font-normal text-sm",
-                            location.pathname === subItem.path && "bg-accent"
+                if (item.submenu) {
+                  const isOpen = openMenus.includes(item.label);
+                  return (
+                    <Collapsible key={item.label} open={isOpen} onOpenChange={() => toggleMenu(item.label)}>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton className="w-full">
+                          <Icon className="mr-3 h-4 w-4" />
+                          {open && <span className="flex-1 text-left">{item.label}</span>}
+                          {open && (
+                            <ChevronDown
+                              className={cn(
+                                "h-4 w-4 transition-transform",
+                                isOpen && "rotate-180"
+                              )}
+                            />
                           )}
-                        >
-                          {subItem.label}
-                        </Button>
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      {open && (
+                        <CollapsibleContent className="space-y-1 pl-9 pt-1">
+                          {item.submenu.map((subItem) => (
+                            <SidebarMenuItem key={subItem.path}>
+                              <SidebarMenuButton asChild isActive={location.pathname === subItem.path}>
+                                <Link to={subItem.path}>
+                                  <span className="text-sm">{subItem.label}</span>
+                                </Link>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          ))}
+                        </CollapsibleContent>
+                      )}
+                    </Collapsible>
+                  );
+                }
+
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link to={item.path}>
+                        <Icon className="h-4 w-4" />
+                        {open && <span>{item.label}</span>}
                       </Link>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            }
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-            return (
-              <Link key={item.path} to={item.path}>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start font-normal",
-                    isActive && "bg-accent"
-                  )}
-                >
-                  <Icon className="mr-3 h-4 w-4" />
-                  {item.label}
-                </Button>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Bottom Actions */}
-      <div className="border-t p-3">
-        <Button
-          variant="ghost"
-          className="w-full justify-center mb-2"
-          size="sm"
-        >
-          <HelpCircle className="mr-2 h-4 w-4" />
-          Ajuda?
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={signOut}
-        >
-          <LogOut className="mr-3 h-4 w-4" />
-          Sair
-        </Button>
-      </div>
-    </div>
+        {/* Bottom Actions */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <HelpCircle className="h-4 w-4" />
+                  {open && <span>Ajuda?</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={signOut}>
+                  <LogOut className="h-4 w-4" />
+                  {open && <span>Sair</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </SidebarUI>
   );
 };
