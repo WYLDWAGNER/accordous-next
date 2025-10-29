@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -257,32 +256,22 @@ const UsersList = () => {
 
   if (!isAdmin) {
     return (
-      <div className="flex h-screen overflow-hidden">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title="Usuários" />
-          <main className="flex-1 overflow-y-auto bg-background p-6">
-            <Card>
-              <CardContent className="py-12">
-                <div className="text-center text-muted-foreground">
-                  <p>Você não tem permissão para acessar esta página.</p>
-                  <p className="mt-2">Apenas administradores podem gerenciar usuários.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </div>
+      <AppLayout title="Usuários">
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center text-muted-foreground">
+              <p>Você não tem permissão para acessar esta página.</p>
+              <p className="mt-2">Apenas administradores podem gerenciar usuários.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Usuários" />
-        <main className="flex-1 overflow-y-auto bg-background p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+    <AppLayout title="Usuários">
+      <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,14 +85,8 @@ const DocumentsList = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Documentos" />
-
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+    <AppLayout title="Documentos">
+      <div className="max-w-7xl mx-auto space-y-6">
             <Tabs defaultValue="contratos" className="w-full">
               <TabsList className="grid w-full grid-cols-3 max-w-md">
                 <TabsTrigger value="contratos">Contratos</TabsTrigger>
@@ -343,10 +336,8 @@ const DocumentsList = () => {
                 </Card>
               </TabsContent>
             </Tabs>
-          </div>
-        </main>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

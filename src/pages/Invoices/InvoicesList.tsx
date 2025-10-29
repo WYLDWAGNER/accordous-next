@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -179,13 +178,7 @@ const InvoicesList = () => {
   );
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Faturas" />
-
-        <main className="flex-1 overflow-y-auto p-6">
+    <AppLayout title="Faturas">
           {/* Alert for pending invoices */}
           {hasPendingInvoices && (
             <Alert variant="destructive" className="mb-6">
@@ -525,9 +518,7 @@ const InvoicesList = () => {
               </CardContent>
             </Card>
           )}
-        </main>
-      </div>
-    </div>
+    </AppLayout>
   );
 };
 

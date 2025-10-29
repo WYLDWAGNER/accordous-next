@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -98,13 +97,7 @@ const PropertiesList = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Imóveis" />
-
-        <main className="flex-1 overflow-y-auto p-6">
+    <AppLayout title="Imóveis">
           {/* Pending Invoices Alert */}
           {pendingInvoices && pendingInvoices.length > 0 && (
             <Alert className="mb-6 border-orange-200 bg-orange-50">
@@ -331,9 +324,7 @@ const PropertiesList = () => {
               </CardContent>
             </Card>
           )}
-        </main>
-      </div>
-    </div>
+    </AppLayout>
   );
 };
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,13 +60,7 @@ const ContractsList = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Contratos" />
-
-        <main className="flex-1 overflow-y-auto p-6">
+    <AppLayout title="Contratos">
           {/* Actions Bar */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
@@ -201,9 +194,7 @@ const ContractsList = () => {
               </CardContent>
             </Card>
           )}
-        </main>
-      </div>
-    </div>
+    </AppLayout>
   );
 };
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -579,14 +578,8 @@ const ContractWizard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Novo Contrato" />
-
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto">
+    <AppLayout title="Novo Contrato">
+      <div className="max-w-4xl mx-auto">
             {/* Progress Steps */}
             <div className="mb-8">
               <div className="flex items-center justify-between">
@@ -669,10 +662,8 @@ const ContractWizard = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </main>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

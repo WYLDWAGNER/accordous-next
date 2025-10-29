@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -148,13 +147,7 @@ const ReportsList = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Relatórios" />
-
-        <main className="flex-1 overflow-y-auto p-6">
+    <AppLayout title="Relatórios">
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <Select value={period} onValueChange={setPeriod}>
@@ -568,9 +561,7 @@ const ReportsList = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
-    </div>
+    </AppLayout>
   );
 };
 

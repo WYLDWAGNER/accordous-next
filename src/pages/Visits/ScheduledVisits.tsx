@@ -11,8 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Calendar, Clock, MapPin, Phone, Mail, User, Home, AlertCircle, Settings, Save } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import {
   Dialog,
   DialogContent,
@@ -199,12 +198,8 @@ const ScheduledVisits = () => {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Visitas Agendadas" />
-        <main className="flex-1 overflow-y-auto bg-background p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+    <AppLayout title="Visitas Agendadas">
+      <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Visitas Agendadas</h1>
@@ -497,10 +492,8 @@ const ScheduledVisits = () => {
                 )}
               </>
             )}
-          </div>
-        </main>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
