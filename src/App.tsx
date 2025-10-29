@@ -7,6 +7,9 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Register from "./pages/Register";
+import Plans from "./pages/Plans";
+import CheckoutPlan from "./pages/CheckoutPlan";
 import Checkout from "./pages/Checkout";
 import PropertiesList from "./pages/Properties/PropertiesList";
 import PropertyForm from "./pages/Properties/PropertyForm";
@@ -34,6 +37,9 @@ const App = () => (
         <AuthProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/plans" element={<Plans />} />
+              <Route path="/checkout-plan" element={<CheckoutPlan />} />
               <Route path="/checkout" element={<Checkout />} />
             <Route path="/" element={
               <ProtectedRoute>

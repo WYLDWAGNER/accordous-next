@@ -275,9 +275,19 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="text-center text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col gap-3 text-center text-sm text-muted-foreground">
           <p className="w-full">
             Ao criar uma conta, você concorda com nossos termos de uso
+          </p>
+          <p className="w-full">
+            Quer conhecer nossos planos?{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/register")}
+              className="text-primary underline hover:text-primary/80 font-medium"
+            >
+              Comece agora
+            </button>
           </p>
         </CardFooter>
       </Card>
