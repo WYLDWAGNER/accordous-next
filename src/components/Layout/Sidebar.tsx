@@ -14,13 +14,11 @@ import {
   HelpCircle,
   LogOut,
   Calendar,
-  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
 import {
   Sidebar as SidebarUI,
   SidebarContent,
@@ -57,7 +55,6 @@ const menuItems = [
 export const Sidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
-  const { isAdmin } = useAdminCheck();
   const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis"]);
   const { open } = useSidebar();
 
@@ -133,25 +130,6 @@ export const Sidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Admin Section - Only visible to admins */}
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Administração</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={location.pathname === "/admin/licenses"}>
-                    <Link to="/admin/licenses">
-                      <Shield className="h-4 w-4" />
-                      {open && <span>Gerenciar Licenças</span>}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
 
         {/* Bottom Actions */}
         <SidebarGroup className="mt-auto">
