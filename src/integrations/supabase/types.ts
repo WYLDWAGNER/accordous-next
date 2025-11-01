@@ -74,6 +74,71 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_plans: {
+        Row: {
+          created_at: string
+          days_duration: number
+          id: string
+          name: string
+          price_cents: number
+          provider: string
+          provider_link: string
+        }
+        Insert: {
+          created_at?: string
+          days_duration?: number
+          id: string
+          name: string
+          price_cents: number
+          provider?: string
+          provider_link: string
+        }
+        Update: {
+          created_at?: string
+          days_duration?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          provider?: string
+          provider_link?: string
+        }
+        Relationships: []
+      }
+      checkout_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          plan_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          plan_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          plan_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address: string | null
@@ -476,6 +541,44 @@ export type Database = {
         }
         Relationships: []
       }
+      license_audit: {
+        Row: {
+          created_at: string
+          id: number
+          new_expiration: string | null
+          previous_expiration: string | null
+          ref_payment_id: number | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          new_expiration?: string | null
+          previous_expiration?: string | null
+          ref_payment_id?: number | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          new_expiration?: string | null
+          previous_expiration?: string | null
+          ref_payment_id?: number | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "license_audit_ref_payment_id_fkey"
+            columns: ["ref_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -519,6 +622,66 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_cents: number | null
+          created_at: string
+          currency: string | null
+          event_id: string | null
+          external_tx_id: string | null
+          id: number
+          plan_id: string | null
+          provider: string
+          raw: Json
+          session_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          event_id?: string | null
+          external_tx_id?: string | null
+          id?: number
+          plan_id?: string | null
+          provider?: string
+          raw: Json
+          session_id?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          event_id?: string | null
+          external_tx_id?: string | null
+          id?: number
+          plan_id?: string | null
+          provider?: string
+          raw?: Json
+          session_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_sessions"
             referencedColumns: ["id"]
           },
         ]
