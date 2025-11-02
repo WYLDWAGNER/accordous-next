@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,19 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  // Refs para inputs de arquivo
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estados para arquivos selecionados
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<File[]>([]);
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", id],
@@ -63,6 +73,21 @@ const PropertyDetails = () => {
 
   const activeContract = contracts?.find(c => c.status === "active");
   const pendingInvoices = invoices?.filter(inv => inv.status === "pending") || [];
+  
+  // Handlers para upload de arquivos
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedPhotos(files);
+    toast.success(`${files.length} foto(s) selecionada(s)`);
+    // TODO: Upload para Supabase Storage bucket 'property-photos'
+  };
+  
+  const handleDocSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedDocs(files);
+    toast.success(`${files.length} documento(s) selecionado(s)`);
+    // TODO: Upload para Supabase Storage bucket 'property-documents'
+  };
 
   if (isLoading) {
     return (
@@ -295,7 +320,18 @@ const PropertyDetails = () => {
                 <Home className="h-5 w-5" />
                 <span className="text-xs">Anunciar Imóvel</span>
               </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 gap-2">
+              <Button 
+                variant="outline" 
+                className="h-auto flex-col py-4 gap-2"
+                onClick={() => {
+                  if (activeContract) {
+                    navigate(`/contratos/${activeContract.id}`);
+                  } else {
+                    toast.error('Nenhum contrato ativo encontrado');
+                  }
+                }}
+                disabled={!activeContract}
+              >
                 <Briefcase className="h-5 w-5" />
                 <span className="text-xs">Ver Contrato</span>
               </Button>
@@ -472,10 +508,22 @@ const PropertyDetails = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handlePhotoSelect}
+                    />
                     <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center gap-3">
                       <Camera className="h-8 w-8 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground">Nenhuma foto cadastrada</p>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => photoInputRef.current?.click()}
+                      >
                         <Upload className="mr-2 h-4 w-4" />
                         Adicionar Fotos
                       </Button>
@@ -496,9 +544,22 @@ const PropertyDetails = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    <input
+                      ref={docInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      multiple
+                      className="hidden"
+                      onChange={handleDocSelect}
+                    />
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Nenhum documento cadastrado</p>
-                      <Button variant="outline" className="w-full" size="sm">
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        size="sm"
+                        onClick={() => docInputRef.current?.click()}
+                      >
                         <Upload className="mr-2 h-4 w-4" />
                         Cadastrar Documento
                       </Button>
