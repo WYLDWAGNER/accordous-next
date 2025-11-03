@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import { Button } from "@/components/ui/button";
+import { ScheduleVisitDialog } from "@/components/Properties/ScheduleVisitDialog";
+import { LinkedPersonsDialog } from "@/components/Properties/LinkedPersonsDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -27,6 +29,10 @@ const PropertyDetails = () => {
   // Estados para arquivos selecionados
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [selectedDocs, setSelectedDocs] = useState<File[]>([]);
+  
+  // Estados para dialogs
+  const [visitDialogOpen, setVisitDialogOpen] = useState(false);
+  const [personsDialogOpen, setPersonsDialogOpen] = useState(false);
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", id],
@@ -308,7 +314,11 @@ const PropertyDetails = () => {
 
             {/* Ações Rápidas */}
             <div className="grid grid-cols-4 gap-4">
-              <Button variant="outline" className="h-auto flex-col py-4 gap-2">
+              <Button 
+                variant="outline" 
+                className="h-auto flex-col py-4 gap-2"
+                onClick={() => setPersonsDialogOpen(true)}
+              >
                 <UserPlus className="h-5 w-5" />
                 <span className="text-xs">Vincular Pessoas</span>
               </Button>
