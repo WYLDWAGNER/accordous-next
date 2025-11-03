@@ -734,6 +734,7 @@ export type Database = {
           created_at: string | null
           id: string
           land_area: number | null
+          linked_persons: Json | null
           name: string
           nearby_facilities: Json | null
           neighborhood: string | null
@@ -762,6 +763,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           land_area?: number | null
+          linked_persons?: Json | null
           name: string
           nearby_facilities?: Json | null
           neighborhood?: string | null
@@ -790,6 +792,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           land_area?: number | null
+          linked_persons?: Json | null
           name?: string
           nearby_facilities?: Json | null
           neighborhood?: string | null
