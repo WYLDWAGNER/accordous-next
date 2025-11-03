@@ -73,7 +73,7 @@ export function LinkedPersonsDialog({ propertyId, open, onOpenChange }: LinkedPe
     enabled: open,
   });
 
-  const linkedPersons: LinkedPerson[] = property?.linked_persons || [];
+  const linkedPersons: LinkedPerson[] = (property?.linked_persons as unknown as LinkedPerson[]) || [];
 
   const addPersonMutation = useMutation({
     mutationFn: async (data: PersonFormData) => {
@@ -87,7 +87,7 @@ export function LinkedPersonsDialog({ propertyId, open, onOpenChange }: LinkedPe
 
       const { error } = await supabase
         .from("properties")
-        .update({ linked_persons: updatedPersons })
+        .update({ linked_persons: updatedPersons as any })
         .eq("id", propertyId);
 
       if (error) throw error;
@@ -109,7 +109,7 @@ export function LinkedPersonsDialog({ propertyId, open, onOpenChange }: LinkedPe
 
       const { error } = await supabase
         .from("properties")
-        .update({ linked_persons: updatedPersons })
+        .update({ linked_persons: updatedPersons as any })
         .eq("id", propertyId);
 
       if (error) throw error;

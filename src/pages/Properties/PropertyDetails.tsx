@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,19 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
   Edit, FileText, Trash2, MapPin, Building2, Calendar, User, Phone, Mail, 
   FileCheck, AlertCircle, Image, Camera, Home, DollarSign, Clock, 
-  Shield, TrendingUp, Upload, Eye, UserPlus, Briefcase
+  Shield, TrendingUp, Upload, Eye, UserPlus, Briefcase, Settings
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +43,12 @@ const PropertyDetails = () => {
   // Estados para dialogs
   const [visitDialogOpen, setVisitDialogOpen] = useState(false);
   const [personsDialogOpen, setPersonsDialogOpen] = useState(false);
+  
+  // Estados para Google Calendar
+  const [calendarUrl, setCalendarUrl] = useState<string>("");
+  const [tempCalendarUrl, setTempCalendarUrl] = useState<string>("");
+  const [calendarConfigOpen, setCalendarConfigOpen] = useState(false);
+  const [userId, setUserId] = useState<string>("");
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", id],
@@ -79,6 +95,49 @@ const PropertyDetails = () => {
 
   const activeContract = contracts?.find(c => c.status === "active");
   const pendingInvoices = invoices?.filter(inv => inv.status === "pending") || [];
+  
+  // Buscar usuário autenticado e configuração do calendar
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        fetchCalendarConfig(user.id);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const fetchCalendarConfig = async (uid: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("google_calendar_embed_url")
+      .eq("id", uid)
+      .single();
+    
+    if (data?.google_calendar_embed_url) {
+      setCalendarUrl(data.google_calendar_embed_url);
+      setTempCalendarUrl(data.google_calendar_embed_url);
+    }
+  };
+
+  const saveCalendarConfig = async () => {
+    if (!userId) return;
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ google_calendar_embed_url: tempCalendarUrl })
+      .eq("id", userId);
+    
+    if (error) {
+      toast.error("Erro ao salvar configuração");
+      return;
+    }
+    
+    setCalendarUrl(tempCalendarUrl);
+    setCalendarConfigOpen(false);
+    toast.success("Agenda configurada com sucesso!");
+  };
   
   // Handlers para upload de arquivos
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -580,19 +639,90 @@ const PropertyDetails = () => {
                 {/* Visitas e Propostas */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Calendar className="h-5 w-5" />
-                      Visitas e Propostas
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Calendar className="h-5 w-5" />
+                        Visitas e Propostas
+                      </CardTitle>
+                      <Dialog open={calendarConfigOpen} onOpenChange={setCalendarConfigOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px]">
+                          <DialogHeader>
+                            <DialogTitle>Integrar Agenda Google</DialogTitle>
+                            <DialogDescription>
+                              Cole o link de incorporação da sua agenda do Google Calendar.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="calendar-url">URL do Google Calendar</Label>
+                              <Input
+                                id="calendar-url"
+                                placeholder="https://calendar.google.com/calendar/embed?src=..."
+                                value={tempCalendarUrl}
+                                onChange={(e) => setTempCalendarUrl(e.target.value)}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Para obter a URL, abra o Google Calendar, vá em Configurações {'>'} 
+                              Configurações da sua agenda {'>'} Integrar agenda {'>'} copie a URL de incorporação.
+                            </p>
+                          </div>
+                          <div className="flex justify-end gap-3">
+                            <Button variant="outline" onClick={() => setCalendarConfigOpen(false)}>
+                              Cancelar
+                            </Button>
+                            <Button onClick={saveCalendarConfig}>
+                              Salvar
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Nenhuma visita registrada</p>
-                      <Button variant="outline" className="w-full" size="sm">
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Agendar Visita
-                      </Button>
-                    </div>
+                    {calendarUrl ? (
+                      <div className="space-y-3">
+                        <div className="rounded-lg overflow-hidden border">
+                          <iframe 
+                            src={calendarUrl} 
+                            width="100%" 
+                            height="400"
+                            frameBorder="0"
+                            scrolling="no"
+                            title="Google Calendar"
+                          />
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          size="sm"
+                          onClick={() => setVisitDialogOpen(true)}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          Agendar Visita Manual
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Configure sua agenda do Google para visualizar aqui
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          size="sm"
+                          onClick={() => setVisitDialogOpen(true)}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          Agendar Visita
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -615,6 +745,18 @@ const PropertyDetails = () => {
           </div>
         </main>
       </div>
+      
+      {/* Dialogs */}
+      <ScheduleVisitDialog 
+        open={visitDialogOpen} 
+        onOpenChange={setVisitDialogOpen}
+        propertyId={id || ""}
+      />
+      <LinkedPersonsDialog
+        open={personsDialogOpen}
+        onOpenChange={setPersonsDialogOpen}
+        propertyId={id || ""}
+      />
     </div>
   );
 };
