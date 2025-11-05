@@ -27,41 +27,41 @@ export const PropertySummaryCard = ({ unavailable, contracted, available }: Prop
                 cy="80"
                 r="70"
                 fill="none"
-                stroke="#e5e7eb"
+                stroke="hsl(var(--border))"
                 strokeWidth="20"
               />
               
-              {/* Contracted segment (blue) */}
+              {/* Contracted segment (info) */}
               <circle
                 cx="80"
                 cy="80"
                 r="70"
                 fill="none"
-                stroke="#3b82f6"
+                stroke="hsl(var(--info))"
                 strokeWidth="20"
                 strokeDasharray={`${(contractedPercentage / 100) * 440} 440`}
                 strokeDashoffset="0"
               />
               
-              {/* Available segment (cyan) */}
+              {/* Available segment (success) */}
               <circle
                 cx="80"
                 cy="80"
                 r="70"
                 fill="none"
-                stroke="#06b6d4"
+                stroke="hsl(var(--success))"
                 strokeWidth="20"
                 strokeDasharray={`${(availablePercentage / 100) * 440} 440`}
                 strokeDashoffset={`${-(contractedPercentage / 100) * 440}`}
               />
               
-              {/* Unavailable segment (orange) */}
+              {/* Unavailable segment (warning) */}
               <circle
                 cx="80"
                 cy="80"
                 r="70"
                 fill="none"
-                stroke="#f97316"
+                stroke="hsl(var(--warning))"
                 strokeWidth="20"
                 strokeDasharray={`${(unavailablePercentage / 100) * 440} 440`}
                 strokeDashoffset={`${-((contractedPercentage + availablePercentage) / 100) * 440}`}
@@ -73,26 +73,26 @@ export const PropertySummaryCard = ({ unavailable, contracted, available }: Prop
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-orange-500" />
-              <span className="text-sm text-gray-600">Indisponíveis</span>
+              <div className="h-3 w-3 rounded-full bg-warning" />
+              <span className="text-sm text-muted-foreground">Indisponíveis</span>
             </div>
-            <span className="text-lg font-bold text-orange-500">{unavailable}</span>
+            <span className="text-lg font-bold text-warning">{unavailable}</span>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-blue-500" />
-              <span className="text-sm text-gray-600">Contratados</span>
+              <div className="h-3 w-3 rounded-full bg-info" />
+              <span className="text-sm text-muted-foreground">Contratados</span>
             </div>
-            <span className="text-lg font-bold text-blue-500">{contracted}</span>
+            <span className="text-lg font-bold text-info">{contracted}</span>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-cyan-500" />
-              <span className="text-sm text-gray-600">Disponíveis</span>
+              <div className="h-3 w-3 rounded-full bg-success" />
+              <span className="text-sm text-muted-foreground">Disponíveis</span>
             </div>
-            <span className="text-lg font-bold text-cyan-500">{available}</span>
+            <span className="text-lg font-bold text-success">{available}</span>
           </div>
         </div>
       </CardContent>

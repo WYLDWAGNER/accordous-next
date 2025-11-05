@@ -14,8 +14,8 @@ const Index = () => {
               icon={FileText}
               title="Anúncios"
               stats={[
-                { label: "Propostas", value: "0", color: "bg-blue-500" },
-                { label: "Anúncios", value: "0", color: "bg-blue-500" },
+                { label: "Propostas", value: "0", color: "bg-info" },
+                { label: "Anúncios", value: "0", color: "bg-info" },
               ]}
             />
             
@@ -23,8 +23,8 @@ const Index = () => {
               icon={DollarSign}
               title="Cobranças"
               stats={[
-                { label: "Em aberto", value: "R$ 29.637,61", color: "bg-orange-500" },
-                { label: "Recebidas", value: "R$ 70.054,27", color: "bg-green-500" },
+                { label: "Em aberto", value: "R$ 29.637,61", color: "bg-warning" },
+                { label: "Recebidas", value: "R$ 70.054,27", color: "bg-success" },
               ]}
             />
             
@@ -32,8 +32,8 @@ const Index = () => {
               icon={FileCheck}
               title="Contratos"
               stats={[
-                { label: "Ativos", value: "72", color: "bg-blue-500" },
-                { label: "A vencer", value: "31", color: "bg-orange-500" },
+                { label: "Ativos", value: "72", color: "bg-info" },
+                { label: "A vencer", value: "31", color: "bg-warning" },
               ]}
             />
             
@@ -41,8 +41,8 @@ const Index = () => {
               icon={Users2}
               title="Leads"
               stats={[
-                { label: "Novas respostas", value: "0", color: "bg-blue-500" },
-                { label: "Agendados", value: "0", color: "bg-green-500" },
+                { label: "Novas respostas", value: "0", color: "bg-info" },
+                { label: "Agendados", value: "0", color: "bg-success" },
               ]}
             />
           </div>

@@ -12,10 +12,10 @@ export const CalculatorCard = ({ icon: Icon, title, onClick }: CalculatorCardPro
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onClick}>
       <CardContent className="flex flex-col items-center justify-center p-6 space-y-3">
-        <div className="rounded-lg bg-blue-50 p-4">
-          <Icon className="h-8 w-8 text-blue-600" />
+        <div className="rounded-lg bg-info/10 p-4">
+          <Icon className="h-8 w-8 text-info" />
         </div>
-        <h3 className="text-sm font-medium text-center text-gray-700">{title}</h3>
+        <h3 className="text-sm font-medium text-center">{title}</h3>
       </CardContent>
     </Card>
   );
