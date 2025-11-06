@@ -4,37 +4,36 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Invoice {
-  client: string;
-  property: string;
-  dueDate: string;
-  amount: string;
-  status: "pending" | "paid" | "overdue";
+  id: string;
+  contract?: { tenant_name: string };
+  property?: { name: string };
+  due_date: string;
+  total_amount: number;
+  status: string;
 }
 
-const mockInvoices: Invoice[] = [
-  {
-    client: "Miguel Ramon Deyan Balda",
-    property: "Rua Parati, 233, Bloco 2 AP 19, Guarituba - Piraquara/PR",
-    dueDate: "30/10/2025",
-    amount: "R$ 1.081,80",
-    status: "pending",
-  },
-];
+interface InvoicesTableProps {
+  invoices: Invoice[];
+}
 
-const getStatusBadge = (status: Invoice["status"]) => {
+const getStatusBadge = (status: string) => {
   const variants = {
     pending: { variant: "secondary" as const, label: "Pendente" },
     paid: { variant: "default" as const, label: "Pago" },
     overdue: { variant: "destructive" as const, label: "Vencido" },
   };
 
-  const config = variants[status];
+  const config = variants[status as keyof typeof variants] || variants.pending;
   return <Badge variant={config.variant}>{config.label}</Badge>;
 };
 
-export const InvoicesTable = () => {
+export const InvoicesTable = ({ invoices }: InvoicesTableProps) => {
+  const navigate = useNavigate();
   return (
     <Card>
       <CardHeader className="border-b">
@@ -61,27 +60,54 @@ export const InvoicesTable = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockInvoices.map((invoice, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{invoice.client}</TableCell>
-                  <TableCell className="max-w-xs truncate">{invoice.property}</TableCell>
-                  <TableCell>{invoice.dueDate}</TableCell>
-                  <TableCell className="font-semibold">{invoice.amount}</TableCell>
-                  <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
+              {invoices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Nenhuma fatura encontrada
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                invoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">
+                      {invoice.contract?.tenant_name || "N/A"}
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {invoice.property?.name || "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(invoice.due_date), "dd/MM/yyyy", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className="font-semibold">
+                      R$ {Number(invoice.total_amount || 0).toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => navigate(`/invoices/${invoice.id}`)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
         
         <div className="flex justify-center border-t p-4">
-          <Button variant="link" className="text-blue-600">
-            VISUALIZAR FATURAS
+          <Button 
+            variant="link" 
+            className="text-info"
+            onClick={() => navigate("/invoices")}
+          >
+            VISUALIZAR TODAS AS FATURAS
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
