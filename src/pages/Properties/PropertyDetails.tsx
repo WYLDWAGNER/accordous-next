@@ -139,19 +139,145 @@ const PropertyDetails = () => {
     toast.success("Agenda configurada com sucesso!");
   };
   
-  // Handlers para upload de arquivos
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload de fotos
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedPhotos(files);
-    toast.success(`${files.length} foto(s) selecionada(s)`);
-    // TODO: Upload para Supabase Storage bucket 'property-photos'
+    if (files.length === 0) return;
+    
+    try {
+      const uploadedPaths: string[] = [];
+      
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('property-photos')
+          .upload(fileName, file);
+        
+        if (uploadError) throw uploadError;
+        uploadedPaths.push(fileName);
+      }
+      
+      // Buscar fotos existentes
+      const existingPhotos = (property?.photos as string[]) || [];
+      const updatedPhotos = [...existingPhotos, ...uploadedPaths];
+      
+      // Atualizar banco de dados
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ photos: updatedPhotos })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success(`${files.length} foto(s) adicionada(s) com sucesso!`);
+      window.location.reload(); // Recarrega para atualizar
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao fazer upload das fotos');
+    }
   };
   
-  const handleDocSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload de documentos
+  const handleDocSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedDocs(files);
-    toast.success(`${files.length} documento(s) selecionado(s)`);
-    // TODO: Upload para Supabase Storage bucket 'property-documents'
+    if (files.length === 0) return;
+    
+    try {
+      const uploadedDocs: any[] = [];
+      
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('property-documents')
+          .upload(fileName, file);
+        
+        if (uploadError) throw uploadError;
+        
+        uploadedDocs.push({
+          name: file.name,
+          path: fileName,
+          uploadedAt: new Date().toISOString()
+        });
+      }
+      
+      // Buscar documentos existentes
+      const existingDocs = (property?.documents as any[]) || [];
+      const updatedDocs = [...existingDocs, ...uploadedDocs];
+      
+      // Atualizar banco de dados
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ documents: updatedDocs })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success(`${files.length} documento(s) adicionado(s) com sucesso!`);
+      window.location.reload(); // Recarrega para atualizar
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao fazer upload dos documentos');
+    }
+  };
+  
+  // Deletar foto
+  const handleDeletePhoto = async (photoPath: string) => {
+    try {
+      // Remover do storage
+      const { error: storageError } = await supabase.storage
+        .from('property-photos')
+        .remove([photoPath]);
+      
+      if (storageError) throw storageError;
+      
+      // Atualizar banco de dados
+      const photos = (property?.photos as string[]) || [];
+      const updatedPhotos = photos.filter((p: string) => p !== photoPath);
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ photos: updatedPhotos })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success('Foto removida com sucesso!');
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Erro ao deletar foto:', error);
+      toast.error('Erro ao remover foto');
+    }
+  };
+  
+  // Deletar documento
+  const handleDeleteDoc = async (docPath: string) => {
+    try {
+      // Remover do storage
+      const { error: storageError } = await supabase.storage
+        .from('property-documents')
+        .remove([docPath]);
+      
+      if (storageError) throw storageError;
+      
+      // Atualizar banco de dados
+      const docs = (property?.documents as any[]) || [];
+      const updatedDocs = docs.filter((d: any) => d.path !== docPath);
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ documents: updatedDocs })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success('Documento removido com sucesso!');
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Erro ao deletar documento:', error);
+      toast.error('Erro ao remover documento');
+    }
   };
 
   if (isLoading) {
@@ -585,18 +711,57 @@ const PropertyDetails = () => {
                       className="hidden"
                       onChange={handlePhotoSelect}
                     />
-                    <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center gap-3">
-                      <Camera className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">Nenhuma foto cadastrada</p>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => photoInputRef.current?.click()}
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Adicionar Fotos
-                      </Button>
-                    </div>
+                    {property?.photos && Array.isArray(property.photos) && property.photos.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          {(property.photos as string[]).map((photoPath: string, idx: number) => {
+                            const { data: photoData } = supabase.storage
+                              .from('property-photos')
+                              .getPublicUrl(photoPath);
+                            
+                            return (
+                              <div key={idx} className="relative group">
+                                <img 
+                                  src={photoData.publicUrl} 
+                                  alt={`Foto ${idx + 1}`}
+                                  className="w-full h-32 object-cover rounded-lg"
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="destructive"
+                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleDeletePhoto(photoPath)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => photoInputRef.current?.click()}
+                        >
+                          <Upload className="mr-2 h-4 w-4" />
+                          Adicionar Mais Fotos
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center gap-3">
+                        <Camera className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Nenhuma foto cadastrada</p>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => photoInputRef.current?.click()}
+                        >
+                          <Upload className="mr-2 h-4 w-4" />
+                          Adicionar Fotos
+                        </Button>
+                      </div>
+                    )}
                     <Button variant="link" className="w-full mt-3">
                       <Camera className="mr-2 h-4 w-4" />
                       Solicitar Fotógrafo
@@ -622,16 +787,48 @@ const PropertyDetails = () => {
                       onChange={handleDocSelect}
                     />
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Nenhum documento cadastrado</p>
-                      <Button 
-                        variant="outline" 
-                        className="w-full" 
-                        size="sm"
-                        onClick={() => docInputRef.current?.click()}
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Cadastrar Documento
-                      </Button>
+                      {property?.documents && Array.isArray(property.documents) && (property.documents as any[]).length > 0 ? (
+                        <>
+                          {(property.documents as any[]).map((doc: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between p-2 border rounded-lg group hover:bg-muted/50">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm">{doc.name}</span>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleDeleteDoc(doc.path)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button 
+                            variant="outline" 
+                            className="w-full" 
+                            size="sm"
+                            onClick={() => docInputRef.current?.click()}
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Adicionar Mais Documentos
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm text-muted-foreground">Nenhum documento cadastrado</p>
+                          <Button 
+                            variant="outline" 
+                            className="w-full" 
+                            size="sm"
+                            onClick={() => docInputRef.current?.click()}
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Cadastrar Documento
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

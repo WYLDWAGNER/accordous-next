@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +42,23 @@ const contractTemplates = [
   "Contrato de Locação por temporada",
   "Contrato de sublocação de imóvel residencial/comercial",
 ];
+
+// Descrições dos templates
+const getTemplateDescription = (template: string): string => {
+  const descriptions: Record<string, string> = {
+    "Contrato de Prestação de Serviços de Corretagem Imobiliária": "Para formalizar serviços de corretagem entre imobiliárias e clientes",
+    "Contrato de locação de garagem – título de capitalização": "Locação de espaço para estacionamento com título de capitalização como garantia",
+    "Recibo de Chaves e Rescisão Provisória": "Documento para entrega de chaves e rescisão temporária de contrato",
+    "Distrato de contrato de locação": "Acordo formal para encerramento de contrato de locação",
+    "Locação de Imóvel Residencial": "Contrato padrão para locação de imóveis residenciais",
+    "Termo de Rescisão de Contrato de Locação": "Documento formal para finalizar contrato de locação",
+    "Contrato de Comodato": "Empréstimo gratuito de imóvel por tempo determinado",
+    "Contrato particular de promessa de compra e venda – À vista": "Compromisso de compra e venda com pagamento integral à vista",
+    "Contrato de Locação por temporada": "Para locações de curta duração, ideais para férias",
+    "Contrato de sublocação de imóvel residencial/comercial": "Permite ao locatário sublocar o imóvel a terceiros",
+  };
+  return descriptions[template] || "Template de contrato profissional";
+};
 
 const DocumentsList = () => {
   const navigate = useNavigate();
@@ -142,20 +166,49 @@ const DocumentsList = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Criar a partir de um modelo de contrato</CardTitle>
+                    <CardDescription>Escolha um template para criar seu contrato rapidamente</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                      {contractTemplates.map((template, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          className="h-auto py-3 px-3 flex flex-col items-center gap-2 text-center hover:bg-accent"
-                        >
-                          <FileText className="h-6 w-6" />
-                          <span className="text-xs leading-tight">{template}</span>
-                        </Button>
-                      ))}
-                    </div>
+                    <Carousel
+                      opts={{
+                        align: "start",
+                        loop: false,
+                      }}
+                      className="w-full"
+                    >
+                      <CarouselContent className="-ml-4">
+                        {contractTemplates.map((template, index) => (
+                          <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                            <Card className="cursor-pointer hover:shadow-lg transition-all hover:border-primary">
+                              <CardHeader className="space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <FileText className="h-6 w-6 text-primary" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <CardTitle className="text-base leading-tight mb-2">
+                                    {template}
+                                  </CardTitle>
+                                  <CardDescription className="text-xs">
+                                    {getTemplateDescription(template)}
+                                  </CardDescription>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <Button variant="outline" className="w-full" size="sm">
+                                  Usar Template
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <div className="flex items-center justify-center gap-2 mt-4">
+                        <CarouselPrevious />
+                        <CarouselNext />
+                      </div>
+                    </Carousel>
                   </CardContent>
                 </Card>
 

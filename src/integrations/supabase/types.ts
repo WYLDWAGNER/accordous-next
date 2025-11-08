@@ -732,6 +732,7 @@ export type Database = {
           construction_year: number | null
           country: string | null
           created_at: string | null
+          documents: Json | null
           id: string
           land_area: number | null
           linked_persons: Json | null
@@ -742,6 +743,7 @@ export type Database = {
           owner_contact: string | null
           owner_email: string | null
           owner_name: string | null
+          photos: string[] | null
           postal_code: string | null
           property_type: string
           registry_data: string | null
@@ -761,6 +763,7 @@ export type Database = {
           construction_year?: number | null
           country?: string | null
           created_at?: string | null
+          documents?: Json | null
           id?: string
           land_area?: number | null
           linked_persons?: Json | null
@@ -771,6 +774,7 @@ export type Database = {
           owner_contact?: string | null
           owner_email?: string | null
           owner_name?: string | null
+          photos?: string[] | null
           postal_code?: string | null
           property_type: string
           registry_data?: string | null
@@ -790,6 +794,7 @@ export type Database = {
           construction_year?: number | null
           country?: string | null
           created_at?: string | null
+          documents?: Json | null
           id?: string
           land_area?: number | null
           linked_persons?: Json | null
@@ -800,6 +805,7 @@ export type Database = {
           owner_contact?: string | null
           owner_email?: string | null
           owner_name?: string | null
+          photos?: string[] | null
           postal_code?: string | null
           property_type?: string
           registry_data?: string | null
