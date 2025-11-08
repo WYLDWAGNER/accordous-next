@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Edit, FileText, Trash2, MapPin, Building2, Calendar, User, Phone, Mail, 
   FileCheck, AlertCircle, Image, Camera, Home, DollarSign, Clock, 
-  Shield, TrendingUp, Upload, Eye, UserPlus, Briefcase, Settings
+  Shield, TrendingUp, Upload, Eye, UserPlus, Briefcase, Settings, Star
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +43,15 @@ const PropertyDetails = () => {
   // Estados para dialogs
   const [visitDialogOpen, setVisitDialogOpen] = useState(false);
   const [personsDialogOpen, setPersonsDialogOpen] = useState(false);
+  
+  // Estados para drag and drop
+  const [isPhotosDragging, setIsPhotosDragging] = useState(false);
+  const [isDocsDragging, setIsDocsDragging] = useState(false);
+  
+  // Estados para preview de PDF
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>("");
+  const [selectedPdfName, setSelectedPdfName] = useState<string>("");
   
   // Estados para Google Calendar
   const [calendarUrl, setCalendarUrl] = useState<string>("");
@@ -277,6 +286,156 @@ const PropertyDetails = () => {
     } catch (error: any) {
       console.error('Erro ao deletar documento:', error);
       toast.error('Erro ao remover documento');
+    }
+  };
+  
+  // Definir foto de capa
+  const handleSetCoverPhoto = async (photoPath: string) => {
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .update({ cover_photo: photoPath })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success('Foto de capa definida com sucesso!');
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Erro ao definir foto de capa:', error);
+      toast.error('Erro ao definir foto de capa');
+    }
+  };
+  
+  // Abrir preview de PDF
+  const handleOpenPdfPreview = (doc: any) => {
+    const { data } = supabase.storage
+      .from('property-documents')
+      .getPublicUrl(doc.path);
+    
+    setSelectedPdfUrl(data.publicUrl);
+    setSelectedPdfName(doc.name);
+    setPdfPreviewOpen(true);
+  };
+  
+  // Drag and Drop - Fotos
+  const handlePhotosDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsPhotosDragging(true);
+  };
+  
+  const handlePhotosDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsPhotosDragging(false);
+  };
+  
+  const handlePhotosDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsPhotosDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    if (files.length === 0) {
+      toast.error('Nenhuma imagem válida encontrada');
+      return;
+    }
+    
+    try {
+      const uploadedPaths: string[] = [];
+      
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('property-photos')
+          .upload(fileName, file);
+        
+        if (uploadError) throw uploadError;
+        uploadedPaths.push(fileName);
+      }
+      
+      const existingPhotos = (property?.photos as string[]) || [];
+      const updatedPhotos = [...existingPhotos, ...uploadedPaths];
+      
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ photos: updatedPhotos })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success(`${files.length} foto(s) adicionada(s) com sucesso!`);
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao fazer upload das fotos');
+    }
+  };
+  
+  // Drag and Drop - Documentos
+  const handleDocsDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDocsDragging(true);
+  };
+  
+  const handleDocsDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDocsDragging(false);
+  };
+  
+  const handleDocsDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDocsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type === 'application/pdf' || 
+      file.type === 'application/msword' ||
+      file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    );
+    
+    if (files.length === 0) {
+      toast.error('Apenas arquivos PDF, DOC e DOCX são permitidos');
+      return;
+    }
+    
+    try {
+      const uploadedDocs: any[] = [];
+      
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('property-documents')
+          .upload(fileName, file);
+        
+        if (uploadError) throw uploadError;
+        
+        uploadedDocs.push({
+          name: file.name,
+          path: fileName,
+          uploadedAt: new Date().toISOString()
+        });
+      }
+      
+      const existingDocs = (property?.documents as any[]) || [];
+      const updatedDocs = [...existingDocs, ...uploadedDocs];
+      
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ documents: updatedDocs })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success(`${files.length} documento(s) adicionado(s) com sucesso!`);
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao fazer upload dos documentos');
     }
   };
 
@@ -718,22 +877,42 @@ const PropertyDetails = () => {
                             const { data: photoData } = supabase.storage
                               .from('property-photos')
                               .getPublicUrl(photoPath);
+                            const isCover = property.cover_photo === photoPath;
                             
                             return (
                               <div key={idx} className="relative group">
                                 <img 
                                   src={photoData.publicUrl} 
                                   alt={`Foto ${idx + 1}`}
-                                  className="w-full h-32 object-cover rounded-lg"
+                                  className={`w-full h-32 object-cover rounded-lg ${isCover ? 'ring-2 ring-primary' : ''}`}
                                 />
-                                <Button
-                                  size="icon"
-                                  variant="destructive"
-                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleDeletePhoto(photoPath)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                {isCover && (
+                                  <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1">
+                                    <Star className="h-3 w-3 fill-current" />
+                                    Capa
+                                  </div>
+                                )}
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {!isCover && (
+                                    <Button
+                                      size="icon"
+                                      variant="secondary"
+                                      className="h-8 w-8"
+                                      onClick={() => handleSetCoverPhoto(photoPath)}
+                                      title="Definir como capa"
+                                    >
+                                      <Star className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    className="h-8 w-8"
+                                    onClick={() => handleDeletePhoto(photoPath)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                             );
                           })}
@@ -749,16 +928,30 @@ const PropertyDetails = () => {
                         </Button>
                       </div>
                     ) : (
-                      <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center gap-3">
-                        <Camera className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Nenhuma foto cadastrada</p>
+                      <div 
+                        className={`aspect-video rounded-lg flex flex-col items-center justify-center gap-3 border-2 border-dashed transition-colors ${
+                          isPhotosDragging 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-muted-foreground/25 bg-muted'
+                        }`}
+                        onDragOver={handlePhotosDragOver}
+                        onDragLeave={handlePhotosDragLeave}
+                        onDrop={handlePhotosDrop}
+                      >
+                        <Camera className={`h-12 w-12 ${isPhotosDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {isPhotosDragging ? 'Solte as fotos aqui' : 'Arraste fotos ou clique para selecionar'}
+                          </p>
+                          <p className="text-xs text-muted-foreground/75">PNG, JPG ou WEBP</p>
+                        </div>
                         <Button 
                           size="sm" 
                           variant="outline"
                           onClick={() => photoInputRef.current?.click()}
                         >
                           <Upload className="mr-2 h-4 w-4" />
-                          Adicionar Fotos
+                          Selecionar Fotos
                         </Button>
                       </div>
                     )}
@@ -789,22 +982,35 @@ const PropertyDetails = () => {
                     <div className="space-y-2">
                       {property?.documents && Array.isArray(property.documents) && (property.documents as any[]).length > 0 ? (
                         <>
-                          {(property.documents as any[]).map((doc: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between p-2 border rounded-lg group hover:bg-muted/50">
-                              <div className="flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">{doc.name}</span>
+                          {(property.documents as any[]).map((doc: any, idx: number) => {
+                            const isPdf = doc.name.toLowerCase().endsWith('.pdf');
+                            
+                            return (
+                              <div key={idx} className="flex items-center justify-between p-2 border rounded-lg group hover:bg-muted/50 transition-colors">
+                                <div 
+                                  className="flex items-center gap-2 flex-1 cursor-pointer"
+                                  onClick={() => isPdf && handleOpenPdfPreview(doc)}
+                                >
+                                  <FileText className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm flex-1">{doc.name}</span>
+                                  {isPdf && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      <Eye className="h-3 w-3 mr-1" />
+                                      Preview
+                                    </Badge>
+                                  )}
+                                </div>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleDeleteDoc(doc.path)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
                               </div>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleDeleteDoc(doc.path)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          ))}
+                            );
+                          })}
                           <Button 
                             variant="outline" 
                             className="w-full" 
@@ -816,8 +1022,23 @@ const PropertyDetails = () => {
                           </Button>
                         </>
                       ) : (
-                        <>
-                          <p className="text-sm text-muted-foreground">Nenhum documento cadastrado</p>
+                        <div 
+                          className={`rounded-lg border-2 border-dashed p-6 flex flex-col items-center justify-center gap-3 transition-colors ${
+                            isDocsDragging 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-muted-foreground/25 bg-muted'
+                          }`}
+                          onDragOver={handleDocsDragOver}
+                          onDragLeave={handleDocsDragLeave}
+                          onDrop={handleDocsDrop}
+                        >
+                          <FileText className={`h-10 w-10 ${isDocsDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div className="text-center">
+                            <p className="text-sm text-muted-foreground mb-1">
+                              {isDocsDragging ? 'Solte os documentos aqui' : 'Arraste documentos ou clique para selecionar'}
+                            </p>
+                            <p className="text-xs text-muted-foreground/75">PDF, DOC ou DOCX</p>
+                          </div>
                           <Button 
                             variant="outline" 
                             className="w-full" 
@@ -825,9 +1046,9 @@ const PropertyDetails = () => {
                             onClick={() => docInputRef.current?.click()}
                           >
                             <Upload className="mr-2 h-4 w-4" />
-                            Cadastrar Documento
+                            Selecionar Documentos
                           </Button>
-                        </>
+                        </div>
                       )}
                     </div>
                   </CardContent>
@@ -944,8 +1165,8 @@ const PropertyDetails = () => {
       </div>
       
       {/* Dialogs */}
-      <ScheduleVisitDialog 
-        open={visitDialogOpen} 
+      <ScheduleVisitDialog
+        open={visitDialogOpen}
         onOpenChange={setVisitDialogOpen}
         propertyId={id || ""}
       />
@@ -954,6 +1175,28 @@ const PropertyDetails = () => {
         onOpenChange={setPersonsDialogOpen}
         propertyId={id || ""}
       />
+      
+      {/* PDF Preview Dialog */}
+      <Dialog open={pdfPreviewOpen} onOpenChange={setPdfPreviewOpen}>
+        <DialogContent className="max-w-4xl h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {selectedPdfName}
+            </DialogTitle>
+            <DialogDescription>
+              Visualização do documento PDF
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 w-full h-full">
+            <iframe
+              src={selectedPdfUrl}
+              className="w-full h-full rounded-lg border"
+              title="PDF Preview"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

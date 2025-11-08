@@ -731,6 +731,7 @@ export type Database = {
           complement: string | null
           construction_year: number | null
           country: string | null
+          cover_photo: string | null
           created_at: string | null
           documents: Json | null
           id: string
@@ -762,6 +763,7 @@ export type Database = {
           complement?: string | null
           construction_year?: number | null
           country?: string | null
+          cover_photo?: string | null
           created_at?: string | null
           documents?: Json | null
           id?: string
@@ -793,6 +795,7 @@ export type Database = {
           complement?: string | null
           construction_year?: number | null
           country?: string | null
+          cover_photo?: string | null
           created_at?: string | null
           documents?: Json | null
           id?: string
