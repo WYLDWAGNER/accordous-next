@@ -30,15 +30,15 @@ const FinancialDashboardComplete = () => {
 
   const [dataInicio, setDataInicio] = useState(firstDayOfMonth.toISOString().split('T')[0]);
   const [dataFim, setDataFim] = useState(lastDayOfMonth.toISOString().split('T')[0]);
-  const [selectedProperty, setSelectedProperty] = useState<string>('');
+  const [selectedProperty, setSelectedProperty] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
 
   const { data: resumo, isLoading: loadingResumo, refetch: refetchResumo } = useResumoFinanceiro(dataInicio, dataFim);
-  const { data: fluxoCaixa, isLoading: loadingFluxo } = useFluxoCaixa({ meses: 6, id_imovel: selectedProperty });
+  const { data: fluxoCaixa, isLoading: loadingFluxo } = useFluxoCaixa({ meses: 6, id_imovel: selectedProperty === 'all' ? undefined : selectedProperty });
   const { data: composicao, isLoading: loadingComposicao } = useComposicaoDespesas({ 
     data_inicio: dataInicio, 
     data_fim: dataFim,
-    id_imovel: selectedProperty 
+    id_imovel: selectedProperty === 'all' ? undefined : selectedProperty 
   });
   const { data: inadimplencia, isLoading: loadingInadimplencia } = useInadimplenciaPorImovel();
 
@@ -146,7 +146,7 @@ const FinancialDashboardComplete = () => {
                         <SelectValue placeholder="Todos os Imóveis" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos os Imóveis</SelectItem>
+                        <SelectItem value="all">Todos os Imóveis</SelectItem>
                         {properties?.map((prop) => (
                           <SelectItem key={prop.id} value={prop.id}>
                             {prop.name}
