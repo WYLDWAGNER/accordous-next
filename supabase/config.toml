@@ -35,3 +35,9 @@ verify_jwt = true
 
 [functions.invoice-reminders]
 verify_jwt = false
+
+[functions.generate-lancamentos-contrato]
+verify_jwt = true
+
+[functions.financial-dashboard]
+verify_jwt = true

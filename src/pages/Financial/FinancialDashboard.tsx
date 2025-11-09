@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,23 +7,54 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   TrendingUp, TrendingDown, DollarSign, AlertCircle, 
-  Calendar, RefreshCw, Download, Plus
+  Calendar, RefreshCw, Download, Plus, Receipt, PieChart, BarChart3
 } from "lucide-react";
 import { useResumoFinanceiro } from "@/hooks/useResumoFinanceiro";
+import { useFluxoCaixa, useComposicaoDespesas, useInadimplenciaPorImovel } from "@/hooks/useFinancialDashboard";
+import { LancamentoForm } from "@/components/Financial/LancamentoForm";
+import { BarChart, Bar, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const FinancialDashboard = () => {
-  // Período padrão: mês atual
+const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+const FinancialDashboardComplete = () => {
+  const navigate = useNavigate();
   const today = new Date();
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
   const [dataInicio, setDataInicio] = useState(firstDayOfMonth.toISOString().split('T')[0]);
   const [dataFim, setDataFim] = useState(lastDayOfMonth.toISOString().split('T')[0]);
+  const [selectedProperty, setSelectedProperty] = useState<string>('');
+  const [formOpen, setFormOpen] = useState(false);
 
-  const { data: resumo, isLoading, refetch } = useResumoFinanceiro(dataInicio, dataFim);
+  const { data: resumo, isLoading: loadingResumo, refetch: refetchResumo } = useResumoFinanceiro(dataInicio, dataFim);
+  const { data: fluxoCaixa, isLoading: loadingFluxo } = useFluxoCaixa({ meses: 6, id_imovel: selectedProperty });
+  const { data: composicao, isLoading: loadingComposicao } = useComposicaoDespesas({ 
+    data_inicio: dataInicio, 
+    data_fim: dataFim,
+    id_imovel: selectedProperty 
+  });
+  const { data: inadimplencia, isLoading: loadingInadimplencia } = useInadimplenciaPorImovel();
+
+  // Buscar imóveis
+  const { data: properties } = useQuery({
+    queryKey: ['properties-filter'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -55,53 +87,74 @@ const FinancialDashboard = () => {
     setDataFim(end.toISOString().split('T')[0]);
   };
 
+  const formatMes = (mesStr: string) => {
+    const [ano, mes] = mesStr.split('-');
+    return new Date(parseInt(ano), parseInt(mes) - 1).toLocaleDateString('pt-BR', { 
+      month: 'short', 
+      year: '2-digit' 
+    });
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Resumo Financeiro" />
+        <Header title="Dashboard Financeiro" />
         
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
-            {/* Filtros de Período */}
+            {/* Filtros */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Período de Análise
-                </CardTitle>
-                <CardDescription>
-                  Selecione o período para visualizar o resumo financeiro
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Filtros e Período
+                    </CardTitle>
+                    <CardDescription>
+                      Configure os filtros para análise financeira
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => navigate('/financeiro/baixa')}>
+                      <Receipt className="mr-2 h-4 w-4" />
+                      Baixar Pagamentos
+                    </Button>
+                    <Button onClick={() => setFormOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Novo Lançamento
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => handlePeriodChange('current')}
-                  >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <Button variant="outline" onClick={() => handlePeriodChange('current')}>
                     Mês Atual
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handlePeriodChange('previous')}
-                  >
+                  <Button variant="outline" onClick={() => handlePeriodChange('previous')}>
                     Mês Anterior
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handlePeriodChange('year')}
-                  >
+                  <Button variant="outline" onClick={() => handlePeriodChange('year')}>
                     Ano Atual
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => refetch()}
-                  >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Atualizar
-                  </Button>
+                  <div className="md:col-span-2">
+                    <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Todos os Imóveis" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todos os Imóveis</SelectItem>
+                        {properties?.map((prop) => (
+                          <SelectItem key={prop.id} value={prop.id}>
+                            {prop.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -127,8 +180,8 @@ const FinancialDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Cards de Resumo */}
-            {isLoading ? (
+            {/* KPIs */}
+            {loadingResumo ? (
               <div className="grid grid-cols-4 gap-6">
                 {[...Array(4)].map((_, i) => (
                   <Card key={i}>
@@ -143,16 +196,11 @@ const FinancialDashboard = () => {
               </div>
             ) : resumo ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Total Receitas */}
                 <Card className="border-green-200 bg-green-50/50">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Total Receitas
-                      </p>
-                      <div className="rounded-full p-2 bg-green-500/10">
-                        <TrendingUp className="h-5 w-5 text-green-600" />
-                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Receitas</p>
+                      <TrendingUp className="h-5 w-5 text-green-600" />
                     </div>
                     <p className="text-3xl font-bold text-green-600">
                       {formatCurrency(resumo.total_receitas)}
@@ -163,16 +211,11 @@ const FinancialDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Total Despesas */}
                 <Card className="border-red-200 bg-red-50/50">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Total Despesas
-                      </p>
-                      <div className="rounded-full p-2 bg-red-500/10">
-                        <TrendingDown className="h-5 w-5 text-red-600" />
-                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Despesas</p>
+                      <TrendingDown className="h-5 w-5 text-red-600" />
                     </div>
                     <p className="text-3xl font-bold text-red-600">
                       {formatCurrency(resumo.total_despesas)}
@@ -183,39 +226,29 @@ const FinancialDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Saldo */}
-                <Card className={`border-${resumo.saldo >= 0 ? 'blue' : 'orange'}-200 bg-${resumo.saldo >= 0 ? 'blue' : 'orange'}-50/50`}>
+                <Card className="border-blue-200 bg-blue-50/50">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Saldo do Período
-                      </p>
-                      <div className={`rounded-full p-2 bg-${resumo.saldo >= 0 ? 'blue' : 'orange'}-500/10`}>
-                        <DollarSign className={`h-5 w-5 text-${resumo.saldo >= 0 ? 'blue' : 'orange'}-600`} />
-                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">Saldo</p>
+                      <DollarSign className="h-5 w-5 text-blue-600" />
                     </div>
-                    <p className={`text-3xl font-bold text-${resumo.saldo >= 0 ? 'blue' : 'orange'}-600`}>
+                    <p className={`text-3xl font-bold ${resumo.saldo >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                       {formatCurrency(resumo.saldo)}
                     </p>
                     <Badge 
                       variant="outline" 
-                      className={`mt-2 border-${resumo.saldo >= 0 ? 'blue' : 'orange'}-600 text-${resumo.saldo >= 0 ? 'blue' : 'orange'}-600`}
+                      className={`mt-2 ${resumo.saldo >= 0 ? 'border-blue-600 text-blue-600' : 'border-orange-600 text-orange-600'}`}
                     >
                       {resumo.saldo >= 0 ? 'Positivo' : 'Negativo'}
                     </Badge>
                   </CardContent>
                 </Card>
 
-                {/* Inadimplência */}
                 <Card className="border-yellow-200 bg-yellow-50/50">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Inadimplência Total
-                      </p>
-                      <div className="rounded-full p-2 bg-yellow-500/10">
-                        <AlertCircle className="h-5 w-5 text-yellow-600" />
-                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">Inadimplência</p>
+                      <AlertCircle className="h-5 w-5 text-yellow-600" />
                     </div>
                     <p className="text-3xl font-bold text-yellow-600">
                       {formatCurrency(resumo.total_inadimplencia)}
@@ -228,66 +261,139 @@ const FinancialDashboard = () => {
               </div>
             ) : null}
 
-            {/* Resumo Detalhado */}
-            {resumo && (
+            {/* Gráficos */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Fluxo de Caixa */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Análise Detalhada</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Fluxo de Caixa (Últimos 6 Meses)
+                  </CardTitle>
                   <CardDescription>
-                    Análise do período de {new Date(dataInicio).toLocaleDateString('pt-BR')} até {new Date(dataFim).toLocaleDateString('pt-BR')}
+                    Receitas vs Despesas mensais
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <span className="text-sm text-muted-foreground">Receitas Pagas</span>
-                        <span className="font-semibold text-green-600">
-                          {formatCurrency(resumo.total_receitas)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <span className="text-sm text-muted-foreground">Despesas Pagas</span>
-                        <span className="font-semibold text-red-600">
-                          {formatCurrency(resumo.total_despesas)}
-                        </span>
-                      </div>
+                <CardContent>
+                  {loadingFluxo ? (
+                    <div className="h-[300px] flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-3 border rounded-lg bg-muted/50">
-                        <span className="text-sm font-medium">Resultado Líquido</span>
-                        <span className={`font-bold ${resumo.saldo >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                          {formatCurrency(resumo.saldo)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg bg-yellow-50">
-                        <span className="text-sm font-medium">Valores em Atraso</span>
-                        <span className="font-bold text-yellow-600">
-                          {formatCurrency(resumo.total_inadimplencia)}
-                        </span>
-                      </div>
+                  ) : fluxoCaixa && fluxoCaixa.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={fluxoCaixa}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="mes" tickFormatter={formatMes} />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value: number) => formatCurrency(value)}
+                          labelFormatter={formatMes}
+                        />
+                        <Legend />
+                        <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
+                        <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      Sem dados para o período selecionado
                     </div>
-                  </div>
-
-                  <div className="pt-4 border-t flex gap-3">
-                    <Button className="flex-1">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Novo Lançamento
-                    </Button>
-                    <Button variant="outline">
-                      <Download className="mr-2 h-4 w-4" />
-                      Exportar Relatório
-                    </Button>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
+
+              {/* Composição das Despesas */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5" />
+                    Composição das Despesas
+                  </CardTitle>
+                  <CardDescription>
+                    Distribuição por categoria
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loadingComposicao ? (
+                    <div className="h-[300px] flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                    </div>
+                  ) : composicao && composicao.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RechartsPie>
+                        <Pie
+                          data={composicao}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ categoria, percent }) => `${categoria} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="valor"
+                        >
+                          {composicao.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      </RechartsPie>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      Sem despesas no período selecionado
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Inadimplência por Imóvel */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  Inadimplência por Imóvel
+                </CardTitle>
+                <CardDescription>
+                  Valores atrasados agrupados por propriedade
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingInadimplencia ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  </div>
+                ) : inadimplencia && inadimplencia.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={inadimplencia} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="nome_imovel" type="category" width={150} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Bar dataKey="total_inadimplencia" fill="#f59e0b" name="Inadimplência" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Nenhuma inadimplência registrada
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>
+
+      <LancamentoForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSuccess={() => {
+          refetchResumo();
+          toast.success('Lançamento criado com sucesso!');
+        }}
+      />
     </div>
   );
 };
 
-export default FinancialDashboard;
+export default FinancialDashboardComplete;

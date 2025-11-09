@@ -29,6 +29,7 @@ import NotFound from "./pages/NotFound";
 import LicenseManagement from "./pages/Admin/LicenseManagement";
 import NotificationSettings from "./pages/Notifications/NotificationSettings";
 import FinancialDashboard from "./pages/Financial/FinancialDashboard";
+import BaixaPagamentos from "./pages/Financial/BaixaPagamentos";
 
 const queryClient = new QueryClient();
 
@@ -124,6 +125,11 @@ const App = () => (
             <Route path="/financeiro" element={
               <ProtectedRoute>
                 <FinancialDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/baixa" element={
+              <ProtectedRoute>
+                <BaixaPagamentos />
               </ProtectedRoute>
             } />
             <Route path="/admin/licenses" element={
