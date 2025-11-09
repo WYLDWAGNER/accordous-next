@@ -487,6 +487,72 @@ export type Database = {
           },
         ]
       }
+      lancamentos_financeiros: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          id_contrato: string | null
+          id_imovel: string | null
+          observacoes: string | null
+          status: Database["public"]["Enums"]["lancamento_status"]
+          tipo: Database["public"]["Enums"]["lancamento_tipo"]
+          updated_at: string | null
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          id_contrato?: string | null
+          id_imovel?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["lancamento_status"]
+          tipo: Database["public"]["Enums"]["lancamento_tipo"]
+          updated_at?: string | null
+          user_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          id_contrato?: string | null
+          id_imovel?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["lancamento_status"]
+          tipo?: Database["public"]["Enums"]["lancamento_tipo"]
+          updated_at?: string | null
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lancamentos_financeiros_id_contrato_fkey"
+            columns: ["id_contrato"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_id_imovel_fkey"
+            columns: ["id_imovel"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           budget_range: string | null
@@ -943,6 +1009,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_resumo_financeiro: {
+        Args: { p_data_fim: string; p_data_inicio: string; p_user_id: string }
+        Returns: {
+          saldo: number
+          total_despesas: number
+          total_inadimplencia: number
+          total_receitas: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -960,6 +1035,8 @@ export type Database = {
         | "agenda"
         | "cadastro_leads"
         | "financeiro"
+      lancamento_status: "pendente" | "pago" | "atrasado" | "cancelado"
+      lancamento_tipo: "receita" | "despesa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1096,6 +1173,8 @@ export const Constants = {
         "cadastro_leads",
         "financeiro",
       ],
+      lancamento_status: ["pendente", "pago", "atrasado", "cancelado"],
+      lancamento_tipo: ["receita", "despesa"],
     },
   },
 } as const
