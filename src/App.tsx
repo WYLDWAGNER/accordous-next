@@ -28,6 +28,7 @@ import UsersList from "./pages/Users/UsersList";
 import NotFound from "./pages/NotFound";
 import LicenseManagement from "./pages/Admin/LicenseManagement";
 import NotificationSettings from "./pages/Notifications/NotificationSettings";
+import FinancialDashboard from "./pages/Financial/FinancialDashboard";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +119,11 @@ const App = () => (
             <Route path="/notificacoes" element={
               <ProtectedRoute>
                 <NotificationSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro" element={
+              <ProtectedRoute>
+                <FinancialDashboard />
               </ProtectedRoute>
             } />
             <Route path="/admin/licenses" element={
