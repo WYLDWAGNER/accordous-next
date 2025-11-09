@@ -14,6 +14,7 @@ import {
   HelpCircle,
   LogOut,
   Calendar,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -46,6 +47,7 @@ const menuItems = [
   { icon: Calendar, label: "Visitas Agendadas", path: "/visitas" },
   { icon: Users, label: "CRM", path: "/crm" },
   { icon: Receipt, label: "Faturas", path: "/faturas" },
+  { icon: Bell, label: "Notificações", path: "/notificacoes" },
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
   { icon: CreditCard, label: "Remessa Bancária", path: "/remessa" },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },

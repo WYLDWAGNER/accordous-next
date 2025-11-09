@@ -27,6 +27,7 @@ import ScheduledVisits from "./pages/Visits/ScheduledVisits";
 import UsersList from "./pages/Users/UsersList";
 import NotFound from "./pages/NotFound";
 import LicenseManagement from "./pages/Admin/LicenseManagement";
+import NotificationSettings from "./pages/Notifications/NotificationSettings";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,11 @@ const App = () => (
             <Route path="/usuarios" element={
               <ProtectedRoute>
                 <UsersList />
+              </ProtectedRoute>
+            } />
+            <Route path="/notificacoes" element={
+              <ProtectedRoute>
+                <NotificationSettings />
               </ProtectedRoute>
             } />
             <Route path="/admin/licenses" element={
