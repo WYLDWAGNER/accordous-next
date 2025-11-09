@@ -534,10 +534,10 @@ const PropertyDetails = () => {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Ops! Temos algumas faturas pendentes</strong>
+                  <strong>Faturas de Aluguel Pendentes</strong>
                   <br />
-                  Notamos que você possui {pendingInvoices.length} fatura(s) pendente(s). Para continuar aproveitando 
-                  todos os recursos da plataforma, por favor, confira suas faturas.
+                  Este imóvel possui {pendingInvoices.length} fatura(s) de aluguel pendente(s). 
+                  Por favor, verifique o histórico de faturas abaixo.
                 </AlertDescription>
               </Alert>
             )}
