@@ -24,13 +24,15 @@ import {
   FileCheck, AlertCircle, Image, Camera, Home, DollarSign, Clock, 
   Shield, TrendingUp, Upload, Eye, UserPlus, Briefcase, Settings, Star
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import imageCompression from "browser-image-compression";
 
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   // Refs para inputs de arquivo
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -148,7 +150,7 @@ const PropertyDetails = () => {
     toast.success("Agenda configurada com sucesso!");
   };
   
-  // Upload de fotos
+  // Upload de fotos com compressão
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -156,13 +158,23 @@ const PropertyDetails = () => {
     try {
       const uploadedPaths: string[] = [];
       
+      // Opções de compressão
+      const compressionOptions = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      
       for (const file of files) {
+        // Comprimir imagem
+        const compressedFile = await imageCompression(file, compressionOptions);
+        
         const fileExt = file.name.split('.').pop();
         const fileName = `${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('property-photos')
-          .upload(fileName, file);
+          .upload(fileName, compressedFile);
         
         if (uploadError) throw uploadError;
         uploadedPaths.push(fileName);
@@ -181,7 +193,7 @@ const PropertyDetails = () => {
       if (updateError) throw updateError;
       
       toast.success(`${files.length} foto(s) adicionada(s) com sucesso!`);
-      window.location.reload(); // Recarrega para atualizar
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
     } catch (error: any) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload das fotos');
@@ -226,7 +238,7 @@ const PropertyDetails = () => {
       if (updateError) throw updateError;
       
       toast.success(`${files.length} documento(s) adicionado(s) com sucesso!`);
-      window.location.reload(); // Recarrega para atualizar
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
     } catch (error: any) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload dos documentos');
@@ -254,7 +266,7 @@ const PropertyDetails = () => {
       if (updateError) throw updateError;
       
       toast.success('Foto removida com sucesso!');
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
     } catch (error: any) {
       console.error('Erro ao deletar foto:', error);
       toast.error('Erro ao remover foto');
@@ -282,7 +294,7 @@ const PropertyDetails = () => {
       if (updateError) throw updateError;
       
       toast.success('Documento removido com sucesso!');
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
     } catch (error: any) {
       console.error('Erro ao deletar documento:', error);
       toast.error('Erro ao remover documento');
@@ -300,7 +312,7 @@ const PropertyDetails = () => {
       if (error) throw error;
       
       toast.success('Foto de capa definida com sucesso!');
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
     } catch (error: any) {
       console.error('Erro ao definir foto de capa:', error);
       toast.error('Erro ao definir foto de capa');
@@ -345,13 +357,23 @@ const PropertyDetails = () => {
     try {
       const uploadedPaths: string[] = [];
       
+      // Opções de compressão
+      const compressionOptions = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      
       for (const file of files) {
+        // Comprimir imagem
+        const compressedFile = await imageCompression(file, compressionOptions);
+        
         const fileExt = file.name.split('.').pop();
         const fileName = `${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('property-photos')
-          .upload(fileName, file);
+          .upload(fileName, compressedFile);
         
         if (uploadError) throw uploadError;
         uploadedPaths.push(fileName);
@@ -368,7 +390,7 @@ const PropertyDetails = () => {
       if (updateError) throw updateError;
       
       toast.success(`${files.length} foto(s) adicionada(s) com sucesso!`);
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
     } catch (error: any) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload das fotos');
@@ -432,7 +454,7 @@ const PropertyDetails = () => {
       if (updateError) throw updateError;
       
       toast.success(`${files.length} documento(s) adicionado(s) com sucesso!`);
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
     } catch (error: any) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload dos documentos');
