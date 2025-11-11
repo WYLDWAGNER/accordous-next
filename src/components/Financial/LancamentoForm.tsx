@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
@@ -19,12 +20,29 @@ interface LancamentoFormProps {
 
 const categorias = {
   receita: ['Aluguel', 'Condomínio', 'Multa', 'Outros'],
-  despesa: ['Manutenção', 'IPTU', 'Condomínio', 'Água', 'Luz', 'Gás', 'Comissão', 'Outros'],
+  despesa: [
+    'Condomínio',
+    'Manutenção', 
+    'Reforma',
+    'Limpeza',
+    'Segurança',
+    'IPTU',
+    'Água', 
+    'Luz', 
+    'Gás',
+    'Internet/TV',
+    'Dedetização',
+    'Jardinagem',
+    'Elevador',
+    'Comissão',
+    'Outros'
+  ],
 };
 
 export function LancamentoForm({ open, onOpenChange, onSuccess, lancamento }: LancamentoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipo, setTipo] = useState<'receita' | 'despesa'>(lancamento?.tipo || 'receita');
+  const [isCondomonioExpense, setIsCondomonioExpense] = useState(false);
 
   const { register, handleSubmit, reset, setValue } = useForm({
     defaultValues: lancamento || {
@@ -200,11 +218,41 @@ export function LancamentoForm({ open, onOpenChange, onSuccess, lancamento }: La
             </div>
           </div>
 
+          {tipo === 'despesa' && (
+            <div className="flex items-center space-x-2 pb-2">
+              <Checkbox
+                id="condominio-expense"
+                checked={isCondomonioExpense}
+                onCheckedChange={(checked) => {
+                  setIsCondomonioExpense(checked as boolean);
+                  if (checked) {
+                    setValue('id_imovel', '');
+                  }
+                }}
+              />
+              <label
+                htmlFor="condominio-expense"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Despesa comum do condomínio
+              </label>
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="id_imovel">Imóvel</Label>
-            <Select onValueChange={(value) => setValue('id_imovel', value)}>
+            <Label htmlFor="id_imovel">
+              Imóvel {isCondomonioExpense && tipo === 'despesa' && '(opcional)'}
+            </Label>
+            <Select 
+              onValueChange={(value) => setValue('id_imovel', value)}
+              disabled={isCondomonioExpense && tipo === 'despesa'}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um imóvel (opcional)" />
+                <SelectValue placeholder={
+                  isCondomonioExpense && tipo === 'despesa' 
+                    ? "Condomínio - Áreas Comuns" 
+                    : "Selecione um imóvel (opcional)"
+                } />
               </SelectTrigger>
               <SelectContent>
                 {properties?.map((prop) => (
@@ -214,6 +262,11 @@ export function LancamentoForm({ open, onOpenChange, onSuccess, lancamento }: La
                 ))}
               </SelectContent>
             </Select>
+            {isCondomonioExpense && tipo === 'despesa' && (
+              <p className="text-xs text-muted-foreground">
+                Despesa aplicada às áreas comuns do condomínio
+              </p>
+            )}
           </div>
 
           {tipo === 'receita' && (
