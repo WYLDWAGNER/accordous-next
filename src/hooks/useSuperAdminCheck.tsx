@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useAdminCheck = () => {
+export const useSuperAdminCheck = () => {
   const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const checkSuperAdmin = async () => {
       if (!user) {
-        setIsAdmin(false);
+        setIsSuperAdmin(false);
         setLoading(false);
         return;
       }
@@ -20,24 +20,24 @@ export const useAdminCheck = () => {
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .in('role', ['admin', 'super_admin'])
+          .eq('role', 'super_admin')
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
-          console.error('Error checking admin status:', error);
+          console.error('Error checking super admin status:', error);
         }
 
-        setIsAdmin(!!data);
+        setIsSuperAdmin(!!data);
       } catch (error) {
-        console.error('Unexpected error checking admin status:', error);
-        setIsAdmin(false);
+        console.error('Unexpected error checking super admin status:', error);
+        setIsSuperAdmin(false);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAdmin();
+    checkSuperAdmin();
   }, [user]);
 
-  return { isAdmin, loading };
+  return { isSuperAdmin, loading };
 };
