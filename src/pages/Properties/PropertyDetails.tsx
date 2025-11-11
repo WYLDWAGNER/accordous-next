@@ -320,12 +320,18 @@ const PropertyDetails = () => {
   };
   
   // Abrir preview de PDF
-  const handleOpenPdfPreview = (doc: any) => {
-    const { data } = supabase.storage
+  const handleOpenPdfPreview = async (doc: any) => {
+    const { data, error } = await supabase.storage
       .from('property-documents')
-      .getPublicUrl(doc.path);
+      .createSignedUrl(doc.path, 3600); // URL válida por 1 hora
     
-    setSelectedPdfUrl(data.publicUrl);
+    if (error) {
+      console.error('Erro ao gerar URL do documento:', error);
+      toast.error('Erro ao carregar documento para visualização');
+      return;
+    }
+    
+    setSelectedPdfUrl(data.signedUrl);
     setSelectedPdfName(doc.name);
     setPdfPreviewOpen(true);
   };
