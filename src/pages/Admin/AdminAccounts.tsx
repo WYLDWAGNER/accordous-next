@@ -55,12 +55,7 @@ const AdminAccounts = () => {
       // Fetch all accounts
       const { data: accountsData, error: accountsError } = await supabase
         .from('accounts')
-        .select(`
-          *,
-          profiles!accounts_owner_id_fkey (
-            id
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (accountsError) throw accountsError;
