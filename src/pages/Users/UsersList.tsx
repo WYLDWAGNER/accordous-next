@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountId } from "@/hooks/useAccountId";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,12 +52,15 @@ const UsersList = () => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const { user } = useAuth();
+  const { accountId } = useAccountId();
   const { toast } = useToast();
 
   useEffect(() => {
     checkAdminStatus();
-    fetchUsers();
-  }, [user]);
+    if (accountId) {
+      fetchUsers();
+    }
+  }, [user, accountId]);
 
   useEffect(() => {
     filterUsers();
@@ -81,15 +85,16 @@ const UsersList = () => {
   };
 
   const fetchUsers = async () => {
-    if (!user) return;
+    if (!user || !accountId) return;
 
     try {
       setLoading(true);
 
-      // Fetch profiles
+      // Fetch profiles filtered by account_id
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
+        .eq("account_id", accountId)
         .order("full_name");
 
       if (profilesError) throw profilesError;
@@ -387,6 +392,7 @@ const UsersList = () => {
             open={isAddDialogOpen}
             onOpenChange={setIsAddDialogOpen}
             onSuccess={fetchUsers}
+            accountId={accountId}
           />
 
           <UserFormDialog
@@ -394,6 +400,7 @@ const UsersList = () => {
             onOpenChange={(open) => !open && setEditingUser(null)}
             user={editingUser}
             onSuccess={fetchUsers}
+            accountId={accountId}
           />
         </AppLayout>
   );

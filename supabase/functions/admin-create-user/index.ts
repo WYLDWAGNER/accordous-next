@@ -52,7 +52,15 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { email, password, full_name, role, is_active } = await req.json()
+    const { email, password, full_name, account_id, is_active } = await req.json()
+
+    // Validate required fields
+    if (!email || !password || !full_name || !account_id) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
 
     // Create user in auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -67,26 +75,34 @@ Deno.serve(async (req) => {
     if (authError) throw authError
     if (!authData.user) throw new Error('Failed to create user')
 
-    // Create profile
+    // Create profile with account_id
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
         id: authData.user.id,
         full_name,
-        is_active
+        is_active: is_active ?? true,
+        account_id
       })
 
     if (profileError) throw profileError
 
-    // Assign role
+    // Assign 'user' role (employee)
     const { error: roleInsertError } = await supabaseAdmin
       .from('user_roles')
       .insert({
         user_id: authData.user.id,
-        role
+        role: 'user'
       })
 
     if (roleInsertError) throw roleInsertError
+
+    console.log('Employee created successfully:', {
+      user_id: authData.user.id,
+      email,
+      account_id,
+      role: 'user'
+    })
 
     return new Response(JSON.stringify({ success: true, user: authData.user }), {
       status: 200,

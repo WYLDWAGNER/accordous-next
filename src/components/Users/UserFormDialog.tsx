@@ -34,9 +34,10 @@ interface UserFormDialogProps {
   onOpenChange: (open: boolean) => void;
   user?: any;
   onSuccess: () => void;
+  accountId: string | null;
 }
 
-const UserFormDialog = ({ open, onOpenChange, user, onSuccess }: UserFormDialogProps) => {
+const UserFormDialog = ({ open, onOpenChange, user, onSuccess, accountId }: UserFormDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -130,13 +131,17 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess }: UserFormDialogP
           description: "As informações do usuário foram atualizadas com sucesso.",
         });
       } else {
-        // Create new user via edge function
+        // Create new user (employee) via edge function
+        if (!accountId) {
+          throw new Error("Account ID não encontrado");
+        }
+
         const { data, error } = await supabase.functions.invoke('admin-create-user', {
           body: {
             email: formData.email.trim(),
             password: formData.password,
             full_name: formData.full_name.trim(),
-            role: formData.role,
+            account_id: accountId,
             is_active: formData.is_active,
           },
         });
@@ -231,27 +236,35 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess }: UserFormDialogP
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Nível de Acesso *</Label>
-            <Select
-              value={formData.role}
-              onValueChange={(value: any) => setFormData({ ...formData, role: value })}
-            >
-              <SelectTrigger id="role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="full">Full</SelectItem>
-                <SelectItem value="agenda">Agenda</SelectItem>
-                <SelectItem value="cadastro_leads">Cadastro/Gestão de Leads</SelectItem>
-                <SelectItem value="financeiro">Financeiro</SelectItem>
-                <SelectItem value="moderator">Moderador</SelectItem>
-                <SelectItem value="user">Usuário</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.role && <p className="text-sm text-destructive">{errors.role}</p>}
-          </div>
+          {user && (
+            <div className="space-y-2">
+              <Label htmlFor="role">Nível de Acesso *</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: any) => setFormData({ ...formData, role: value })}
+              >
+                <SelectTrigger id="role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="agenda">Agenda</SelectItem>
+                  <SelectItem value="cadastro_leads">Cadastro/Gestão de Leads</SelectItem>
+                  <SelectItem value="financeiro">Financeiro</SelectItem>
+                  <SelectItem value="moderator">Moderador</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.role && <p className="text-sm text-destructive">{errors.role}</p>}
+            </div>
+          )}
+          
+          {!user && (
+            <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+              <strong>Nota:</strong> Novos funcionários serão criados automaticamente com perfil de "Usuário" e vinculados à sua conta.
+            </p>
+          )}
 
           <div className="flex items-center justify-between">
             <Label htmlFor="is_active">Status</Label>
