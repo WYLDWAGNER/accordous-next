@@ -1,6 +1,5 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useLicenseCheck } from "@/hooks/useLicenseCheck";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,9 +7,8 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const license = useLicenseCheck();
 
-  if (loading || license.loading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -25,6 +23,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
+  // Allow access even with expired license (read-only mode)
   return <>{children}</>;
 };
 
