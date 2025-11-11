@@ -16,11 +16,13 @@ import {
   Calendar,
   Bell,
   Wallet,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSuperAdminCheck } from "@/hooks/useSuperAdminCheck";
 import {
   Sidebar as SidebarUI,
   SidebarContent,
@@ -56,7 +58,8 @@ const menuItems = [
 export const Sidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
-  const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis"]);
+  const { isSuperAdmin } = useSuperAdminCheck();
+  const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis", "Super Admin"]);
   const { open } = useSidebar();
 
   const toggleMenu = (label: string) => {
@@ -131,6 +134,61 @@ export const Sidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Super Admin Menu */}
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Super Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <Collapsible 
+                  open={openMenus.includes("Super Admin")} 
+                  onOpenChange={() => toggleMenu("Super Admin")}
+                >
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="w-full">
+                      <Shield className="mr-3 h-4 w-4 text-destructive" />
+                      {open && <span className="flex-1 text-left">Administração</span>}
+                      {open && (
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition-transform",
+                            openMenus.includes("Super Admin") && "rotate-180"
+                          )}
+                        />
+                      )}
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  {open && (
+                    <CollapsibleContent className="space-y-1 pl-9 pt-1">
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.pathname === "/admin"}>
+                          <Link to="/admin">
+                            <span className="text-sm">Dashboard</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.pathname === "/admin/accounts"}>
+                          <Link to="/admin/accounts">
+                            <span className="text-sm">Contas</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.pathname === "/admin/payments"}>
+                          <Link to="/admin/payments">
+                            <span className="text-sm">Pagamentos</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </CollapsibleContent>
+                  )}
+                </Collapsible>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Bottom Actions */}
         <SidebarGroup className="mt-auto">

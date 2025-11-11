@@ -8,6 +8,7 @@ import { LicenseProvider } from "@/contexts/LicenseContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
+import SuperAdminRoute from "@/components/SuperAdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Register from "./pages/Register";
@@ -28,6 +29,9 @@ import ScheduledVisits from "./pages/Visits/ScheduledVisits";
 import UsersList from "./pages/Users/UsersList";
 import NotFound from "./pages/NotFound";
 import LicenseManagement from "./pages/Admin/LicenseManagement";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import AdminAccounts from "./pages/Admin/AdminAccounts";
+import AdminPayments from "./pages/Admin/AdminPayments";
 import NotificationSettings from "./pages/Notifications/NotificationSettings";
 import FinancialDashboard from "./pages/Financial/FinancialDashboard";
 import BaixaPagamentos from "./pages/Financial/BaixaPagamentos";
@@ -132,6 +136,27 @@ const App = () => (
             <Route path="/financeiro/baixa" element={
               <ProtectedRoute>
                 <BaixaPagamentos />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <SuperAdminRoute>
+                  <AdminDashboard />
+                </SuperAdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/accounts" element={
+              <ProtectedRoute>
+                <SuperAdminRoute>
+                  <AdminAccounts />
+                </SuperAdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/payments" element={
+              <ProtectedRoute>
+                <SuperAdminRoute>
+                  <AdminPayments />
+                </SuperAdminRoute>
               </ProtectedRoute>
             } />
             <Route path="/admin/licenses" element={
