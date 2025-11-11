@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Receipt, Eye, DollarSign, AlertCircle, Zap, Calendar as CalendarIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { InvoiceCard } from "@/components/Responsive/InvoiceCard";
+import { FilterDrawer } from "@/components/Filters/FilterDrawer";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +30,7 @@ const ITEMS_PER_PAGE = 50;
 const InvoicesList = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
@@ -327,7 +331,8 @@ const InvoicesList = () => {
               </Link>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
+            {/* Desktop Filters */}
+            <div className="hidden md:flex flex-col md:flex-row gap-4">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="Status" />
@@ -366,9 +371,55 @@ const InvoicesList = () => {
                 className="w-full md:w-[200px]"
               />
             </div>
+
+            {/* Mobile Filters */}
+            <FilterDrawer onClear={() => {
+              setStatusFilter("all");
+              setPaymentMethodFilter("all");
+              setContractFilter("");
+              setOwnerFilter("");
+            }}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="cancelled">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Forma de Pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as formas</SelectItem>
+                  <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input
+                placeholder="Filtrar por contrato..."
+                value={contractFilter}
+                onChange={(e) => setContractFilter(e.target.value)}
+                className="w-full"
+              />
+
+              <Input
+                placeholder="Filtrar por proprietário..."
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                className="w-full"
+              />
+            </FilterDrawer>
           </div>
 
-          {/* Invoices Table */}
+          {/* Invoices Display */}
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -378,7 +429,19 @@ const InvoicesList = () => {
             </div>
           ) : filteredInvoices && filteredInvoices.length > 0 ? (
             <>
-              <Card>
+              {/* Mobile: Cards */}
+              <div className="md:hidden grid gap-4">
+                {paginatedInvoices?.map((invoice) => (
+                  <InvoiceCard 
+                    key={invoice.id} 
+                    invoice={invoice} 
+                    getStatusBadge={getStatusBadge} 
+                  />
+                ))}
+              </div>
+
+              {/* Desktop: Table */}
+              <Card className="hidden md:block">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>

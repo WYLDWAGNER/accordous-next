@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,14 +95,8 @@ const FinancialDashboardComplete = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Dashboard Financeiro" />
-        
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+    <AppLayout title="Dashboard Financeiro">
+      <div className="max-w-7xl mx-auto space-y-6">
             {/* Filtros */}
             <Card>
               <CardHeader>
@@ -381,8 +374,6 @@ const FinancialDashboardComplete = () => {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
 
       <LancamentoForm
         open={formOpen}
@@ -392,7 +383,7 @@ const FinancialDashboardComplete = () => {
           toast.success('Lançamento criado com sucesso!');
         }}
       />
-    </div>
+    </AppLayout>
   );
 };
 

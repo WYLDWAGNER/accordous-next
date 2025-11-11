@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -9,8 +10,10 @@ interface AppLayoutProps {
 }
 
 export const AppLayout = ({ children, title }: AppLayoutProps) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex h-screen w-full bg-gray-50">
         <Sidebar />
         

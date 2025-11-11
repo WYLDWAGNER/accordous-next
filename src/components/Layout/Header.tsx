@@ -17,7 +17,7 @@ export const Header = ({ title }: HeaderProps) => {
       
       <div className="flex items-center gap-2 md:gap-3">
         <Select defaultValue="30">
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[120px] md:w-[180px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -28,7 +28,7 @@ export const Header = ({ title }: HeaderProps) => {
           </SelectContent>
         </Select>
 
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="hidden md:flex relative">
           <HelpCircle className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-500 text-[10px] font-medium text-white flex items-center justify-center">
             2
@@ -43,7 +43,7 @@ export const Header = ({ title }: HeaderProps) => {
           <User className="h-5 w-5" />
         </Button>
 
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="hidden md:flex">
           <Sun className="h-5 w-5" />
         </Button>
       </div>

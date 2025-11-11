@@ -7,6 +7,8 @@ import { Eye, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { InvoiceCard } from "@/components/Responsive/InvoiceCard";
 
 interface Invoice {
   id: string;
@@ -34,11 +36,13 @@ const getStatusBadge = (status: string) => {
 
 export const InvoicesTable = ({ invoices }: InvoicesTableProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
   return (
     <Card>
       <CardHeader className="border-b">
         <Tabs defaultValue="cobrancas" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-md text-xs md:text-sm">
             <TabsTrigger value="cobrancas">Cobranças</TabsTrigger>
             <TabsTrigger value="contratos">Contratos</TabsTrigger>
             <TabsTrigger value="leads">Leads</TabsTrigger>
@@ -47,7 +51,24 @@ export const InvoicesTable = ({ invoices }: InvoicesTableProps) => {
         </Tabs>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        {isMobile ? (
+          <div className="p-3 space-y-3">
+            {invoices.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhuma fatura encontrada
+              </div>
+            ) : (
+              invoices.map((invoice) => (
+                <InvoiceCard 
+                  key={invoice.id} 
+                  invoice={{ ...invoice, contracts: invoice.contract, properties: invoice.property }} 
+                  getStatusBadge={(status, dueDate) => getStatusBadge(status)} 
+                />
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -100,6 +121,7 @@ export const InvoicesTable = ({ invoices }: InvoicesTableProps) => {
             </TableBody>
           </Table>
         </div>
+        )}
         
         <div className="flex justify-center border-t p-4">
           <Button 
