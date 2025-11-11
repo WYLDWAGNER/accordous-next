@@ -40,7 +40,6 @@ const menuItems = [
     label: "Imóveis",
     submenu: [
       { label: "Listar imóveis", path: "/imoveis" },
-      { label: "Listar anúncios", path: "/anuncios" },
       { label: "Cadastrar imóveis", path: "/imoveis/novo" },
     ],
   },
