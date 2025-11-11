@@ -1035,6 +1035,8 @@ export type Database = {
         | "agenda"
         | "cadastro_leads"
         | "financeiro"
+        | "super_admin"
+        | "trial"
       lancamento_status: "pendente" | "pago" | "atrasado" | "cancelado"
       lancamento_tipo: "receita" | "despesa"
     }
@@ -1172,6 +1174,8 @@ export const Constants = {
         "agenda",
         "cadastro_leads",
         "financeiro",
+        "super_admin",
+        "trial",
       ],
       lancamento_status: ["pendente", "pago", "atrasado", "cancelado"],
       lancamento_tipo: ["receita", "despesa"],
