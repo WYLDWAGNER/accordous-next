@@ -826,6 +826,101 @@ export type Database = {
           },
         ]
       }
+      portal_integrations: {
+        Row: {
+          account_id: string
+          ad_limit: number | null
+          created_at: string | null
+          credentials: Json | null
+          featured_limit: number | null
+          feed_url: string | null
+          id: string
+          is_active: boolean | null
+          provider: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_id: string
+          ad_limit?: number | null
+          created_at?: string | null
+          credentials?: Json | null
+          featured_limit?: number | null
+          feed_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          ad_limit?: number | null
+          created_at?: string | null
+          credentials?: Json | null
+          featured_limit?: number | null
+          feed_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_integrations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_sync_logs: {
+        Row: {
+          account_id: string | null
+          action: string | null
+          error_message: string | null
+          id: string
+          portal: string | null
+          property_id: string | null
+          status: string | null
+          synced_at: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          action?: string | null
+          error_message?: string | null
+          id?: string
+          portal?: string | null
+          property_id?: string | null
+          status?: string | null
+          synced_at?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          action?: string | null
+          error_message?: string | null
+          id?: string
+          portal?: string | null
+          property_id?: string | null
+          status?: string | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_sync_logs_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_sync_logs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_id: string | null
@@ -897,12 +992,17 @@ export type Database = {
           owner_email: string | null
           owner_name: string | null
           photos: string[] | null
+          portal_last_sync: string | null
+          portal_listing_id: string | null
+          portal_status: string | null
           postal_code: string | null
           property_type: string
+          publish_to_portals: boolean | null
           registry_data: string | null
           state: string
           status: string
           total_area: number | null
+          transaction_type: string | null
           updated_at: string | null
           useful_area: number | null
           user_id: string
@@ -930,12 +1030,17 @@ export type Database = {
           owner_email?: string | null
           owner_name?: string | null
           photos?: string[] | null
+          portal_last_sync?: string | null
+          portal_listing_id?: string | null
+          portal_status?: string | null
           postal_code?: string | null
           property_type: string
+          publish_to_portals?: boolean | null
           registry_data?: string | null
           state: string
           status?: string
           total_area?: number | null
+          transaction_type?: string | null
           updated_at?: string | null
           useful_area?: number | null
           user_id: string
@@ -963,12 +1068,17 @@ export type Database = {
           owner_email?: string | null
           owner_name?: string | null
           photos?: string[] | null
+          portal_last_sync?: string | null
+          portal_listing_id?: string | null
+          portal_status?: string | null
           postal_code?: string | null
           property_type?: string
+          publish_to_portals?: boolean | null
           registry_data?: string | null
           state?: string
           status?: string
           total_area?: number | null
+          transaction_type?: string | null
           updated_at?: string | null
           useful_area?: number | null
           user_id?: string

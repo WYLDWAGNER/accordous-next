@@ -51,7 +51,14 @@ const menuItems = [
   { icon: Wallet, label: "Financeiro", path: "/financeiro" },
   { icon: Bell, label: "Notificações", path: "/notificacoes" },
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
-  { icon: Settings, label: "Configurações", path: "/configuracoes" },
+  {
+    icon: Settings,
+    label: "Configurações",
+    submenu: [
+      { label: "Geral", path: "/configuracoes" },
+      { label: "Portais Imobiliários", path: "/configuracoes/portais" },
+    ],
+  },
   { icon: UserCircle, label: "Usuários", path: "/usuarios" },
 ];
 
@@ -59,7 +66,7 @@ export const Sidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
   const { isSuperAdmin } = useSuperAdminCheck();
-  const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis", "Super Admin"]);
+  const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis", "Super Admin", "Configurações"]);
   const { open } = useSidebar();
 
   const toggleMenu = (label: string) => {
