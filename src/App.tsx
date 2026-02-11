@@ -35,6 +35,7 @@ import AdminPayments from "./pages/Admin/AdminPayments";
 import NotificationSettings from "./pages/Notifications/NotificationSettings";
 import FinancialDashboard from "./pages/Financial/FinancialDashboard";
 import BaixaPagamentos from "./pages/Financial/BaixaPagamentos";
+import PortalSettings from "./pages/Properties/PortalSettings";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +137,11 @@ const App = () => (
             <Route path="/financeiro/baixa" element={
               <ProtectedRoute>
                 <BaixaPagamentos />
+              </ProtectedRoute>
+            } />
+            <Route path="/configuracoes/portais" element={
+              <ProtectedRoute>
+                <PortalSettings />
               </ProtectedRoute>
             } />
             <Route path="/admin" element={

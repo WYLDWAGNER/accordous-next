@@ -13,7 +13,8 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Building2, AlertCircle, ChevronRight, Filter, User, FileText, Eye } from "lucide-react";
+import { Plus, Search, Building2, AlertCircle, ChevronRight, Filter, User, FileText, Eye, Globe } from "lucide-react";
+import { PortalManagementDialog } from "@/components/Properties/PortalManagementDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +25,7 @@ const PropertiesList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("");
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [portalDialogProperty, setPortalDialogProperty] = useState<any>(null);
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ["properties", user?.id],
@@ -295,8 +297,8 @@ const PropertiesList = () => {
                             Ver Imóvel
                           </Button>
                         </Link>
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <FileText className="mr-2 h-4 w-4" />
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => setPortalDialogProperty(property)}>
+                          <Globe className="mr-2 h-4 w-4" />
                           Anúncios
                         </Button>
                       </div>
@@ -324,6 +326,14 @@ const PropertiesList = () => {
               </CardContent>
             </Card>
           )}
+
+      {portalDialogProperty && (
+        <PortalManagementDialog
+          open={!!portalDialogProperty}
+          onOpenChange={(open) => !open && setPortalDialogProperty(null)}
+          property={portalDialogProperty}
+        />
+      )}
     </AppLayout>
   );
 };

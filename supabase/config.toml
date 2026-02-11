@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.financial-dashboard]
 verify_jwt = true
+
+[functions.generate-portal-feed]
+verify_jwt = false
