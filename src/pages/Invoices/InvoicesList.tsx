@@ -143,15 +143,10 @@ const InvoicesList = () => {
   const totalPages = Math.ceil((filteredInvoices?.length || 0) / ITEMS_PER_PAGE);
 
   const getStatusBadge = (status: string, dueDate: string) => {
-    const isOverdue = new Date(dueDate) < new Date() && status === "pending";
-    
     const variants = {
       paid: { variant: "default" as const, label: "Pago", icon: null },
-      pending: { 
-        variant: isOverdue ? "destructive" as const : "secondary" as const, 
-        label: isOverdue ? "Vencida" : "Pendente",
-        icon: isOverdue ? AlertCircle : null
-      },
+      pending: { variant: "secondary" as const, label: "Pendente", icon: null },
+      overdue: { variant: "destructive" as const, label: "Vencida", icon: AlertCircle },
       cancelled: { variant: "outline" as const, label: "Cancelada", icon: null },
     };
 
