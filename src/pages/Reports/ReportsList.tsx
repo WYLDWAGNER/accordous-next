@@ -432,7 +432,7 @@ const ReportsList = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-orange-600">
-                      {invoices?.filter(i => i.status === "pending").length || 0}
+                      {invoices?.filter(i => i.status === "pending" || i.status === "overdue").length || 0}
                     </div>
                   </CardContent>
                 </Card>
