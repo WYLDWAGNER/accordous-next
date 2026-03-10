@@ -1,0 +1,656 @@
+# 📖 Documentação Completa — Accordous
+
+> **Última atualização:** Março 2026  
+> **Stack:** React 18 + Vite + TypeScript + Tailwind CSS + Supabase  
+> **Supabase Project ID:** `yvlzmbamsqzqqbhdrqwk`
+
+---
+
+## 1. Visão Geral
+
+O **Accordous** é um SaaS de gestão imobiliária multi-tenant que permite administradoras e corretores gerenciarem imóveis, contratos, faturas, financeiro, visitas e integração com portais imobiliários (ZAP, Viva Real, OLX).
+
+### 1.1 Arquitetura Multi-Tenant
+
+- Cada cliente (admin) possui uma **conta** (`accounts`) isolada
+- Todos os dados são vinculados via `account_id`
+- Funcionários são vinculados à conta do admin via `profiles.account_id`
+- RLS (Row Level Security) garante isolamento total entre contas
+
+### 1.2 Hierarquia de Usuários
+
+| Role | Descrição |
+|------|-----------|
+| `super_admin` | Dono do SaaS — acessa tudo |
+| `admin` | Cliente pagante — gerencia sua conta |
+| `full` | Funcionário com acesso completo |
+| `financeiro` | Acesso ao módulo financeiro |
+| `agenda` | Acesso a agendamentos |
+| `cadastro_leads` | Acesso a leads |
+| `sdr` | Sales Development Representative |
+| `suporte` | Suporte ao cliente |
+| `trial` | Novo usuário em teste (14 dias) |
+
+---
+
+## 2. Rotas da Aplicação
+
+### 2.1 Rotas Públicas
+| Rota | Página | Descrição |
+|------|--------|-----------|
+| `/auth` | Auth | Login |
+| `/register` | Register | Registro |
+| `/plans` | Plans | Planos disponíveis |
+| `/checkout-plan` | CheckoutPlan | Seleção de plano |
+| `/checkout` | Checkout | Pagamento |
+
+### 2.2 Rotas Protegidas (requer autenticação)
+| Rota | Página | Descrição |
+|------|--------|-----------|
+| `/` | Index | Dashboard principal |
+| `/imoveis` | PropertiesList | Lista de imóveis |
+| `/imoveis/novo` | PropertyForm | Cadastrar imóvel |
+| `/imoveis/:id` | PropertyDetails | Detalhes do imóvel |
+| `/imoveis/:id/editar` | PropertyForm | Editar imóvel |
+| `/contratos` | ContractsList | Lista de contratos |
+| `/contratos/novo/:propertyId` | ContractWizard | Criar contrato |
+| `/contratos/:id` | ContractDetails | Detalhes do contrato |
+| `/faturas` | InvoicesList | Lista de faturas |
+| `/faturas/:id` | InvoiceDetails | Detalhes da fatura |
+| `/financeiro` | FinancialDashboard | Dashboard financeiro |
+| `/financeiro/baixa` | BaixaPagamentos | Baixa de pagamentos |
+| `/documentos` | DocumentsList | Documentos |
+| `/visitas` | ScheduledVisits | Visitas agendadas |
+| `/usuarios` | UsersList | Gestão de usuários |
+| `/notificacoes` | NotificationSettings | Configurações de notificação |
+| `/relatorios` | ReportsList | Relatórios |
+| `/configuracoes/portais` | PortalSettings | Integração com portais |
+
+### 2.3 Rotas Super Admin
+| Rota | Página | Descrição |
+|------|--------|-----------|
+| `/admin` | AdminDashboard | Dashboard administrativo |
+| `/admin/accounts` | AdminAccounts | Gerenciar contas |
+| `/admin/payments` | AdminPayments | Pagamentos |
+| `/admin/licenses` | LicenseManagement | Licenças |
+
+---
+
+## 3. Banco de Dados — Schema Completo
+
+### 3.1 Diagrama de Relacionamentos
+
+```
+auth.users (Supabase managed)
+    │
+    ├── profiles (1:1) ──────────── accounts (N:1)
+    │       │                           │
+    │       └── user_roles (1:N)        ├── properties (1:N)
+    │                                   │       ├── contracts (1:N)
+    │                                   │       │       ├── invoices (1:N)
+    │                                   │       │       └── lancamentos_financeiros (1:N)
+    │                                   │       ├── scheduled_visits (1:N)
+    │                                   │       └── portal_sync_logs (1:N)
+    │                                   │
+    │                                   ├── contacts (1:N)
+    │                                   ├── portal_integrations (1:N)
+    │                                   └── portal_sync_logs (1:N)
+    │
+    ├── leads (1:N)
+    │       └── conversations (1:N)
+    │               ├── messages (1:N)
+    │               └── conversation_summaries (1:1)
+    │
+    ├── checkout_sessions (1:N)
+    ├── payments (1:N)
+    └── license_audit (1:N)
+
+billing_plans (standalone)
+agent_configs (1:N per user)
+whatsapp_logs (standalone)
+```
+
+---
+
+### 3.2 Tabelas — Definição Detalhada
+
+#### `accounts`
+> Conta principal do tenant (cliente do SaaS).
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `owner_id` | uuid | No | — | FK → auth.users (dono da conta) |
+| `account_name` | text | No | — | Nome da conta/empresa |
+| `subscription_status` | text | No | `'trial'` | Status: trial, active, expired, cancelled |
+| `plan_id` | text | Yes | — | Plano contratado |
+| `data_expiracao` | timestamptz | Yes | — | Data de expiração da licença |
+| `created_at` | timestamptz | No | `now()` | — |
+| `updated_at` | timestamptz | No | `now()` | — |
+
+**RLS:** Super admin vê tudo. Owner vê/edita sua conta. Members veem sua conta.
+
+---
+
+#### `profiles`
+> Perfil do usuário vinculado à conta.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | — | PK = auth.users.id |
+| `full_name` | text | Yes | — | Nome completo |
+| `avatar_url` | text | Yes | — | URL do avatar |
+| `account_id` | uuid | Yes | — | FK → accounts.id |
+| `data_expiracao` | timestamptz | Yes | — | Expiração individual |
+| `google_calendar_embed_url` | text | Yes | — | URL embed do Google Calendar |
+| `is_active` | boolean | Yes | `true` | Usuário ativo |
+| `last_access` | timestamptz | Yes | — | Último acesso |
+| `created_at` | timestamptz | Yes | `now()` | — |
+| `updated_at` | timestamptz | Yes | `now()` | — |
+
+**RLS:** Usuário vê/edita seu perfil. Admin vê perfis da conta. Super admin vê tudo.
+
+---
+
+#### `user_roles`
+> Roles dos usuários (NUNCA armazenar em profiles!).
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | FK → auth.users |
+| `role` | app_role (enum) | No | — | Role do usuário |
+| `created_at` | timestamptz | Yes | `now()` | — |
+
+**Enum `app_role`:** `admin`, `sdr`, `suporte`, `full`, `agenda`, `cadastro_leads`, `financeiro`, `super_admin`, `trial`
+
+**RLS:** Admins gerenciam roles. Usuários veem suas próprias.
+
+---
+
+#### `properties`
+> Imóveis cadastrados.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | Criador |
+| `account_id` | uuid | Yes | — | FK → accounts |
+| `name` | text | No | — | Nome/identificação |
+| `property_type` | text | No | — | Tipo (casa, apto, etc) |
+| `classification` | text | Yes | — | Classificação |
+| `status` | text | No | `'available'` | available, rented, sold |
+| `address` | text | No | — | Endereço |
+| `number` | text | Yes | — | Número |
+| `complement` | text | Yes | — | Complemento |
+| `neighborhood` | text | Yes | — | Bairro |
+| `city` | text | No | — | Cidade |
+| `state` | text | No | — | Estado |
+| `country` | text | Yes | `'Brasil'` | País |
+| `postal_code` | text | Yes | — | CEP |
+| `total_area` | numeric | Yes | — | Área total (m²) |
+| `built_area` | numeric | Yes | — | Área construída |
+| `useful_area` | numeric | Yes | — | Área útil |
+| `land_area` | numeric | Yes | — | Área do terreno |
+| `construction_year` | integer | Yes | — | Ano de construção |
+| `owner_name` | text | Yes | — | Nome do proprietário |
+| `owner_contact` | text | Yes | — | Contato do proprietário |
+| `owner_email` | text | Yes | — | Email do proprietário |
+| `registry_data` | text | Yes | — | Dados de matrícula |
+| `cover_photo` | text | Yes | — | URL foto de capa |
+| `photos` | text[] | Yes | `'{}'` | Array de URLs de fotos |
+| `documents` | jsonb | Yes | `'[]'` | Documentos vinculados |
+| `linked_persons` | jsonb | Yes | `'[]'` | Pessoas vinculadas |
+| `nearby_facilities` | jsonb | Yes | `'{}'` | Facilidades próximas |
+| `publish_to_portals` | boolean | Yes | `false` | Publicar nos portais |
+| `portal_status` | text | Yes | `'draft'` | draft, published, error |
+| `portal_listing_id` | text | Yes | — | ID do anúncio no portal |
+| `portal_last_sync` | timestamptz | Yes | — | Última sincronização |
+| `transaction_type` | text | Yes | `'rent'` | rent, sale, both |
+| `created_at` | timestamptz | Yes | `now()` | — |
+| `updated_at` | timestamptz | Yes | `now()` | — |
+
+**RLS:** Isolamento por account_id. Members da conta têm CRUD completo.
+
+---
+
+#### `contracts`
+> Contratos de locação.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | Criador |
+| `account_id` | uuid | Yes | — | FK → accounts |
+| `property_id` | uuid | No | — | FK → properties |
+| `contract_number` | text | Yes | — | Número do contrato |
+| `tenant_name` | text | No | — | Nome do inquilino |
+| `tenant_document` | text | Yes | — | CPF/CNPJ |
+| `tenant_rg` | text | Yes | — | RG |
+| `tenant_phone` | text | Yes | — | Telefone |
+| `tenant_email` | text | Yes | — | Email |
+| `tenant_profession` | text | Yes | — | Profissão |
+| `tenant_emergency_phone` | text | Yes | — | Telefone emergência |
+| `start_date` | date | No | — | Início do contrato |
+| `end_date` | date | Yes | — | Fim do contrato |
+| `rental_value` | numeric | No | — | Valor do aluguel |
+| `payment_day` | integer | Yes | `5` | Dia de vencimento |
+| `payment_method` | text | Yes | `'bank_transfer'` | Método de pagamento |
+| `guarantee_type` | text | Yes | — | Tipo de garantia |
+| `guarantee_value` | numeric | Yes | — | Valor da garantia |
+| `adjustment_index` | text | Yes | — | Índice de reajuste |
+| `pre_paid` | boolean | Yes | `false` | Pré-pago |
+| `status` | text | No | `'active'` | active, expired, cancelled |
+| `co_tenants` | jsonb | Yes | `'[]'` | Co-inquilinos |
+| `extra_charges` | jsonb | Yes | `'[]'` | Cobranças extras |
+| `created_at` | timestamptz | Yes | `now()` | — |
+| `updated_at` | timestamptz | Yes | `now()` | — |
+
+---
+
+#### `invoices`
+> Faturas geradas a partir dos contratos.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | Criador |
+| `account_id` | uuid | Yes | — | FK → accounts |
+| `contract_id` | uuid | No | — | FK → contracts |
+| `property_id` | uuid | No | — | FK → properties |
+| `invoice_number` | text | Yes | — | Número da fatura |
+| `reference_month` | date | No | — | Mês de referência |
+| `issue_date` | date | No | `CURRENT_DATE` | Data de emissão |
+| `due_date` | date | No | — | Data de vencimento |
+| `payment_date` | date | Yes | — | Data de pagamento |
+| `payment_method` | text | Yes | — | Método de pagamento |
+| `status` | text | No | `'pending'` | pending, paid, overdue, cancelled |
+| `rental_amount` | numeric | No | `0` | Valor do aluguel |
+| `water_amount` | numeric | Yes | `0` | Água |
+| `electricity_amount` | numeric | Yes | `0` | Energia |
+| `gas_amount` | numeric | Yes | `0` | Gás |
+| `internet_amount` | numeric | Yes | `0` | Internet |
+| `condo_fee` | numeric | Yes | `0` | Condomínio |
+| `guarantee_installment` | numeric | Yes | `0` | Parcela de garantia |
+| `guarantee_installment_number` | integer | Yes | — | Nº da parcela |
+| `extra_charges` | jsonb | Yes | `'[]'` | Cobranças extras |
+| `total_amount` | numeric | No | — | Valor total |
+| `notes` | text | Yes | — | Observações |
+| `bank_data` | jsonb | Yes | — | Dados bancários |
+| `history` | jsonb | Yes | `'[]'` | Histórico de alterações |
+| `created_at` | timestamptz | Yes | `now()` | — |
+| `updated_at` | timestamptz | Yes | `now()` | — |
+
+---
+
+#### `lancamentos_financeiros`
+> Lançamentos financeiros (receitas e despesas).
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | Criador |
+| `account_id` | uuid | Yes | — | FK → accounts |
+| `id_contrato` | uuid | Yes | — | FK → contracts |
+| `id_imovel` | uuid | Yes | — | FK → properties |
+| `tipo` | lancamento_tipo (enum) | No | — | `receita` ou `despesa` |
+| `valor` | numeric | No | — | Valor |
+| `descricao` | text | Yes | — | Descrição |
+| `categoria` | text | Yes | — | Categoria |
+| `data_vencimento` | date | No | — | Data de vencimento |
+| `data_pagamento` | date | Yes | — | Data de pagamento |
+| `status` | lancamento_status (enum) | No | `'pendente'` | `pendente`, `pago`, `atrasado`, `cancelado` |
+| `observacoes` | text | Yes | — | Observações |
+| `created_at` | timestamptz | Yes | `now()` | — |
+| `updated_at` | timestamptz | Yes | `now()` | — |
+
+**Trigger:** `update_lancamento_status` — Auto-atualiza status para `pago` quando `data_pagamento` é preenchida, ou `atrasado` quando vence.
+
+---
+
+#### `contacts`
+> Contatos (proprietários, inquilinos, fornecedores, etc).
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | Criador |
+| `account_id` | uuid | Yes | — | FK → accounts |
+| `name` | text | No | — | Nome |
+| `contact_type` | text | No | — | Tipo de contato |
+| `email` | text | Yes | — | Email |
+| `phone` | text | Yes | — | Telefone |
+| `document` | text | Yes | — | CPF/CNPJ |
+| `address` | text | Yes | — | Endereço |
+| `company` | text | Yes | — | Empresa |
+| `notes` | text | Yes | — | Observações |
+| `lead_score` | integer | Yes | `0` | Score do lead |
+| `status` | text | Yes | `'active'` | Status |
+| `created_at` | timestamptz | Yes | `now()` | — |
+| `updated_at` | timestamptz | Yes | `now()` | — |
+
+---
+
+#### `scheduled_visits`
+> Visitas agendadas aos imóveis.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | Criador |
+| `account_id` | uuid | Yes | — | FK → accounts |
+| `property_id` | uuid | Yes | — | FK → properties |
+| `contact_id` | uuid | Yes | — | FK → contacts |
+| `visitor_name` | text | No | — | Nome do visitante |
+| `visitor_phone` | text | No | — | Telefone |
+| `visitor_email` | text | Yes | — | Email |
+| `visit_date` | date | No | — | Data da visita |
+| `visit_time` | time | No | — | Horário |
+| `status` | text | No | `'scheduled'` | scheduled, completed, cancelled |
+| `notes` | text | Yes | — | Observações |
+| `created_by` | text | Yes | `'agent'` | Quem criou |
+| `created_at` | timestamptz | No | `now()` | — |
+| `updated_at` | timestamptz | No | `now()` | — |
+
+---
+
+#### `portal_integrations`
+> Configuração de portais imobiliários por conta.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `account_id` | uuid | No | — | FK → accounts |
+| `provider` | text | No | — | `grupozap`, `vivareal`, `olx` |
+| `is_active` | boolean | Yes | `true` | Portal ativo |
+| `ad_limit` | integer | Yes | `0` | Limite de anúncios |
+| `featured_limit` | integer | Yes | `0` | Limite de destaques |
+| `credentials` | jsonb | Yes | `'{}'` | Credenciais |
+| `feed_url` | text | Yes | — | URL do feed |
+| `created_at` | timestamptz | Yes | `now()` | — |
+| `updated_at` | timestamptz | Yes | `now()` | — |
+
+---
+
+#### `portal_sync_logs`
+> Logs de sincronização com portais.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `account_id` | uuid | Yes | — | FK → accounts |
+| `property_id` | uuid | Yes | — | FK → properties |
+| `portal` | text | Yes | — | Nome do portal |
+| `action` | text | Yes | — | create, update, delete |
+| `status` | text | Yes | — | success, error |
+| `error_message` | text | Yes | — | Mensagem de erro |
+| `synced_at` | timestamptz | Yes | `now()` | — |
+
+---
+
+#### `billing_plans`
+> Planos de assinatura disponíveis.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | text | No | — | PK |
+| `name` | text | No | — | Nome do plano |
+| `price_cents` | integer | No | — | Preço em centavos |
+| `days_duration` | integer | No | `30` | Duração em dias |
+| `provider` | text | No | `'cakto'` | Provedor de pagamento |
+| `provider_link` | text | No | — | Link de checkout |
+| `created_at` | timestamptz | No | `now()` | — |
+
+---
+
+#### `checkout_sessions`
+> Sessões de checkout.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | uuid | No | `gen_random_uuid()` | PK |
+| `user_id` | uuid | No | — | FK → auth.users |
+| `plan_id` | text | No | — | FK → billing_plans |
+| `status` | text | No | `'created'` | Status da sessão |
+| `expires_at` | timestamptz | No | `now() + 2h` | Expiração |
+| `created_at` | timestamptz | No | `now()` | — |
+
+---
+
+#### `payments`
+> Pagamentos registrados.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | bigint | No | auto-increment | PK |
+| `user_id` | uuid | No | — | FK → auth.users |
+| `session_id` | uuid | Yes | — | FK → checkout_sessions |
+| `plan_id` | text | Yes | — | FK → billing_plans |
+| `provider` | text | No | `'cakto'` | Provedor |
+| `status` | text | No | — | Status do pagamento |
+| `amount_cents` | integer | Yes | — | Valor em centavos |
+| `currency` | text | Yes | `'BRL'` | Moeda |
+| `external_tx_id` | text | Yes | — | ID transação externa |
+| `event_id` | text | Yes | — | ID do evento |
+| `raw` | jsonb | No | — | Payload bruto |
+| `created_at` | timestamptz | No | `now()` | — |
+
+---
+
+#### `license_audit`
+> Auditoria de alterações em licenças.
+
+| Coluna | Tipo | Nullable | Default | Descrição |
+|--------|------|----------|---------|-----------|
+| `id` | bigint | No | auto-increment | PK |
+| `user_id` | uuid | No | — | FK → auth.users |
+| `source` | text | No | — | Origem da alteração |
+| `previous_expiration` | timestamptz | Yes | — | Expiração anterior |
+| `new_expiration` | timestamptz | Yes | — | Nova expiração |
+| `ref_payment_id` | bigint | Yes | — | FK → payments |
+| `created_at` | timestamptz | No | `now()` | — |
+
+---
+
+#### `leads`, `conversations`, `messages`, `conversation_summaries`
+> Módulo de CRM/WhatsApp (leads e conversas).
+
+*(Tabelas do módulo de IA/chatbot — consultar types.ts para schema completo)*
+
+---
+
+## 4. Funções do Banco de Dados
+
+| Função | Tipo | Descrição |
+|--------|------|-----------|
+| `has_role(user_id, role)` | SECURITY DEFINER | Verifica se usuário tem determinada role |
+| `is_super_admin(user_id)` | SECURITY DEFINER | Verifica se é super admin |
+| `get_user_account_id(user_id)` | SECURITY DEFINER | Retorna account_id do usuário |
+| `get_resumo_financeiro(user_id, data_inicio, data_fim)` | SECURITY DEFINER | Retorna resumo financeiro (receitas, despesas, saldo, inadimplência) |
+| `handle_new_user()` | TRIGGER | Cria account + profile + role ao registrar usuário |
+| `update_lancamento_status()` | TRIGGER | Auto-atualiza status de lançamentos financeiros |
+| `update_updated_at_column()` | TRIGGER | Atualiza `updated_at` automaticamente |
+| `clean_old_messages()` | TRIGGER | Mantém apenas 10 últimas mensagens por conversa |
+
+---
+
+## 5. Enums
+
+| Enum | Valores |
+|------|---------|
+| `app_role` | admin, sdr, suporte, full, agenda, cadastro_leads, financeiro, super_admin, trial |
+| `lancamento_status` | pendente, pago, atrasado, cancelado |
+| `lancamento_tipo` | receita, despesa |
+
+---
+
+## 6. Storage (Buckets)
+
+| Bucket | Público | Descrição |
+|--------|---------|-----------|
+| `property-photos` | ✅ Sim | Fotos dos imóveis |
+| `property-documents` | ❌ Não | Documentos dos imóveis |
+
+---
+
+## 7. Edge Functions
+
+| Função | JWT | Descrição |
+|--------|-----|-----------|
+| `admin-create-user` | ✅ | Cria usuário (admin) |
+| `admin-update-user` | ✅ | Atualiza usuário |
+| `admin-delete-user` | ✅ | Remove usuário |
+| `admin-list-users` | ✅ | Lista usuários |
+| `admin-stats` | ✅ | Estatísticas do admin |
+| `admin-update-license` | ✅ | Atualiza licença |
+| `checkout-session` | ✅ | Cria sessão de checkout |
+| `check-payment-status` | ✅ | Verifica status do pagamento |
+| `generate-invoices` | ✅ | Gera faturas dos contratos |
+| `generate-lancamentos-contrato` | ✅ | Gera lançamentos financeiros |
+| `financial-dashboard` | ✅ | Dados do dashboard financeiro |
+| `invoice-reminders` | ❌ | Lembretes de faturas (cron) |
+| `generate-portal-feed` | ❌ | Feed XML VrSync para portais |
+| `payment-webhook` | ❌ | Webhook de pagamento (⚠️ sem auth — verificar segurança) |
+| `cakto-webhook` | ❌ | Webhook da Cakto |
+
+---
+
+## 8. Secrets (Variáveis de Ambiente)
+
+| Secret | Descrição |
+|--------|-----------|
+| `SUPABASE_URL` | URL do projeto Supabase |
+| `SUPABASE_ANON_KEY` | Chave anônima |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço (admin) |
+| `SUPABASE_DB_URL` | URL de conexão direta ao banco |
+| `SUPABASE_PUBLISHABLE_KEY` | Chave pública |
+| `CAL_COM_API_KEY` | API key Cal.com |
+| `N8N_POSTGRES_USER` | Usuário Postgres N8N |
+| `N8N_POSTGRES_PASSWORD` | Senha Postgres N8N |
+| `N8N_POSTGRES_HOST` | Host Postgres N8N |
+| `N8N_POSTGRES_DATABASE` | Database N8N |
+| `N8N_WEBHOOK_URL` | URL webhook N8N |
+| `LOVABLE_API_KEY` | API key Lovable |
+
+---
+
+## 9. Padrão RLS (Row Level Security)
+
+Todas as tabelas de dados do tenant seguem o padrão:
+
+```sql
+-- SELECT: Membros da conta podem ver dados da conta
+CREATE POLICY "Account members can view ..."
+ON public.<table> FOR SELECT
+USING (account_id = get_user_account_id(auth.uid()));
+
+-- INSERT: Membros da conta + user_id = auth.uid()
+CREATE POLICY "Account members can insert ..."
+ON public.<table> FOR INSERT
+WITH CHECK (
+  account_id = get_user_account_id(auth.uid()) 
+  AND auth.uid() = user_id
+);
+
+-- UPDATE: Membros da conta
+CREATE POLICY "Account members can update ..."
+ON public.<table> FOR UPDATE
+USING (account_id = get_user_account_id(auth.uid()));
+
+-- DELETE: Membros da conta
+CREATE POLICY "Account members can delete ..."
+ON public.<table> FOR DELETE
+USING (account_id = get_user_account_id(auth.uid()));
+```
+
+---
+
+## 10. Integração com Portais Imobiliários
+
+### Fluxo
+1. Admin acessa `/configuracoes/portais`
+2. Ativa portais desejados (ZAP, Viva Real, OLX)
+3. Copia URL do feed XML
+4. Cadastra URL no painel do portal
+5. Marca imóveis para publicação via `PortalManagementDialog`
+6. Portais fazem polling periódico no feed
+
+### URL do Feed
+```
+https://yvlzmbamsqzqqbhdrqwk.supabase.co/functions/v1/generate-portal-feed?account_id={ACCOUNT_ID}
+```
+
+### Formato: VrSync XML
+O feed é gerado no formato VrSync (padrão do Grupo ZAP) pela Edge Function `generate-portal-feed`.
+
+---
+
+## 11. Fluxo de Pagamento / Licenciamento
+
+1. Usuário escolhe plano em `/plans`
+2. Sistema cria `checkout_session`
+3. Redireciona para provedor (Cakto)
+4. Webhook (`cakto-webhook`) recebe confirmação
+5. Registra em `payments` e `license_audit`
+6. Atualiza `data_expiracao` em `accounts` e `profiles`
+7. `LicenseProvider` verifica expiração via `license-verify`
+
+---
+
+## 12. Dependências Principais
+
+| Pacote | Versão | Uso |
+|--------|--------|-----|
+| React | 18.3 | UI |
+| Vite | — | Build |
+| TypeScript | — | Tipagem |
+| Tailwind CSS | — | Estilos |
+| shadcn/ui | — | Componentes |
+| @supabase/supabase-js | 2.76 | Backend |
+| @tanstack/react-query | 5.83 | Cache/fetching |
+| react-router-dom | 6.30 | Roteamento |
+| recharts | 2.15 | Gráficos |
+| date-fns | 3.6 | Manipulação de datas |
+| sonner | 1.7 | Toasts |
+| zod | 3.25 | Validação |
+| react-hook-form | 7.61 | Formulários |
+| lucide-react | 0.462 | Ícones |
+
+---
+
+## 13. Guia de Migração de Banco
+
+Se precisar migrar para outro banco de dados:
+
+### 13.1 O que replicar obrigatoriamente
+1. **Tabelas e colunas** — conforme seção 3.2
+2. **Enums** — `app_role`, `lancamento_status`, `lancamento_tipo`
+3. **Funções** — especialmente `has_role`, `is_super_admin`, `get_user_account_id`
+4. **Triggers** — `handle_new_user`, `update_lancamento_status`, `update_updated_at_column`
+5. **RLS equivalente** — implementar no nível de aplicação ou middleware
+
+### 13.2 Dependências do Supabase
+- **Auth** — `auth.users` gerenciado pelo Supabase Auth
+- **Storage** — buckets `property-photos` e `property-documents`
+- **Edge Functions** — 16 funções Deno no edge
+- **Realtime** — não utilizado atualmente
+
+### 13.3 Substituições necessárias
+| Supabase | Alternativa |
+|----------|-------------|
+| Supabase Auth | Firebase Auth, Auth0, Clerk |
+| RLS Policies | Middleware de autorização (ex: CASL, Casbin) |
+| Edge Functions | AWS Lambda, Cloudflare Workers, Vercel Functions |
+| Storage Buckets | AWS S3, Cloudflare R2 |
+| `supabase-js` client | Cliente HTTP + ORM (Prisma, Drizzle) |
+
+### 13.4 Exportação dos dados
+```sql
+-- Exportar todas as tabelas
+pg_dump -h db.yvlzmbamsqzqqbhdrqwk.supabase.co -U postgres -d postgres \
+  --schema=public --data-only --format=custom -f accordous_backup.dump
+```
+
+---
+
+*Documentação gerada automaticamente a partir do código-fonte e schema do banco de dados.*
