@@ -369,7 +369,7 @@ const ReportsList = () => {
                     </TableHeader>
                     <TableBody>
                       {invoices
-                        ?.filter(i => i.status === "pending" && new Date(i.due_date) < new Date())
+                        ?.filter(i => i.status === "overdue")
                         .map((invoice) => {
                           const daysOverdue = Math.floor(
                             (new Date().getTime() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)
