@@ -69,7 +69,6 @@ const InvoiceDetails = () => {
       const { error } = await supabase
         .from("invoices")
         .update({ 
-          status: "paid",
           payment_date: new Date().toISOString().split('T')[0],
           history: [
             ...currentHistory,

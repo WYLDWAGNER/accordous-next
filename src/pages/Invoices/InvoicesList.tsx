@@ -163,7 +163,7 @@ const InvoicesList = () => {
     (acc, invoice) => {
       if (invoice.status === "paid") {
         acc.paid += Number(invoice.total_amount);
-      } else if (invoice.status === "pending") {
+      } else if (invoice.status === "pending" || invoice.status === "overdue") {
         acc.pending += Number(invoice.total_amount);
       }
       acc.total += Number(invoice.total_amount);
@@ -173,7 +173,7 @@ const InvoicesList = () => {
   );
 
   const hasPendingInvoices = invoices?.some(
-    (invoice) => invoice.status === "pending" && new Date(invoice.due_date) < new Date()
+    (invoice) => invoice.status === "overdue"
   );
 
   return (
