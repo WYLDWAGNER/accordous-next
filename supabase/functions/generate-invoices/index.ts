@@ -258,6 +258,37 @@ Deno.serve(async (req) => {
         } else {
           console.log(`Invoice created for contract ${contract.id}`);
           results.created++;
+
+          // Create linked lancamento_financeiro for dashboard sync
+          const { data: insertedInvoice } = await supabase
+            .from('invoices')
+            .select('id')
+            .eq('contract_id', contract.id)
+            .eq('reference_month', reference_month)
+            .single();
+
+          if (insertedInvoice) {
+            const refDate = new Date(reference_month);
+            const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+              'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+            const descricao = `Aluguel referente a ${monthNames[refDate.getMonth()]} de ${refDate.getFullYear()}`;
+
+            await supabase
+              .from('lancamentos_financeiros')
+              .insert({
+                user_id: user.id,
+                account_id: contract.account_id,
+                id_contrato: contract.id,
+                id_imovel: contract.property_id,
+                invoice_id: insertedInvoice.id,
+                tipo: 'receita',
+                categoria: 'Aluguel',
+                descricao: descricao,
+                valor: totalAmount,
+                data_vencimento: dueDate.toISOString().split('T')[0],
+                status: 'pendente',
+              });
+          }
         }
       } catch (error) {
         console.error(`Exception processing contract ${contract.id}:`, error);

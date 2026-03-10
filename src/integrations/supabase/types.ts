@@ -562,6 +562,7 @@ export type Database = {
           id: string
           id_contrato: string | null
           id_imovel: string | null
+          invoice_id: string | null
           observacoes: string | null
           status: Database["public"]["Enums"]["lancamento_status"]
           tipo: Database["public"]["Enums"]["lancamento_tipo"]
@@ -579,6 +580,7 @@ export type Database = {
           id?: string
           id_contrato?: string | null
           id_imovel?: string | null
+          invoice_id?: string | null
           observacoes?: string | null
           status?: Database["public"]["Enums"]["lancamento_status"]
           tipo: Database["public"]["Enums"]["lancamento_tipo"]
@@ -596,6 +598,7 @@ export type Database = {
           id?: string
           id_contrato?: string | null
           id_imovel?: string | null
+          invoice_id?: string | null
           observacoes?: string | null
           status?: Database["public"]["Enums"]["lancamento_status"]
           tipo?: Database["public"]["Enums"]["lancamento_tipo"]
@@ -623,6 +626,13 @@ export type Database = {
             columns: ["id_imovel"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
