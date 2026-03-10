@@ -265,7 +265,7 @@ const ReportsList = () => {
                         const propertyInvoices = invoices?.filter(i => i.property_id === property.id) || [];
                         const revenue = propertyInvoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
                         const overdue = propertyInvoices.filter(
-                          i => i.status === "pending" && new Date(i.due_date) < new Date()
+                          i => i.status === "overdue"
                         ).length;
 
                         return (
