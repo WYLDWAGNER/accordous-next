@@ -472,8 +472,8 @@ const ReportsList = () => {
                             R$ {Number(invoice.total_amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={invoice.status === "paid" ? "default" : invoice.status === "pending" ? "secondary" : "outline"}>
-                              {invoice.status === "paid" ? "Pago" : invoice.status === "pending" ? "Pendente" : "Cancelada"}
+                            <Badge variant={invoice.status === "paid" ? "default" : invoice.status === "overdue" ? "destructive" : invoice.status === "pending" ? "secondary" : "outline"}>
+                              {invoice.status === "paid" ? "Pago" : invoice.status === "overdue" ? "Vencida" : invoice.status === "pending" ? "Pendente" : "Cancelada"}
                             </Badge>
                           </TableCell>
                         </TableRow>
