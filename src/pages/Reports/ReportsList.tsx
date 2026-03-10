@@ -90,9 +90,9 @@ const ReportsList = () => {
         acc.totalPaid += amount;
       } else if (invoice.status === "pending") {
         acc.totalPending += amount;
-        if (new Date(invoice.due_date) < new Date()) {
-          acc.totalOverdue += amount;
-        }
+      } else if (invoice.status === "overdue") {
+        acc.totalPending += amount;
+        acc.totalOverdue += amount;
       }
       
       return acc;
