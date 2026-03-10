@@ -394,7 +394,7 @@ const ReportsList = () => {
                         })}
                     </TableBody>
                   </Table>
-                  {invoices?.filter(i => i.status === "pending" && new Date(i.due_date) < new Date()).length === 0 && (
+                  {invoices?.filter(i => i.status === "overdue").length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       Nenhuma fatura atrasada encontrada
                     </div>
