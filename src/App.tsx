@@ -140,6 +140,11 @@ const App = () => (
                 <BaixaPagamentos />
               </ProtectedRoute>
             } />
+            <Route path="/configuracoes" element={
+              <ProtectedRoute>
+                <GeneralSettings />
+              </ProtectedRoute>
+            } />
             <Route path="/configuracoes/portais" element={
               <ProtectedRoute>
                 <PortalSettings />
