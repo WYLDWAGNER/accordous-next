@@ -132,6 +132,7 @@ const PropertyForm = () => {
       // Prepare insert data with only defined values
       const insertData: any = {
         user_id: user?.id,
+        account_id: accountId,
         name: validatedData.name,
         property_type: validatedData.property_type,
         status: validatedData.status,
