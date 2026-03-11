@@ -4,10 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountId } from "@/hooks/useAccountId";
 import { toast } from "sonner";
+import * as pdfjsLib from "pdfjs-dist";
+
+// Configure pdf.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface ImportContractDocsDialogProps {
   open: boolean;
@@ -17,90 +22,211 @@ interface ImportContractDocsDialogProps {
 
 interface FileMatch {
   file: File;
-  extractedNumber: string | null;
+  extractedCpf: string | null;
+  extractedName: string | null;
   contractId: string | null;
   contractNumber: string | null;
   tenantName: string | null;
-  status: "pending" | "matched" | "unmatched" | "uploaded" | "error";
+  contactId: string | null;
+  status: "pending" | "parsing" | "matched" | "unmatched" | "uploaded" | "error";
   errorMsg?: string;
+}
+
+// Extract CPF patterns from text: 000.000.000-00 or 00000000000
+function extractCpf(text: string): string | null {
+  // Pattern with dots and dash
+  const formatted = text.match(/\d{3}\.\d{3}\.\d{3}-\d{2}/g);
+  if (formatted && formatted.length > 0) {
+    // Skip the LOCADOR CPF (first one is usually the landlord)
+    // Look for CPF after LOCATÁRIO/LOCATÁRIA keyword
+    const locatarioIdx = text.search(/LOCAT[ÁA]RI[OA]/i);
+    if (locatarioIdx >= 0) {
+      const afterLocatario = text.substring(locatarioIdx);
+      const cpfMatch = afterLocatario.match(/\d{3}\.\d{3}\.\d{3}-\d{2}/);
+      if (cpfMatch) return cpfMatch[0];
+    }
+    // Fallback: return second CPF (first is usually landlord)
+    if (formatted.length >= 2) return formatted[1];
+    return formatted[0];
+  }
+  return null;
+}
+
+// Extract tenant name from contract text
+function extractTenantName(text: string): string | null {
+  // Look for pattern after LOCATÁRIO/LOCATÁRIA
+  const match = text.match(/LOCAT[ÁA]RI[OA][,:]?\s+([^,]+)/i);
+  if (match) {
+    // Clean up the name
+    let name = match[1].trim();
+    // Remove common suffixes
+    name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|solteiro|solteira|casado|casada|portador|portadora|inscrito|inscrita).*/i, "").trim();
+    if (name.length > 3 && name.length < 100) return name;
+  }
+  return null;
+}
+
+async function extractTextFromPdf(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = "";
+  // Read first 3 pages (contract data is usually at the top)
+  const pagesToRead = Math.min(pdf.numPages, 3);
+  for (let i = 1; i <= pagesToRead; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item: any) => item.str).join(" ");
+    fullText += pageText + "\n";
+  }
+  return fullText;
 }
 
 export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: ImportContractDocsDialogProps) {
   const { user } = useAuth();
+  const { accountId } = useAccountId();
   const [files, setFiles] = useState<FileMatch[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState<"select" | "preview" | "done">("select");
-
-  const extractContractNumber = (filename: string): string | null => {
-    // Match patterns like: contrato_9401_xxx.pdf, contrato-9401.pdf, 9401.pdf, etc.
-    const patterns = [
-      /contrato[_\-\s]*(\d+)/i,
-      /^(\d{4,6})/,
-      /[_\-](\d{4,6})[_\-\.]/,
-    ];
-    for (const pattern of patterns) {
-      const match = filename.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
-  };
+  const [parseProgress, setParseProgress] = useState(0);
 
   const handleFilesSelected = useCallback(async (selectedFiles: FileList) => {
     if (!user?.id) return;
     setLoading(true);
 
-    // Fetch all contracts for the user
-    const { data: contracts, error } = await supabase
+    // Fetch all contacts with documents (CPFs)
+    const { data: contacts, error: contactsErr } = await supabase
+      .from("contacts")
+      .select("id, name, document")
+      .eq("user_id", user.id)
+      .not("document", "is", null);
+
+    if (contactsErr) {
+      toast.error("Erro ao buscar contatos");
+      setLoading(false);
+      return;
+    }
+
+    // Fetch all contracts
+    const { data: contracts, error: contractsErr } = await supabase
       .from("contracts")
-      .select("id, contract_number, tenant_name")
+      .select("id, contract_number, tenant_name, tenant_document")
       .eq("user_id", user.id);
 
-    if (error) {
+    if (contractsErr) {
       toast.error("Erro ao buscar contratos");
       setLoading(false);
       return;
     }
 
-    const fileMatches: FileMatch[] = [];
+    // Normalize CPF for comparison
+    const normalizeCpf = (cpf: string) => cpf.replace(/[^0-9]/g, "");
 
-    for (const file of Array.from(selectedFiles)) {
-      const extractedNumber = extractContractNumber(file.name);
-      let matchedContract = null;
+    // Build contact CPF index
+    const contactByCpf = new Map<string, typeof contacts[0]>();
+    contacts?.forEach((c) => {
+      if (c.document) {
+        contactByCpf.set(normalizeCpf(c.document), c);
+      }
+    });
 
-      if (extractedNumber && contracts) {
-        matchedContract = contracts.find(
-          (c) => c.contract_number === extractedNumber
-        );
+    // Build contract by tenant_document index
+    const contractByDoc = new Map<string, typeof contracts[0]>();
+    contracts?.forEach((c) => {
+      if (c.tenant_document) {
+        contractByDoc.set(normalizeCpf(c.tenant_document), c);
+      }
+    });
+
+    const fileMatches: FileMatch[] = Array.from(selectedFiles).map((file) => ({
+      file,
+      extractedCpf: null,
+      extractedName: null,
+      contractId: null,
+      contractNumber: null,
+      tenantName: null,
+      contactId: null,
+      status: "pending" as const,
+    }));
+
+    setFiles(fileMatches);
+    setStep("preview");
+
+    // Parse PDFs in batches
+    let parsed = 0;
+    for (const fm of fileMatches) {
+      fm.status = "parsing";
+      setFiles([...fileMatches]);
+
+      try {
+        const text = await extractTextFromPdf(fm.file);
+        const cpf = extractCpf(text);
+        const name = extractTenantName(text);
+        fm.extractedCpf = cpf;
+        fm.extractedName = name;
+
+        if (cpf) {
+          const normalizedCpf = normalizeCpf(cpf);
+
+          // Try to match contract by tenant_document
+          const contract = contractByDoc.get(normalizedCpf);
+          if (contract) {
+            fm.contractId = contract.id;
+            fm.contractNumber = contract.contract_number;
+            fm.tenantName = contract.tenant_name;
+            fm.status = "matched";
+          } else {
+            // Try to match contact by CPF
+            const contact = contactByCpf.get(normalizedCpf);
+            if (contact) {
+              fm.contactId = contact.id;
+              fm.tenantName = contact.name;
+              // Try to find contract by tenant_name matching contact name
+              const matchedContract = contracts?.find(
+                (c) => c.tenant_name?.toLowerCase() === contact.name?.toLowerCase()
+              );
+              if (matchedContract) {
+                fm.contractId = matchedContract.id;
+                fm.contractNumber = matchedContract.contract_number;
+                fm.status = "matched";
+              } else {
+                // Contact found but no contract linked
+                fm.status = "matched";
+                fm.tenantName = contact.name + " (contato encontrado, contrato será criado)";
+              }
+            } else {
+              fm.status = "unmatched";
+            }
+          }
+        } else {
+          fm.status = "unmatched";
+          fm.errorMsg = "CPF não encontrado no PDF";
+        }
+      } catch (err: any) {
+        fm.status = "error";
+        fm.errorMsg = "Erro ao ler PDF: " + (err.message || "desconhecido");
       }
 
-      fileMatches.push({
-        file,
-        extractedNumber,
-        contractId: matchedContract?.id || null,
-        contractNumber: matchedContract?.contract_number || null,
-        tenantName: matchedContract?.tenant_name || null,
-        status: matchedContract ? "matched" : "unmatched",
-      });
+      parsed++;
+      setParseProgress(Math.round((parsed / fileMatches.length) * 100));
+      setFiles([...fileMatches]);
     }
 
-    // Sort: matched first, then unmatched
+    // Sort: matched first
     fileMatches.sort((a, b) => {
       if (a.status === "matched" && b.status !== "matched") return -1;
       if (a.status !== "matched" && b.status === "matched") return 1;
       return 0;
     });
-
-    setFiles(fileMatches);
-    setStep("preview");
+    setFiles([...fileMatches]);
     setLoading(false);
   }, [user?.id]);
 
   const handleUpload = async () => {
     const matchedFiles = files.filter((f) => f.status === "matched");
     if (matchedFiles.length === 0) {
-      toast.error("Nenhum arquivo vinculado a contratos");
+      toast.error("Nenhum arquivo vinculado");
       return;
     }
 
@@ -110,50 +236,71 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
     let uploaded = 0;
     let errors = 0;
 
-    for (const fileMatch of matchedFiles) {
+    for (const fm of matchedFiles) {
       try {
-        const ext = fileMatch.file.name.split(".").pop() || "pdf";
-        const storagePath = `${user!.id}/${fileMatch.contractId}/${Date.now()}_${fileMatch.file.name}`;
+        let contractId = fm.contractId;
 
-        // Upload to storage
+        // If no contract but contact found, create a contract
+        if (!contractId && fm.contactId && fm.extractedCpf) {
+          const { data: newContract, error: createErr } = await supabase
+            .from("contracts")
+            .insert({
+              user_id: user!.id,
+              account_id: accountId || undefined,
+              tenant_name: fm.extractedName || "Inquilino",
+              tenant_document: fm.extractedCpf,
+              rental_value: 0,
+              start_date: new Date().toISOString().split("T")[0],
+              status: "active",
+            } as any)
+            .select("id")
+            .single();
+
+          if (createErr) throw createErr;
+          contractId = newContract.id;
+        }
+
+        if (!contractId) throw new Error("Sem contrato vinculado");
+
+        const storagePath = `${user!.id}/${contractId}/${Date.now()}_${fm.file.name}`;
+
         const { error: uploadError } = await supabase.storage
           .from("contract-documents")
-          .upload(storagePath, fileMatch.file, { contentType: fileMatch.file.type });
+          .upload(storagePath, fm.file, { contentType: fm.file.type });
 
         if (uploadError) throw uploadError;
 
-        // Get existing documents from contract
+        // Get existing documents
         const { data: contractData } = await supabase
           .from("contracts")
           .select("documents")
-          .eq("id", fileMatch.contractId!)
+          .eq("id", contractId)
           .single();
 
-        const existingDocs = Array.isArray((contractData as any)?.documents) 
-          ? (contractData as any).documents 
+        const existingDocs = Array.isArray((contractData as any)?.documents)
+          ? (contractData as any).documents
           : [];
 
         const newDoc = {
-          name: fileMatch.file.name,
+          name: fm.file.name,
           path: storagePath,
-          type: fileMatch.file.type,
-          size: fileMatch.file.size,
+          type: fm.file.type,
+          size: fm.file.size,
           uploaded_at: new Date().toISOString(),
         };
 
-        // Update contract documents
         const { error: updateError } = await supabase
           .from("contracts")
           .update({ documents: [...existingDocs, newDoc] } as any)
-          .eq("id", fileMatch.contractId!);
+          .eq("id", contractId);
 
         if (updateError) throw updateError;
 
-        fileMatch.status = "uploaded";
+        fm.status = "uploaded";
         uploaded++;
       } catch (err: any) {
-        fileMatch.status = "error";
-        fileMatch.errorMsg = err.message;
+        fm.status = "error";
+        fm.errorMsg = err.message;
         errors++;
       }
 
@@ -163,17 +310,19 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
 
     setUploading(false);
     setStep("done");
-    toast.success(`${uploaded} documentos enviados com sucesso${errors > 0 ? `, ${errors} erros` : ""}`);
+    toast.success(`${uploaded} documentos enviados${errors > 0 ? `, ${errors} erros` : ""}`);
     onComplete?.();
   };
 
   const matchedCount = files.filter((f) => f.status === "matched" || f.status === "uploaded").length;
-  const unmatchedCount = files.filter((f) => f.status === "unmatched").length;
+  const unmatchedCount = files.filter((f) => f.status === "unmatched" || f.status === "error").length;
+  const parsingCount = files.filter((f) => f.status === "parsing" || f.status === "pending").length;
 
   const handleClose = () => {
     setFiles([]);
     setStep("select");
     setProgress(0);
+    setParseProgress(0);
     onOpenChange(false);
   };
 
@@ -183,7 +332,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
         <DialogHeader>
           <DialogTitle>Importar Documentos de Contratos</DialogTitle>
           <DialogDescription>
-            Faça upload dos PDFs. O sistema vincula automaticamente ao contrato pelo número no nome do arquivo (ex: contrato_9401_xxx.pdf → contrato #9401).
+            Faça upload dos PDFs. O sistema extrai o CPF do inquilino de cada PDF e vincula ao contato/contrato correspondente.
           </DialogDescription>
         </DialogHeader>
 
@@ -195,7 +344,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
             >
               <Upload className="h-10 w-10 text-muted-foreground mb-3" />
               <p className="text-sm font-medium">Clique ou arraste os PDFs aqui</p>
-              <p className="text-xs text-muted-foreground mt-1">Aceita múltiplos arquivos PDF</p>
+              <p className="text-xs text-muted-foreground mt-1">O sistema lerá cada PDF para extrair o CPF do inquilino</p>
               <input
                 id="contract-docs-input"
                 type="file"
@@ -205,14 +354,19 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
                 onChange={(e) => e.target.files && handleFilesSelected(e.target.files)}
               />
             </label>
-            {loading && <p className="text-center text-sm text-muted-foreground">Analisando arquivos...</p>}
           </div>
         )}
 
         {step === "preview" && (
           <div className="space-y-4">
-            <div className="flex gap-3">
-              <Badge variant="default" className="bg-green-600">
+            <div className="flex gap-3 flex-wrap">
+              {parsingCount > 0 && (
+                <Badge variant="secondary">
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Lendo {parsingCount} PDFs...
+                </Badge>
+              )}
+              <Badge variant="default" className="bg-green-600 hover:bg-green-700">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 {matchedCount} vinculados
               </Badge>
@@ -225,6 +379,10 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
               </Badge>
             </div>
 
+            {parsingCount > 0 && (
+              <Progress value={parseProgress} className="w-full" />
+            )}
+
             <ScrollArea className="h-[400px] border rounded-lg">
               <div className="p-2 space-y-1">
                 {files.map((f, i) => (
@@ -233,31 +391,43 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
                     className={`flex items-center gap-3 p-2 rounded text-sm ${
                       f.status === "matched" ? "bg-green-50 dark:bg-green-950/20" :
                       f.status === "uploaded" ? "bg-blue-50 dark:bg-blue-950/20" :
+                      f.status === "parsing" || f.status === "pending" ? "bg-muted/30" :
                       f.status === "error" ? "bg-red-50 dark:bg-red-950/20" :
-                      "bg-muted/30"
+                      "bg-orange-50 dark:bg-orange-950/20"
                     }`}
                   >
                     <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
                       <p className="truncate font-medium">{f.file.name}</p>
+                      {f.status === "parsing" && (
+                        <p className="text-xs text-muted-foreground">Lendo PDF...</p>
+                      )}
                       {f.status === "matched" && (
                         <p className="text-xs text-muted-foreground">
-                          → Contrato #{f.contractNumber} • {f.tenantName}
+                          CPF: {f.extractedCpf} → {f.tenantName}
+                          {f.contractNumber && ` (Contrato #${f.contractNumber})`}
                         </p>
                       )}
                       {f.status === "unmatched" && (
                         <p className="text-xs text-destructive">
-                          Nº "{f.extractedNumber || "?"}" não encontrado nos contratos
+                          {f.extractedCpf 
+                            ? `CPF ${f.extractedCpf} não encontrado nos contatos`
+                            : f.errorMsg || "CPF não encontrado no PDF"
+                          }
                         </p>
                       )}
                       {f.status === "error" && (
                         <p className="text-xs text-destructive">{f.errorMsg}</p>
+                      )}
+                      {f.status === "uploaded" && (
+                        <p className="text-xs text-blue-600">Enviado com sucesso</p>
                       )}
                     </div>
                     {f.status === "matched" && <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />}
                     {f.status === "uploaded" && <CheckCircle className="h-4 w-4 text-blue-600 flex-shrink-0" />}
                     {f.status === "unmatched" && <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0" />}
                     {f.status === "error" && <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />}
+                    {(f.status === "parsing" || f.status === "pending") && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0" />}
                   </div>
                 ))}
               </div>
@@ -269,7 +439,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
               <Button variant="outline" onClick={handleClose} disabled={uploading}>
                 Cancelar
               </Button>
-              <Button onClick={handleUpload} disabled={uploading || matchedCount === 0}>
+              <Button onClick={handleUpload} disabled={uploading || matchedCount === 0 || parsingCount > 0}>
                 {uploading ? `Enviando... ${progress}%` : `Enviar ${matchedCount} documentos`}
               </Button>
             </div>
