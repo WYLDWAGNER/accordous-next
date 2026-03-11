@@ -37,6 +37,7 @@ import FinancialDashboard from "./pages/Financial/FinancialDashboard";
 import BaixaPagamentos from "./pages/Financial/BaixaPagamentos";
 import PortalSettings from "./pages/Properties/PortalSettings";
 import GeneralSettings from "./pages/Settings/GeneralSettings";
+import ImportConciliacao from "./pages/Settings/ImportConciliacao";
 import ContactsList from "./pages/Contacts/ContactsList";
 import ContactDetails from "./pages/Contacts/ContactDetails";
 
@@ -155,6 +156,11 @@ const App = () => (
             <Route path="/configuracoes" element={
               <ProtectedRoute>
                 <GeneralSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/configuracoes/importar-conciliacao" element={
+              <ProtectedRoute>
+                <ImportConciliacao />
               </ProtectedRoute>
             } />
             <Route path="/configuracoes/portais" element={

@@ -2,9 +2,12 @@ import { AppLayout } from "@/components/Layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImportPropertiesDialog } from "@/components/Properties/ImportPropertiesDialog";
 import { ImportContactsDialog } from "@/components/Contacts/ImportContactsDialog";
-import { Building2, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Users, FileSpreadsheet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const GeneralSettings = () => {
+  const navigate = useNavigate();
   return (
     <AppLayout title="Configurações Gerais">
       <div className="space-y-6">
@@ -49,6 +52,24 @@ const GeneralSettings = () => {
                 <ImportContactsDialog />
               </div>
             </div>
+          </CardContent>
+        </Card>
+        {/* Conciliação Import */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5" />
+              Importação de Conciliação
+            </CardTitle>
+            <CardDescription>
+              Importe contatos, contratos e faturas a partir de uma planilha de conciliação XLSX.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/configuracoes/importar-conciliacao")}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Importar Conciliação XLSX
+            </Button>
           </CardContent>
         </Card>
       </div>
