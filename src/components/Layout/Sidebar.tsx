@@ -45,6 +45,7 @@ const menuItems = [
       { label: "Cadastrar imóveis", path: "/imoveis/novo" },
     ],
   },
+  { icon: Users, label: "Contatos", path: "/contatos" },
   { icon: FileText, label: "Documentos", path: "/documentos" },
   { icon: Calendar, label: "Visitas Agendadas", path: "/visitas" },
   { icon: Receipt, label: "Faturas", path: "/faturas" },
