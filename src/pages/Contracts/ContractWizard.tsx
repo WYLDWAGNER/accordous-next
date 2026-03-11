@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronLeft, ChevronRight, FileCheck, Shield, User, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountId } from "@/hooks/useAccountId";
 
 const ContractWizard = () => {
   const { propertyId } = useParams();
