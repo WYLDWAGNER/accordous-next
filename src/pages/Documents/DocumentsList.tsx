@@ -27,8 +27,10 @@ import {
   Building2,
   User,
   Calendar,
-  Eye
+  Eye,
+  Upload
 } from "lucide-react";
+import { ImportContractDocsDialog } from "@/components/Contracts/ImportContractDocsDialog";
 
 const contractTemplates = [
   "Contrato de Prestação de Serviços de Corretagem Imobiliária",
