@@ -196,7 +196,7 @@ const ImportConciliacao = () => {
         const data = evt.target?.result;
         const workbook = XLSX.read(data, { type: "binary" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<any>(sheet, { header: 1 });
+        const rows = XLSX.utils.sheet_to_json<any>(sheet, { header: 1, raw: false });
 
         // Find header row (contains "Contrato")
         let headerIdx = -1;
