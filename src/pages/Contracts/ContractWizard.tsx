@@ -18,6 +18,7 @@ const ContractWizard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { accountId } = useAccountId();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
