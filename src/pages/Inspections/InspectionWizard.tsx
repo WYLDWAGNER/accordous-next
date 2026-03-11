@@ -57,15 +57,66 @@ const buildInitialItems = (): InspectionItem[] => {
   );
 };
 
+const STORAGE_KEY = "locatto_inspection_draft";
+
+const loadDraft = (): InspectionData | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as InspectionData;
+  } catch {
+    return null;
+  }
+};
+
+const saveDraft = (data: InspectionData) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // storage full — silently ignore
+  }
+};
+
+export const clearInspectionDraft = () => {
+  localStorage.removeItem(STORAGE_KEY);
+};
+
 const InspectionWizard = () => {
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<InspectionData>({
-    contractId: null,
-    contractLabel: "",
-    items: buildInitialItems(),
-    tenantSignature: null,
-    inspectorSignature: null,
-  });
+  const draft = loadDraft();
+  const [step, setStep] = useState(draft ? 0 : 0);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [data, setData] = useState<InspectionData>(
+    draft ?? {
+      contractId: null,
+      contractLabel: "",
+      items: buildInitialItems(),
+      tenantSignature: null,
+      inspectorSignature: null,
+    }
+  );
+
+  // Persist to localStorage on every data change
+  useEffect(() => {
+    saveDraft(data);
+  }, [data]);
+
+  // Online/Offline detection
+  useEffect(() => {
+    const goOnline = () => {
+      setIsOnline(true);
+      toast.success("Conexão restabelecida");
+    };
+    const goOffline = () => {
+      setIsOnline(false);
+      toast.warning("Sem conexão — seus dados estão salvos localmente");
+    };
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
 
   const canAdvance = () => {
     if (step === 0) return !!data.contractId;
