@@ -110,19 +110,19 @@ function extractCpf(text: string): string | null {
 
 // Extract tenant name from contract text
 function extractTenantName(text: string): string | null {
-  // Strategy 1: Extract from "e de outro [NOME], ..."
+  // Strategy 1 (BEST): pattern after "LOCATÁRIO:" label
+  const match = text.match(/LOCAT[ÁA]RI[OA]\s*[,:]\s*([^,]+)/i);
+  if (match) {
+    let name = match[1].trim();
+    name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|solteiro|solteira|casado|casada|portador|portadora|inscrito|inscrita|outros).*/i, "").trim();
+    if (name.length > 3 && name.length < 120) return name;
+  }
+
+  // Strategy 2: Extract from "e de outro [NOME], ..."
   const tenantSectionMatch = text.match(/e\s+de\s+outro(?:\s+lado)?\s+([^,]+)/i);
   if (tenantSectionMatch) {
     let name = tenantSectionMatch[1].trim();
     name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|portador|portadora).*/i, "").trim();
-    if (name.length > 3 && name.length < 120) return name;
-  }
-
-  // Strategy 2: pattern after LOCATÁRIO/LOCATÁRIA
-  const match = text.match(/LOCAT[ÁA]RI[OA][,:]?\s+([^,]+)/i);
-  if (match) {
-    let name = match[1].trim();
-    name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|solteiro|solteira|casado|casada|portador|portadora|inscrito|inscrita).*/i, "").trim();
     if (name.length > 3 && name.length < 120) return name;
   }
 
