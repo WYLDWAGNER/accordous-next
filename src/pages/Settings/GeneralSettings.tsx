@@ -2,7 +2,9 @@ import { AppLayout } from "@/components/Layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImportPropertiesDialog } from "@/components/Properties/ImportPropertiesDialog";
 import { ImportContactsDialog } from "@/components/Contacts/ImportContactsDialog";
-import { Building2, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Users, FileSpreadsheet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const GeneralSettings = () => {
   return (
