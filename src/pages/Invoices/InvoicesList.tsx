@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAccountId } from "@/hooks/useAccountId";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ const ITEMS_PER_PAGE = 50;
 
 const InvoicesList = () => {
   const { user } = useAuth();
+  const { accountId } = useAccountId();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,8 +41,11 @@ const InvoicesList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [referenceMonth, setReferenceMonth] = useState<Date>(new Date());
 
+  const filterColumn = accountId ? "account_id" : "user_id";
+  const filterValue = accountId || user?.id;
+
   const { data: invoices, isLoading } = useQuery({
-    queryKey: ["invoices", user?.id],
+    queryKey: ["invoices", user?.id, accountId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
@@ -63,7 +68,7 @@ const InvoicesList = () => {
             owner_email
           )
         `)
-        .eq("user_id", user?.id)
+        .eq(filterColumn, filterValue)
         .order("due_date", { ascending: false });
 
       if (error) throw error;
@@ -73,12 +78,12 @@ const InvoicesList = () => {
   });
 
   const { data: activeContractsCount } = useQuery({
-    queryKey: ["active-contracts-count", user?.id],
+    queryKey: ["active-contracts-count", user?.id, accountId],
     queryFn: async () => {
       const { count, error } = await supabase
         .from("contracts")
         .select("*", { count: "exact", head: true })
-        .eq("user_id", user?.id)
+        .eq(filterColumn, filterValue)
         .eq("status", "active");
 
       if (error) throw error;
