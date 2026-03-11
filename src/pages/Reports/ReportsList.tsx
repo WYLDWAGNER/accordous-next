@@ -328,7 +328,7 @@ const ReportsList = () => {
                       {contracts?.map((contract) => (
                         <TableRow key={contract.id}>
                           <TableCell className="font-medium">
-                            {contract.properties?.address}
+                            {contract.properties?.name}
                           </TableCell>
                           <TableCell>
                             {new Date(contract.start_date).toLocaleDateString("pt-BR")} - {" "}
