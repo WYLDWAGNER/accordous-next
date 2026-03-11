@@ -420,25 +420,36 @@ const ImportConciliacao = () => {
       const BATCH_SIZE = 50;
       for (let batch = 0; batch < updatedContacts.length; batch += BATCH_SIZE) {
         const chunk = updatedContacts.slice(batch, batch + BATCH_SIZE);
-        const insertData = chunk.map(c => ({
-          user_id: user.id,
-          account_id: accountId,
-          name: c.name,
-          document: c.document || null,
-          phone: c.cellphone || c.phone || null,
-          email: c.email || null,
-          address: c.address || null,
-          contact_type: "inquilino",
-          status: "active",
-          notes: [
-            c.rg ? `RG: ${c.rg}` : "",
-            c.birthDate ? `Nascimento: ${c.birthDate}` : "",
-            c.nationality ? `Nacionalidade: ${c.nationality}` : "",
-            c.maritalStatus ? `Estado Civil: ${c.maritalStatus}` : "",
-            c.profession ? `Profissão: ${c.profession}` : "",
-            c.legacyId ? `ID legado: ${c.legacyId}` : "",
-          ].filter(Boolean).join(" | ") || null,
-        }));
+        const insertData = chunk.map(c => {
+          // Build full address with CEP, city, state
+          const addressParts = [
+            c.address,
+            c.cep ? `CEP: ${c.cep}` : "",
+            c.city && c.state ? `${c.city}/${c.state}` : c.city || c.state || "",
+          ].filter(Boolean);
+
+          return {
+            user_id: user.id,
+            account_id: accountId,
+            name: c.name,
+            document: c.document || null,
+            phone: c.cellphone || c.phone || null,
+            email: c.email || null,
+            address: addressParts.join(", ") || null,
+            company: (c as any).fantasyName || null,
+            contact_type: "inquilino",
+            status: "active",
+            notes: [
+              c.rg ? `RG: ${c.rg}` : "",
+              c.birthDate ? `Nascimento: ${c.birthDate}` : "",
+              c.nationality ? `Nacionalidade: ${c.nationality}` : "",
+              c.maritalStatus ? `Estado Civil: ${c.maritalStatus}` : "",
+              c.profession ? `Profissão: ${c.profession}` : "",
+              (c as any).hasRepresentative === "Sim" ? `Representante: ${(c as any).representativeName || ""} | Email: ${(c as any).representativeEmail || ""} | Doc: ${(c as any).representativeDoc || ""}` : "",
+              c.legacyId ? `ID legado: ${c.legacyId}` : "",
+            ].filter(Boolean).join(" | ") || null,
+          };
+        });
 
         const { error } = await supabase.from("contacts").insert(insertData);
 
