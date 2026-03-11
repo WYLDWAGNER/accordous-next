@@ -81,7 +81,7 @@ export const Sidebar = () => {
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
         <Building2 className="h-6 w-6 text-primary" />
-        {open && <span className="ml-2 text-lg font-semibold">Accordous</span>}
+        {open && <span className="ml-2 text-lg font-semibold">Locatto</span>}
       </div>
 
       <SidebarContent>

@@ -152,7 +152,7 @@ const PropertiesList = () => {
 
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-            <Link to="/" className="hover:text-gray-900">Accordous</Link>
+            <Link to="/" className="hover:text-gray-900">Locatto</Link>
             <ChevronRight className="h-4 w-4" />
             <span className="text-gray-900 font-medium">Imóveis</span>
           </div>

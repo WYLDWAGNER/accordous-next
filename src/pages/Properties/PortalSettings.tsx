@@ -95,7 +95,7 @@ const PortalSettings = () => {
     <AppLayout title="Portais Imobiliários">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <Link to="/" className="hover:text-foreground">Accordous</Link>
+        <Link to="/" className="hover:text-foreground">Locatto</Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-foreground font-medium">Portais Imobiliários</span>
       </div>

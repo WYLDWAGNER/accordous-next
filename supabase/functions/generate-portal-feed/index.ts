@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
   xsi:schemaLocation="http://www.vivareal.com/schemas/1.0/VRSync http://xml.vivareal.com/vrsync.xsd">
   <Header>
     <PublishDate>${new Date().toISOString()}</PublishDate>
-    <Provider>Accordous</Provider>
+    <Provider>Locatto</Provider>
     <SourceFeedUrl>${escapeXml(url.toString())}</SourceFeedUrl>
   </Header>
   <Listings>
