@@ -156,7 +156,7 @@ export default function ContractDetails() {
     );
   }
 
-  if (!contract || !property) {
+  if (!contract) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
