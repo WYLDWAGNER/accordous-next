@@ -539,7 +539,7 @@ const ReportsList = () => {
                         
                         return (
                           <TableRow key={property.id}>
-                            <TableCell className="font-medium">{property.address}</TableCell>
+                            <TableCell className="font-medium">{property.name}</TableCell>
                             <TableCell>{property.property_type}</TableCell>
                             <TableCell>
                               <Badge variant={property.status === "rented" ? "default" : "secondary"}>
