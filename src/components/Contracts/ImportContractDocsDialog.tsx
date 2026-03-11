@@ -215,8 +215,19 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
 
       try {
         const text = await extractTextFromPdf(fm.file);
+        
+        // Debug: log extracted text and CPF candidates
+        console.log(`[PDF DEBUG] File: ${fm.file.name}`);
+        console.log(`[PDF DEBUG] Text (first 1500 chars):`, text.substring(0, 1500));
+        console.log(`[PDF DEBUG] Has "e de outro":`, /e\s+de\s+outro/i.test(text));
+        console.log(`[PDF DEBUG] Has "doravante denominad":`, /doravante\s+denominad/i.test(text));
+        console.log(`[PDF DEBUG] Has "LOCATÁRI":`, /LOCAT[ÁA]RI[OA]/i.test(text));
+        console.log(`[PDF DEBUG] All CPF candidates:`, collectCpfCandidates(text));
+        
         const cpf = extractCpf(text);
         const name = extractTenantName(text);
+        console.log(`[PDF DEBUG] Extracted CPF: ${cpf}, Name: ${name}`);
+        
         fm.extractedCpf = cpf;
         fm.extractedName = name;
 
