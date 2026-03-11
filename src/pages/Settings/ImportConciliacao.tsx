@@ -166,7 +166,7 @@ function normalizePaymentStatus(value: string): "Pago" | "Não pago" | "" {
   return "";
 }
 
-function parseCsvLine(line: string): string[] {
+function parseCsvLine(line: string, delimiter: string = ","): string[] {
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -174,7 +174,7 @@ function parseCsvLine(line: string): string[] {
     const char = line[i];
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(current.trim());
       current = "";
     } else {
@@ -183,6 +183,12 @@ function parseCsvLine(line: string): string[] {
   }
   result.push(current.trim());
   return result.map(v => v.replace(/^"|"$/g, ""));
+}
+
+function detectCsvDelimiter(headerLine: string): string {
+  const semicolons = (headerLine.match(/;/g) || []).length;
+  const commas = (headerLine.match(/,/g) || []).length;
+  return semicolons > commas ? ";" : ",";
 }
 
 // ── Component ──────────────────────────────────────────────
@@ -220,9 +226,10 @@ const ImportConciliacao = () => {
           return;
         }
 
+        const delimiter = detectCsvDelimiter(lines[0]);
         const parsed: ContactRow[] = [];
         for (let i = 1; i < lines.length; i++) {
-          const cols = parseCsvLine(lines[i]);
+          const cols = parseCsvLine(lines[i], delimiter);
           if (!cols[1]) continue;
 
           parsed.push({
