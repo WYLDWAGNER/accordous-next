@@ -241,6 +241,7 @@ export type Database = {
           co_tenants: Json | null
           contract_number: string | null
           created_at: string | null
+          documents: Json | null
           end_date: string | null
           extra_charges: Json | null
           guarantee_type: string | null
@@ -269,6 +270,7 @@ export type Database = {
           co_tenants?: Json | null
           contract_number?: string | null
           created_at?: string | null
+          documents?: Json | null
           end_date?: string | null
           extra_charges?: Json | null
           guarantee_type?: string | null
@@ -297,6 +299,7 @@ export type Database = {
           co_tenants?: Json | null
           contract_number?: string | null
           created_at?: string | null
+          documents?: Json | null
           end_date?: string | null
           extra_charges?: Json | null
           guarantee_type?: string | null

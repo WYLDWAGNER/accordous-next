@@ -27,8 +27,10 @@ import {
   Building2,
   User,
   Calendar,
-  Eye
+  Eye,
+  Upload
 } from "lucide-react";
+import { ImportContractDocsDialog } from "@/components/Contracts/ImportContractDocsDialog";
 
 const contractTemplates = [
   "Contrato de Prestação de Serviços de Corretagem Imobiliária",
@@ -66,6 +68,7 @@ const DocumentsList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [importDocsOpen, setImportDocsOpen] = useState(false);
 
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ["contracts", user?.id],
@@ -151,12 +154,12 @@ const DocumentsList = () => {
                     </CardHeader>
                   </Card>
 
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setImportDocsOpen(true)}>
                     <CardHeader>
-                      <Settings2 className="h-8 w-8 text-primary mb-2" />
-                      <CardTitle className="text-base">Personalizar documentos</CardTitle>
+                      <Upload className="h-8 w-8 text-primary mb-2" />
+                      <CardTitle className="text-base">Importar PDFs em lote</CardTitle>
                       <CardDescription className="text-xs">
-                        Cadastro de identidade visual para personalizar documentos
+                        Upload massivo de contratos PDF vinculados por número
                       </CardDescription>
                     </CardHeader>
                   </Card>
@@ -390,6 +393,11 @@ const DocumentsList = () => {
               </TabsContent>
             </Tabs>
       </div>
+
+      <ImportContractDocsDialog
+        open={importDocsOpen}
+        onOpenChange={setImportDocsOpen}
+      />
     </AppLayout>
   );
 };

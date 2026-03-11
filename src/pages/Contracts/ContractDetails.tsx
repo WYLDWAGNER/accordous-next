@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Download, AlertCircle, Plus, Edit } from "lucide-react";
+import { ArrowLeft, FileText, Download, AlertCircle, Plus, Edit, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -418,6 +418,83 @@ export default function ContractDetails() {
           </CardContent>
         </Card>
 
+        {/* Documentos Anexos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Documentos Anexos
+              <label htmlFor="upload-doc" className="cursor-pointer">
+                <Button variant="outline" size="sm" asChild>
+                  <span>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Anexar PDF
+                  </span>
+                </Button>
+                <input
+                  id="upload-doc"
+                  type="file"
+                  accept=".pdf"
+                  multiple
+                  className="hidden"
+                  onChange={async (e) => {
+                    if (!e.target.files || !user?.id) return;
+                    for (const file of Array.from(e.target.files)) {
+                      const storagePath = `${user.id}/${contract.id}/${Date.now()}_${file.name}`;
+                      const { error: upErr } = await supabase.storage
+                        .from("contract-documents")
+                        .upload(storagePath, file, { contentType: file.type });
+                      if (upErr) { toast.error(`Erro ao enviar ${file.name}`); continue; }
+                      const existingDocs = Array.isArray(contract.extra_charges) ? [] : [];
+                      const docs = Array.isArray((contract as any).documents) ? (contract as any).documents : [];
+                      const newDoc = { name: file.name, path: storagePath, type: file.type, size: file.size, uploaded_at: new Date().toISOString() };
+                      await supabase.from("contracts").update({ documents: [...docs, newDoc] } as any).eq("id", contract.id);
+                      toast.success(`${file.name} anexado`);
+                    }
+                    fetchContractDetails();
+                  }}
+                />
+              </label>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(!contract || !Array.isArray((contract as any).documents) || (contract as any).documents.length === 0) ? (
+              <p className="text-muted-foreground">Nenhum documento anexado</p>
+            ) : (
+              <div className="space-y-2">
+                {((contract as any).documents as any[]).map((doc: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-sm">{doc.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {doc.uploaded_at ? format(new Date(doc.uploaded_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        const { data } = await supabase.storage
+                          .from("contract-documents")
+                          .createSignedUrl(doc.path, 3600);
+                        if (data?.signedUrl) {
+                          window.open(data.signedUrl, "_blank");
+                        } else {
+                          toast.error("Erro ao gerar link do documento");
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Ações do Contrato */}
         <Card>
           <CardHeader>
@@ -436,10 +513,6 @@ export default function ContractDetails() {
               <Button variant="outline" disabled>
                 <FileText className="mr-2 h-4 w-4" />
                 Análise jurídica
-              </Button>
-              <Button variant="outline" disabled>
-                <Download className="mr-2 h-4 w-4" />
-                Baixar contrato
               </Button>
               <Button variant="outline" disabled>
                 <Edit className="mr-2 h-4 w-4" />
