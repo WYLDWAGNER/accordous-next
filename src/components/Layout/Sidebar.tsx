@@ -17,6 +17,7 @@ import {
   Bell,
   Wallet,
   Shield,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -48,6 +49,7 @@ const menuItems = [
   { icon: Users, label: "Contatos", path: "/contatos" },
   { icon: FileText, label: "Documentos", path: "/documentos" },
   { icon: Calendar, label: "Visitas Agendadas", path: "/visitas" },
+  { icon: ClipboardCheck, label: "Vistorias", path: "/vistorias" },
   { icon: Receipt, label: "Faturas", path: "/faturas" },
   { icon: Wallet, label: "Financeiro", path: "/financeiro" },
   { icon: Bell, label: "Notificações", path: "/notificacoes" },
