@@ -270,7 +270,7 @@ const ReportsList = () => {
 
                         return (
                           <TableRow key={property.id}>
-                            <TableCell className="font-medium">{property.address}</TableCell>
+                            <TableCell className="font-medium">{property.name}</TableCell>
                             <TableCell>R$ {revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
                             <TableCell>
                               {overdue > 0 ? (
