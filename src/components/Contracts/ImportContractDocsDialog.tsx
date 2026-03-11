@@ -209,10 +209,13 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       file,
       extractedCpf: null,
       extractedName: null,
+      extractedAddress: null,
       contractId: null,
       contractNumber: null,
       tenantName: null,
       contactId: null,
+      propertyId: null,
+      propertyName: null,
       status: "pending" as const,
     }));
 
