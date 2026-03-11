@@ -249,7 +249,7 @@ export type Database = {
           payment_day: number | null
           payment_method: string | null
           pre_paid: boolean | null
-          property_id: string
+          property_id: string | null
           rental_value: number
           start_date: string
           status: string
@@ -277,7 +277,7 @@ export type Database = {
           payment_day?: number | null
           payment_method?: string | null
           pre_paid?: boolean | null
-          property_id: string
+          property_id?: string | null
           rental_value: number
           start_date: string
           status?: string
@@ -305,7 +305,7 @@ export type Database = {
           payment_day?: number | null
           payment_method?: string | null
           pre_paid?: boolean | null
-          property_id?: string
+          property_id?: string | null
           rental_value?: number
           start_date?: string
           status?: string
@@ -1253,6 +1253,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role:
