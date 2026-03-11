@@ -37,6 +37,8 @@ import FinancialDashboard from "./pages/Financial/FinancialDashboard";
 import BaixaPagamentos from "./pages/Financial/BaixaPagamentos";
 import PortalSettings from "./pages/Properties/PortalSettings";
 import GeneralSettings from "./pages/Settings/GeneralSettings";
+import ContactsList from "./pages/Contacts/ContactsList";
+import ContactDetails from "./pages/Contacts/ContactDetails";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +95,16 @@ const App = () => (
             <Route path="/contratos/:id" element={
               <ProtectedRoute>
                 <ContractDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/contatos" element={
+              <ProtectedRoute>
+                <ContactsList />
+              </ProtectedRoute>
+            } />
+            <Route path="/contatos/:id" element={
+              <ProtectedRoute>
+                <ContactDetails />
               </ProtectedRoute>
             } />
             <Route path="/faturas" element={
