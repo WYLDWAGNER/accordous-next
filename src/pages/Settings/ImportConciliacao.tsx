@@ -292,34 +292,31 @@ const ImportConciliacao = () => {
           const row = rows[i];
           if (!row || !row[0]) continue;
 
-          const invoiceNum = String(row[0]);
-          const contractNum = String(row[1] || "");
-          const refMonth = String(row[2] || "");
+          const invoiceNum = String(row[0] || "").trim();
+          const contractNum = String(row[1] || "").trim();
+          const refMonth = String(row[2] || "").trim();
 
-          // Handle date - could be Excel serial or string
+          // Handle date (Excel serial or string)
           let dueDate = "";
           if (typeof row[3] === "number") {
             const d = XLSX.SSF.parse_date_code(row[3]);
             dueDate = `${String(d.d).padStart(2, "0")}/${String(d.m).padStart(2, "0")}/${d.y}`;
           } else {
-            dueDate = String(row[3] || "");
+            dueDate = String(row[3] || "").trim();
           }
 
-          // Amount - always parse as BRL string since raw:false
-          let amount: number;
-          const valStr = String(row[4] || "");
-          amount = parseBRLValue(valStr);
+          // Amount - robust for "1357,8", "1357.8", "R$ 1.357,80"
+          let amount = parseBRLValue(String(row[4] || ""));
           if (amount <= 0 && row[5]) {
-            // "R$" in col4, value in col5
-            amount = parseBRLValue(String(row[4] || "") + " " + String(row[5] || ""));
+            amount = parseBRLValue(`${String(row[4] || "")} ${String(row[5] || "")}`);
           }
 
-          // Status - might be in col 5 or 6 depending on value split
+          // Status - supports "Pago", "Não pago" and "Nao pago"
           let payStatus = "";
           for (let c = 4; c < (row.length || 0); c++) {
-            const cell = String(row[c] || "").trim().toLowerCase();
-            if (cell === "pago" || cell === "não pago" || cell.includes("pago")) {
-              payStatus = cell.includes("não") ? "Não pago" : "Pago";
+            const parsedStatus = normalizePaymentStatus(String(row[c] || ""));
+            if (parsedStatus) {
+              payStatus = parsedStatus;
               break;
             }
           }
