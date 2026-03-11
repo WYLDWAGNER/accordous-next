@@ -270,7 +270,7 @@ const ReportsList = () => {
 
                         return (
                           <TableRow key={property.id}>
-                            <TableCell className="font-medium">{property.address}</TableCell>
+                            <TableCell className="font-medium">{property.name}</TableCell>
                             <TableCell>R$ {revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
                             <TableCell>
                               {overdue > 0 ? (
@@ -328,7 +328,7 @@ const ReportsList = () => {
                       {contracts?.map((contract) => (
                         <TableRow key={contract.id}>
                           <TableCell className="font-medium">
-                            {contract.properties?.address}
+                            {contract.properties?.name}
                           </TableCell>
                           <TableCell>
                             {new Date(contract.start_date).toLocaleDateString("pt-BR")} - {" "}
@@ -378,7 +378,7 @@ const ReportsList = () => {
                           return (
                             <TableRow key={invoice.id}>
                               <TableCell className="font-medium">
-                                {invoice.properties?.address}
+                                {invoice.properties?.name}
                               </TableCell>
                               <TableCell>
                                 {new Date(invoice.due_date).toLocaleDateString("pt-BR")}
@@ -457,7 +457,7 @@ const ReportsList = () => {
                       {invoices?.slice(0, 10).map((invoice) => (
                         <TableRow key={invoice.id}>
                           <TableCell className="font-medium">
-                            {invoice.properties?.address}
+                            {invoice.properties?.name}
                           </TableCell>
                           <TableCell>
                             {new Date(invoice.reference_month).toLocaleDateString("pt-BR", {
@@ -539,7 +539,7 @@ const ReportsList = () => {
                         
                         return (
                           <TableRow key={property.id}>
-                            <TableCell className="font-medium">{property.address}</TableCell>
+                            <TableCell className="font-medium">{property.name}</TableCell>
                             <TableCell>{property.property_type}</TableCell>
                             <TableCell>
                               <Badge variant={property.status === "rented" ? "default" : "secondary"}>
