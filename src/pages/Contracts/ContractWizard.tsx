@@ -110,6 +110,7 @@ const ContractWizard = () => {
     try {
       const { error } = await supabase.from("contracts").insert({
         user_id: user?.id,
+        account_id: accountId,
         property_id: propertyId,
         tenant_name: formData.tenant_name,
         tenant_document: formData.tenant_document || null,
