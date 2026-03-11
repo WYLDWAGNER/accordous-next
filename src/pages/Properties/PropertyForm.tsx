@@ -40,6 +40,7 @@ const PropertyForm = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { accountId } = useAccountId();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(!!id);
   const [formData, setFormData] = useState({
