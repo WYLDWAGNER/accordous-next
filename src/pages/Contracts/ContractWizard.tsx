@@ -11,12 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronLeft, ChevronRight, FileCheck, Shield, User, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountId } from "@/hooks/useAccountId";
 
 const ContractWizard = () => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { accountId } = useAccountId();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -108,6 +110,7 @@ const ContractWizard = () => {
     try {
       const { error } = await supabase.from("contracts").insert({
         user_id: user?.id,
+        account_id: accountId,
         property_id: propertyId,
         tenant_name: formData.tenant_name,
         tenant_document: formData.tenant_document || null,
