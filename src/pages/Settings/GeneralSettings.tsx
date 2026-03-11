@@ -7,6 +7,7 @@ import { Building2, Users, FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const GeneralSettings = () => {
+  const navigate = useNavigate();
   return (
     <AppLayout title="Configurações Gerais">
       <div className="space-y-6">
