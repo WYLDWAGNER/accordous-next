@@ -69,29 +69,101 @@ type ImportStep = "upload" | "preview" | "importing" | "done";
 
 function parseDateBR(dateStr: string): string | null {
   if (!dateStr) return null;
-  const parts = dateStr.split("/");
-  if (parts.length === 3) {
-    const [day, month, year] = parts;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  const clean = String(dateStr).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+
+  const match = clean.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if (!match) return null;
+
+  let day = Number(match[1]);
+  let month = Number(match[2]);
+  let year = Number(match[3]);
+
+  if (year < 100) year += 2000;
+
+  // Heurística para formato US (MM/DD/YYYY) quando aparecer
+  if (month > 12 && day <= 12) {
+    const tmp = day;
+    day = month;
+    month = tmp;
   }
-  return null;
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 function parseRefMonth(refStr: string): string | null {
   if (!refStr) return null;
-  const parts = refStr.split("/");
-  if (parts.length === 2) {
-    const [month, year] = parts;
-    return `${year}-${month.padStart(2, "0")}-01`;
+  const clean = String(refStr).trim().toLowerCase();
+
+  const normalized = clean.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const parts = normalized.split("/");
+  if (parts.length !== 2) return null;
+
+  const monthMap: Record<string, number> = {
+    jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6,
+    jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12,
+  };
+
+  const monthPart = parts[0];
+  const yearPart = parts[1];
+
+  let month = Number(monthPart);
+  if (!Number.isFinite(month) || month <= 0) {
+    month = monthMap[monthPart] || 0;
   }
-  return null;
+
+  let year = Number(yearPart);
+  if (year < 100) year += 2000;
+
+  if (!month || month < 1 || month > 12 || !year) return null;
+
+  return `${year}-${String(month).padStart(2, "0")}-01`;
 }
 
 function parseBRLValue(val: any): number {
   if (typeof val === "number") return val;
   if (!val) return 0;
-  const str = String(val).replace("R$", "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-  return parseFloat(str) || 0;
+
+  let str = String(val)
+    .replace(/R\$/gi, "")
+    .replace(/\u00A0/g, "")
+    .replace(/\s/g, "")
+    .replace(/[^\d,.-]/g, "");
+
+  if (!str) return 0;
+
+  const hasComma = str.includes(",");
+  const hasDot = str.includes(".");
+
+  if (hasComma && hasDot) {
+    // O último separador define a casa decimal
+    if (str.lastIndexOf(",") > str.lastIndexOf(".")) {
+      str = str.replace(/\./g, "").replace(",", ".");
+    } else {
+      str = str.replace(/,/g, "");
+    }
+  } else if (hasComma) {
+    str = str.replace(",", ".");
+  }
+
+  const parsed = Number(str);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizePaymentStatus(value: string): "Pago" | "Não pago" | "" {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (!normalized) return "";
+  if (normalized.includes("nao pago") || normalized.includes("não pago") || normalized.includes("pendente")) return "Não pago";
+  if (normalized.includes("pago")) return "Pago";
+  return "";
 }
 
 function parseCsvLine(line: string): string[] {
