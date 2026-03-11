@@ -92,6 +92,29 @@ const PropertiesList = () => {
     );
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from("properties")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      setSelectedProperties([]);
+      setShowDeleteDialog(false);
+      toast({ title: "Imóveis excluídos com sucesso!" });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir imóveis",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     const variants = {
       available: { variant: "default" as const, label: "Disponível" },
