@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verify user is authenticated
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -30,30 +29,58 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check license expiration
-    const { data: profile, error: profileError } = await supabase
+    // Super admin always has valid license
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+    if (isSuperAdmin) {
+      return new Response(
+        JSON.stringify({ valid: true, expires_at: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get user's account_id from profile
+    const { data: profile } = await supabase
       .from('profiles')
-      .select('data_expiracao')
+      .select('account_id')
       .eq('id', user.id)
       .single();
 
-    if (profileError) {
-      console.error('Error fetching profile:', profileError);
+    if (!profile?.account_id) {
+      // Fallback: check profile.data_expiracao for legacy users
+      const { data: legacyProfile } = await supabase
+        .from('profiles')
+        .select('data_expiracao')
+        .eq('id', user.id)
+        .single();
+
+      const expiresAt = legacyProfile?.data_expiracao;
+      const isValid = expiresAt === null ? true : new Date(expiresAt) >= new Date();
+      return new Response(
+        JSON.stringify({ valid: isValid, expires_at: expiresAt || null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check account's license (source of truth)
+    const { data: account, error: accountError } = await supabase
+      .from('accounts')
+      .select('data_expiracao, subscription_status')
+      .eq('id', profile.account_id)
+      .single();
+
+    if (accountError || !account) {
       return new Response(
         JSON.stringify({ valid: false, expires_at: null }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const expiresAt = profile?.data_expiracao;
-    // Se não há data de expiração, considera válido (usuário legado/perpétuo)
+    const expiresAt = account.data_expiracao;
+    // No expiration = perpetual license
     const isValid = expiresAt === null ? true : new Date(expiresAt) >= new Date();
 
     return new Response(
-      JSON.stringify({
-        valid: isValid,
-        expires_at: expiresAt || null
-      }),
+      JSON.stringify({ valid: isValid, expires_at: expiresAt || null }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

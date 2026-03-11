@@ -229,7 +229,7 @@ export type Database = {
             foreignKeyName: "contacts_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "contacts"
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -444,7 +444,7 @@ export type Database = {
           account_id: string | null
           bank_data: Json | null
           condo_fee: number | null
-          contract_id: string
+          contract_id: string | null
           created_at: string | null
           due_date: string
           electricity_amount: number | null
@@ -460,7 +460,7 @@ export type Database = {
           notes: string | null
           payment_date: string | null
           payment_method: string | null
-          property_id: string
+          property_id: string | null
           reference_month: string
           rental_amount: number
           status: string
@@ -473,7 +473,7 @@ export type Database = {
           account_id?: string | null
           bank_data?: Json | null
           condo_fee?: number | null
-          contract_id: string
+          contract_id?: string | null
           created_at?: string | null
           due_date: string
           electricity_amount?: number | null
@@ -489,7 +489,7 @@ export type Database = {
           notes?: string | null
           payment_date?: string | null
           payment_method?: string | null
-          property_id: string
+          property_id?: string | null
           reference_month: string
           rental_amount?: number
           status?: string
@@ -502,7 +502,7 @@ export type Database = {
           account_id?: string | null
           bank_data?: Json | null
           condo_fee?: number | null
-          contract_id?: string
+          contract_id?: string | null
           created_at?: string | null
           due_date?: string
           electricity_amount?: number | null
@@ -518,7 +518,7 @@ export type Database = {
           notes?: string | null
           payment_date?: string | null
           payment_method?: string | null
-          property_id?: string
+          property_id?: string | null
           reference_month?: string
           rental_amount?: number
           status?: string
