@@ -241,6 +241,12 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       return;
     }
 
+    // Fetch all properties for address matching
+    const { data: properties } = await supabase
+      .from("properties")
+      .select("id, name, address, city, state, number, neighborhood")
+      .eq("user_id", user.id);
+
     // Normalize CPF for comparison
     const normalizeCpf = (cpf: string) => cpf.replace(/[^0-9]/g, "");
 
