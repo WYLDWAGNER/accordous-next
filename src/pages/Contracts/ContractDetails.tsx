@@ -92,15 +92,18 @@ export default function ContractDetails() {
       if (contractError) throw contractError;
       setContract(contractData as any);
 
-      // Fetch property
-      const { data: propertyData, error: propertyError } = await supabase
-        .from("properties")
-        .select("*")
-        .eq("id", contractData.property_id)
-        .single();
+      // Fetch property (only if property_id exists)
+      if (contractData.property_id) {
+        const { data: propertyData, error: propertyError } = await supabase
+          .from("properties")
+          .select("*")
+          .eq("id", contractData.property_id)
+          .single();
 
-      if (propertyError) throw propertyError;
-      setProperty(propertyData);
+        if (!propertyError && propertyData) {
+          setProperty(propertyData);
+        }
+      }
 
       // Fetch invoices
       const { data: invoicesData, error: invoicesError } = await supabase
