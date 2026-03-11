@@ -74,7 +74,7 @@ const InvoicesList = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !accountLoading,
   });
 
   const { data: activeContractsCount } = useQuery({
