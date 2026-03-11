@@ -7,12 +7,16 @@ import { FileText, DollarSign, FileCheck, Users2, Calculator, TrendingUp, Calend
 import { useDashboardStats } from "@/hooks/dashboard/useDashboardStats";
 import { useRecentInvoices } from "@/hooks/dashboard/useRecentInvoices";
 import { usePropertySummary } from "@/hooks/dashboard/usePropertySummary";
+import { useAuth } from "@/hooks/useAuth";
+import { useAccountId } from "@/hooks/useAccountId";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: invoices, isLoading: invoicesLoading } = useRecentInvoices(10);
-  const { data: propertySummary, isLoading: propertySummaryLoading } = usePropertySummary();
+  const { user } = useAuth();
+  const { accountId } = useAccountId();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats(user?.id, accountId);
+  const { data: invoices, isLoading: invoicesLoading } = useRecentInvoices(user?.id, accountId, 10);
+  const { data: propertySummary, isLoading: propertySummaryLoading } = usePropertySummary(user?.id, accountId);
 
   return (
     <AppLayout title="Dashboard">
