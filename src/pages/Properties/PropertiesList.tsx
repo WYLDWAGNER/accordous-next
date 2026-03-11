@@ -13,19 +13,24 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Building2, AlertCircle, ChevronRight, Filter, User, FileText, Eye, Globe } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, Search, Building2, AlertCircle, ChevronRight, Filter, User, FileText, Eye, Globe, Trash2 } from "lucide-react";
 import { PortalManagementDialog } from "@/components/Properties/PortalManagementDialog";
-import { useQuery } from "@tanstack/react-query";
+import { ImportPropertiesDialog } from "@/components/Properties/ImportPropertiesDialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 const PropertiesList = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("");
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [portalDialogProperty, setPortalDialogProperty] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ["properties", user?.id],
@@ -87,6 +92,29 @@ const PropertiesList = () => {
     );
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from("properties")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      setSelectedProperties([]);
+      setShowDeleteDialog(false);
+      toast({ title: "Imóveis excluídos com sucesso!" });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir imóveis",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     const variants = {
       available: { variant: "default" as const, label: "Disponível" },
@@ -142,6 +170,13 @@ const PropertiesList = () => {
                   className="pl-10"
                 />
               </div>
+              <ImportPropertiesDialog />
+              {selectedProperties.length > 0 && (
+                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir ({selectedProperties.length})
+                </Button>
+              )}
               <Link to="/imoveis/novo" className="w-full sm:w-auto">
                 <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
@@ -334,6 +369,27 @@ const PropertiesList = () => {
           property={portalDialogProperty}
         />
       )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedProperties.length} imóvel(is)? 
+              Esta ação não pode ser desfeita. Contratos e faturas vinculados podem ser afetados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate(selectedProperties)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };
