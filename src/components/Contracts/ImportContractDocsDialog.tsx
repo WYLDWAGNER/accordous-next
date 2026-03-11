@@ -434,10 +434,10 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
 
         if (uploadError) throw uploadError;
 
-        // Get existing documents
+        // Get existing documents and update contract
         const { data: contractData } = await supabase
           .from("contracts")
-          .select("documents")
+          .select("documents, property_id")
           .eq("id", contractId)
           .single();
 
@@ -453,9 +453,15 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
           uploaded_at: new Date().toISOString(),
         };
 
+        // Build update payload - include property_id if matched and not yet set
+        const updatePayload: any = { documents: [...existingDocs, newDoc] };
+        if (fm.propertyId && !contractData?.property_id) {
+          updatePayload.property_id = fm.propertyId;
+        }
+
         const { error: updateError } = await supabase
           .from("contracts")
-          .update({ documents: [...existingDocs, newDoc] } as any)
+          .update(updatePayload)
           .eq("id", contractId);
 
         if (updateError) throw updateError;
