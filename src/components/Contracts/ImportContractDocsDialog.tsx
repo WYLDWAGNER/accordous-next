@@ -132,7 +132,63 @@ function extractTenantName(text: string): string | null {
   return null;
 }
 
-async function extractTextFromPdf(file: File): Promise<string> {
+// Extract property address from contract text
+function extractAddress(text: string): string | null {
+  const normalizedText = text.replace(/\u00A0/g, " ");
+
+  const patterns = [
+    /im[óo]vel\s+(?:localizado|situado|sito|urbano[^,]*localizado)\s+(?:na|no|à|a)\s+([^,]{10,150})/i,
+    /objeto\s+(?:da|do|desta)\s+(?:presente\s+)?loca[çc][ãa]o[^,]*(?:na|no|à|a)\s+([^,]{10,150})/i,
+    /endere[çc]o[:\s]+([^,]{10,150})/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = normalizedText.match(pattern);
+    if (match) {
+      let addr = (match[1] || match[0]).trim();
+      addr = addr.replace(/\s*(doravante|conforme|de\s+acordo|para\s+os|neste\s+ato).*/i, "").trim();
+      addr = addr.replace(/\.+$/, "").trim();
+      if (addr.length > 8 && addr.length < 200) return addr;
+    }
+  }
+
+  // Fallback: find "Rua/Av/Alameda..." pattern
+  const streetMatch = normalizedText.match(/((?:Rua|Avenida|Av\.?|Travessa|Alameda|Pra[çc]a)\s+[^,]{5,100},?\s*n[ºo°]?\s*\d+[^,]*)/i);
+  if (streetMatch) {
+    let addr = streetMatch[1].trim().replace(/\.+$/, "");
+    if (addr.length > 8) return addr;
+  }
+
+  return null;
+}
+
+function normalizeForComparison(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function addressSimilarity(extracted: string, propertyAddr: string): number {
+  const a = normalizeForComparison(extracted);
+  const b = normalizeForComparison(propertyAddr);
+
+  if (a.includes(b) || b.includes(a)) return 0.9;
+
+  const wordsA = new Set(a.split(" ").filter(w => w.length > 2));
+  const wordsB = new Set(b.split(" ").filter(w => w.length > 2));
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+
+  let matches = 0;
+  for (const w of wordsA) {
+    if (wordsB.has(w)) matches++;
+  }
+  return matches / Math.max(wordsA.size, wordsB.size);
+}
+
+
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let fullText = "";
