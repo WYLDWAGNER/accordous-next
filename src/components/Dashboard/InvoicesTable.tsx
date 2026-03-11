@@ -110,7 +110,7 @@ export const InvoicesTable = ({ invoices }: InvoicesTableProps) => {
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => navigate(`/invoices/${invoice.id}`)}
+                        onClick={() => navigate(`/faturas/${invoice.id}`)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
