@@ -393,6 +393,11 @@ const DocumentsList = () => {
               </TabsContent>
             </Tabs>
       </div>
+
+      <ImportContractDocsDialog
+        open={importDocsOpen}
+        onOpenChange={setImportDocsOpen}
+      />
     </AppLayout>
   );
 };
