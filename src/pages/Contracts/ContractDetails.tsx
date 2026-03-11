@@ -186,40 +186,54 @@ export default function ContractDetails() {
 
       <div className="max-w-7xl mx-auto p-8 space-y-6">
         {/* Imóvel */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Imóvel</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Tipo</p>
-                <p className="font-medium">{property.property_type}</p>
+        {property ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Imóvel</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Tipo</p>
+                  <p className="font-medium">{property.property_type}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Disponível</p>
+                  <p className="font-medium">{property.status === "available" ? "Sim" : "Não"}</p>
+                </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Disponível</p>
-                <p className="font-medium">{property.status === "available" ? "Sim" : "Não"}</p>
+                <p className="text-sm text-muted-foreground">Endereço</p>
+                <p className="font-medium">{property.address}, {property.city}/{property.state}</p>
               </div>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Endereço</p>
-              <p className="font-medium">{property.address}, {property.city}/{property.state}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Área Útil</p>
-                <p className="font-medium">{property.useful_area ? `${property.useful_area} m²` : "N/A"}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Área Útil</p>
+                  <p className="font-medium">{property.useful_area ? `${property.useful_area} m²` : "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Terreno</p>
+                  <p className="font-medium">{property.land_area ? `${property.land_area} m²` : "N/A"}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Terreno</p>
-                <p className="font-medium">{property.land_area ? `${property.land_area} m²` : "N/A"}</p>
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/imoveis/${property.id}`}>Visualizar Imóvel</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Imóvel</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <AlertCircle className="h-4 w-4" />
+                <p className="text-sm">Nenhum imóvel vinculado a este contrato.</p>
               </div>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/imoveis/${property.id}`}>Visualizar Imóvel</Link>
-            </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Participantes */}
         <Card>
