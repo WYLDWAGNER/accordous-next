@@ -97,6 +97,16 @@ const App = () => (
                 <ContractDetails />
               </ProtectedRoute>
             } />
+            <Route path="/contatos" element={
+              <ProtectedRoute>
+                <ContactsList />
+              </ProtectedRoute>
+            } />
+            <Route path="/contatos/:id" element={
+              <ProtectedRoute>
+                <ContactDetails />
+              </ProtectedRoute>
+            } />
             <Route path="/faturas" element={
               <ProtectedRoute>
                 <InvoicesList />
