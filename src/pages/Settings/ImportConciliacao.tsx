@@ -226,9 +226,10 @@ const ImportConciliacao = () => {
           return;
         }
 
+        const delimiter = detectCsvDelimiter(lines[0]);
         const parsed: ContactRow[] = [];
         for (let i = 1; i < lines.length; i++) {
-          const cols = parseCsvLine(lines[i]);
+          const cols = parseCsvLine(lines[i], delimiter);
           if (!cols[1]) continue;
 
           parsed.push({
