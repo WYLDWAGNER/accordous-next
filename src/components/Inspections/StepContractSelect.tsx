@@ -14,7 +14,7 @@ interface Props {
 
 export const StepContractSelect = ({ data, setData }: Props) => {
   const [search, setSearch] = useState("");
-  const { accountId, isLoading: accountLoading } = useAccountId();
+  const { accountId, loading: accountLoading } = useAccountId();
 
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ["contracts-active", accountId],
