@@ -739,7 +739,7 @@ const ImportConciliacao = () => {
                               <TableCell>{getStatusIcon(ct.status)}</TableCell>
                               <TableCell className="font-medium">{ct.contractNumber}</TableCell>
                               <TableCell>{ct.invoiceCount}</TableCell>
-                              <TableCell>R$ {ct.avgAmount.toFixed(2).replace(".", ",")}</TableCell>
+                              <TableCell>R$ {ct.avgAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                               <TableCell className="text-xs">{ct.firstDueDate}</TableCell>
                             </TableRow>
                           ))}
