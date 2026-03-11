@@ -378,7 +378,7 @@ const ReportsList = () => {
                           return (
                             <TableRow key={invoice.id}>
                               <TableCell className="font-medium">
-                                {invoice.properties?.address}
+                                {invoice.properties?.name}
                               </TableCell>
                               <TableCell>
                                 {new Date(invoice.due_date).toLocaleDateString("pt-BR")}
