@@ -170,6 +170,13 @@ const PropertiesList = () => {
                   className="pl-10"
                 />
               </div>
+              <ImportPropertiesDialog />
+              {selectedProperties.length > 0 && (
+                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir ({selectedProperties.length})
+                </Button>
+              )}
               <Link to="/imoveis/novo" className="w-full sm:w-auto">
                 <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
