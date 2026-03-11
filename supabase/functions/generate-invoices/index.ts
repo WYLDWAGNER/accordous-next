@@ -223,6 +223,7 @@ Deno.serve(async (req) => {
           .from('invoices')
           .insert({
             user_id: user.id,
+            account_id: contract.account_id,
             contract_id: contract.id,
             property_id: contract.property_id,
             reference_month: reference_month,
