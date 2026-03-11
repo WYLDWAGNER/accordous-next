@@ -739,7 +739,7 @@ const ImportConciliacao = () => {
                               <TableCell>{getStatusIcon(ct.status)}</TableCell>
                               <TableCell className="font-medium">{ct.contractNumber}</TableCell>
                               <TableCell>{ct.invoiceCount}</TableCell>
-                              <TableCell>R$ {ct.avgAmount.toFixed(2).replace(".", ",")}</TableCell>
+                              <TableCell>R$ {ct.avgAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                               <TableCell className="text-xs">{ct.firstDueDate}</TableCell>
                             </TableRow>
                           ))}
@@ -779,7 +779,7 @@ const ImportConciliacao = () => {
                               <TableCell className="text-xs">{inv.contractNumber}</TableCell>
                               <TableCell className="text-xs">{inv.referenceMonth}</TableCell>
                               <TableCell className="text-xs">{inv.dueDate}</TableCell>
-                              <TableCell className="text-xs">R$ {inv.amount.toFixed(2).replace(".", ",")}</TableCell>
+                              <TableCell className="text-xs">R$ {inv.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                               <TableCell>
                                 <Badge variant={inv.paymentStatus === "Pago" ? "default" : "secondary"} className="text-xs">
                                   {inv.paymentStatus}
