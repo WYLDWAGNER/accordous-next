@@ -1,19 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { useAccountId } from "@/hooks/useAccountId";
 
-export const usePropertySummary = () => {
-  const { user } = useAuth();
-  const { accountId, loading: accountLoading } = useAccountId();
-
+export const usePropertySummary = (userId: string | undefined, accountId: string | null) => {
   return useQuery({
-    queryKey: ["property-summary", user?.id, accountId],
+    queryKey: ["property-summary", userId, accountId],
     queryFn: async () => {
-      if (!user?.id) throw new Error("User not authenticated");
+      if (!userId) throw new Error("User not authenticated");
 
       const filterColumn = accountId ? "account_id" : "user_id";
-      const filterValue = accountId || user.id;
+      const filterValue = accountId || userId;
 
       const { data: properties, error } = await supabase
         .from("properties")
@@ -41,6 +36,6 @@ export const usePropertySummary = () => {
         reserved: statusCount.reserved || 0,
       };
     },
-    enabled: !!user?.id && !accountLoading,
+    enabled: !!userId,
   });
 };
