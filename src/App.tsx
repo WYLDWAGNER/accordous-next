@@ -40,6 +40,7 @@ import GeneralSettings from "./pages/Settings/GeneralSettings";
 import ImportConciliacao from "./pages/Settings/ImportConciliacao";
 import ContactsList from "./pages/Contacts/ContactsList";
 import ContactDetails from "./pages/Contacts/ContactDetails";
+import InspectionWizard from "./pages/Inspections/InspectionWizard";
 
 const queryClient = new QueryClient();
 
