@@ -302,10 +302,32 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
         
         const cpf = extractCpf(text);
         const name = extractTenantName(text);
-        console.log(`[PDF DEBUG] Extracted CPF: ${cpf}, Name: ${name}`);
+        const addr = extractAddress(text);
+        console.log(`[PDF DEBUG] Extracted CPF: ${cpf}, Name: ${name}, Address: ${addr}`);
         
         fm.extractedCpf = cpf;
         fm.extractedName = name;
+        fm.extractedAddress = addr;
+
+        // Try to match property by address
+        if (addr && properties && properties.length > 0) {
+          let bestScore = 0;
+          let bestProp: typeof properties[0] | null = null;
+          for (const prop of properties) {
+            const fullAddr = [prop.address, prop.number, prop.neighborhood, prop.city, prop.state]
+              .filter(Boolean).join(" ");
+            const score = addressSimilarity(addr, fullAddr);
+            if (score > bestScore) {
+              bestScore = score;
+              bestProp = prop;
+            }
+          }
+          if (bestProp && bestScore >= 0.4) {
+            fm.propertyId = bestProp.id;
+            fm.propertyName = bestProp.name || bestProp.address;
+            console.log(`[PDF DEBUG] Matched property: ${fm.propertyName} (score: ${bestScore.toFixed(2)})`);
+          }
+        }
 
         if (cpf) {
           const normalizedCpf = normalizeCpf(cpf);
