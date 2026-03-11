@@ -24,10 +24,13 @@ interface FileMatch {
   file: File;
   extractedCpf: string | null;
   extractedName: string | null;
+  extractedAddress: string | null;
   contractId: string | null;
   contractNumber: string | null;
   tenantName: string | null;
   contactId: string | null;
+  propertyId: string | null;
+  propertyName: string | null;
   status: "pending" | "parsing" | "matched" | "unmatched" | "uploaded" | "error";
   errorMsg?: string;
 }
