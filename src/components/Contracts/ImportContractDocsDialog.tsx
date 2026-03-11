@@ -24,10 +24,13 @@ interface FileMatch {
   file: File;
   extractedCpf: string | null;
   extractedName: string | null;
+  extractedAddress: string | null;
   contractId: string | null;
   contractNumber: string | null;
   tenantName: string | null;
   contactId: string | null;
+  propertyId: string | null;
+  propertyName: string | null;
   status: "pending" | "parsing" | "matched" | "unmatched" | "uploaded" | "error";
   errorMsg?: string;
 }
@@ -129,11 +132,66 @@ function extractTenantName(text: string): string | null {
   return null;
 }
 
+// Extract property address from contract text
+function extractAddress(text: string): string | null {
+  const normalizedText = text.replace(/\u00A0/g, " ");
+
+  const patterns = [
+    /im[óo]vel\s+(?:localizado|situado|sito|urbano[^,]*localizado)\s+(?:na|no|à|a)\s+([^,]{10,150})/i,
+    /objeto\s+(?:da|do|desta)\s+(?:presente\s+)?loca[çc][ãa]o[^,]*(?:na|no|à|a)\s+([^,]{10,150})/i,
+    /endere[çc]o[:\s]+([^,]{10,150})/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = normalizedText.match(pattern);
+    if (match) {
+      let addr = (match[1] || match[0]).trim();
+      addr = addr.replace(/\s*(doravante|conforme|de\s+acordo|para\s+os|neste\s+ato).*/i, "").trim();
+      addr = addr.replace(/\.+$/, "").trim();
+      if (addr.length > 8 && addr.length < 200) return addr;
+    }
+  }
+
+  // Fallback: find "Rua/Av/Alameda..." pattern
+  const streetMatch = normalizedText.match(/((?:Rua|Avenida|Av\.?|Travessa|Alameda|Pra[çc]a)\s+[^,]{5,100},?\s*n[ºo°]?\s*\d+[^,]*)/i);
+  if (streetMatch) {
+    let addr = streetMatch[1].trim().replace(/\.+$/, "");
+    if (addr.length > 8) return addr;
+  }
+
+  return null;
+}
+
+function normalizeForComparison(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function addressSimilarity(extracted: string, propertyAddr: string): number {
+  const a = normalizeForComparison(extracted);
+  const b = normalizeForComparison(propertyAddr);
+
+  if (a.includes(b) || b.includes(a)) return 0.9;
+
+  const wordsA = new Set(a.split(" ").filter(w => w.length > 2));
+  const wordsB = new Set(b.split(" ").filter(w => w.length > 2));
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+
+  let matches = 0;
+  for (const w of wordsA) {
+    if (wordsB.has(w)) matches++;
+  }
+  return matches / Math.max(wordsA.size, wordsB.size);
+}
+
 async function extractTextFromPdf(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let fullText = "";
-  // Read first 3 pages (contract data is usually at the top)
   const pagesToRead = Math.min(pdf.numPages, 3);
   for (let i = 1; i <= pagesToRead; i++) {
     const page = await pdf.getPage(i);
@@ -183,6 +241,12 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       return;
     }
 
+    // Fetch all properties for address matching
+    const { data: properties } = await supabase
+      .from("properties")
+      .select("id, name, address, city, state, number, neighborhood")
+      .eq("user_id", user.id);
+
     // Normalize CPF for comparison
     const normalizeCpf = (cpf: string) => cpf.replace(/[^0-9]/g, "");
 
@@ -206,10 +270,13 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       file,
       extractedCpf: null,
       extractedName: null,
+      extractedAddress: null,
       contractId: null,
       contractNumber: null,
       tenantName: null,
       contactId: null,
+      propertyId: null,
+      propertyName: null,
       status: "pending" as const,
     }));
 
@@ -235,10 +302,32 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
         
         const cpf = extractCpf(text);
         const name = extractTenantName(text);
-        console.log(`[PDF DEBUG] Extracted CPF: ${cpf}, Name: ${name}`);
+        const addr = extractAddress(text);
+        console.log(`[PDF DEBUG] Extracted CPF: ${cpf}, Name: ${name}, Address: ${addr}`);
         
         fm.extractedCpf = cpf;
         fm.extractedName = name;
+        fm.extractedAddress = addr;
+
+        // Try to match property by address
+        if (addr && properties && properties.length > 0) {
+          let bestScore = 0;
+          let bestProp: typeof properties[0] | null = null;
+          for (const prop of properties) {
+            const fullAddr = [prop.address, prop.number, prop.neighborhood, prop.city, prop.state]
+              .filter(Boolean).join(" ");
+            const score = addressSimilarity(addr, fullAddr);
+            if (score > bestScore) {
+              bestScore = score;
+              bestProp = prop;
+            }
+          }
+          if (bestProp && bestScore >= 0.4) {
+            fm.propertyId = bestProp.id;
+            fm.propertyName = bestProp.name || bestProp.address;
+            console.log(`[PDF DEBUG] Matched property: ${fm.propertyName} (score: ${bestScore.toFixed(2)})`);
+          }
+        }
 
         if (cpf) {
           const normalizedCpf = normalizeCpf(cpf);
@@ -323,6 +412,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
               account_id: accountId || undefined,
               tenant_name: fm.extractedName || "Inquilino",
               tenant_document: fm.extractedCpf,
+              property_id: fm.propertyId || undefined,
               rental_value: 0,
               start_date: new Date().toISOString().split("T")[0],
               status: "active",
@@ -344,10 +434,10 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
 
         if (uploadError) throw uploadError;
 
-        // Get existing documents
+        // Get existing documents and update contract
         const { data: contractData } = await supabase
           .from("contracts")
-          .select("documents")
+          .select("documents, property_id")
           .eq("id", contractId)
           .single();
 
@@ -363,9 +453,15 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
           uploaded_at: new Date().toISOString(),
         };
 
+        // Build update payload - include property_id if matched and not yet set
+        const updatePayload: any = { documents: [...existingDocs, newDoc] };
+        if (fm.propertyId && !contractData?.property_id) {
+          updatePayload.property_id = fm.propertyId;
+        }
+
         const { error: updateError } = await supabase
           .from("contracts")
-          .update({ documents: [...existingDocs, newDoc] } as any)
+          .update(updatePayload)
           .eq("id", contractId);
 
         if (updateError) throw updateError;
@@ -480,6 +576,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
                         <p className="text-xs text-muted-foreground">
                           CPF: {f.extractedCpf} → {f.tenantName}
                           {f.contractNumber && ` (Contrato #${f.contractNumber})`}
+                          {f.propertyName && ` | 🏠 ${f.propertyName}`}
                         </p>
                       )}
                       {f.status === "unmatched" && (
