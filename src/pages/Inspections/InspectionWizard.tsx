@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { StepContractSelect } from "@/components/Inspections/StepContractSelect";
 import { StepChecklist } from "@/components/Inspections/StepChecklist";
@@ -6,6 +6,8 @@ import { StepEvidence } from "@/components/Inspections/StepEvidence";
 import { StepSignature } from "@/components/Inspections/StepSignature";
 import { StepSummary } from "@/components/Inspections/StepSummary";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { Wifi, WifiOff } from "lucide-react";
 
 export interface InspectionItem {
   id: string;
