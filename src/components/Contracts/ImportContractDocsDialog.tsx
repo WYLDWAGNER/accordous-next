@@ -32,92 +32,91 @@ interface FileMatch {
   errorMsg?: string;
 }
 
-// Extract CPF patterns from text: 000.000.000-00 or 00000000000
 // Normalize CPF to formatted pattern 000.000.000-00
-function normalizeCpfFormat(cpf: string): string {
-  const digits = cpf.replace(/[^0-9]/g, "");
-  if (digits.length === 11) {
-    return `${digits.slice(0,3)}.${digits.slice(3,6)}.${digits.slice(6,9)}-${digits.slice(9)}`;
-  }
-  return cpf;
+function normalizeCpfFormat(rawCpf: string): string | null {
+  const digits = rawCpf.replace(/\D/g, "");
+  if (digits.length !== 11) return null;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
-// Extract all CPF patterns from text (both formatted and unformatted)
-function findAllCpfs(text: string): { cpf: string; index: number }[] {
+function collectCpfCandidates(text: string): { cpf: string; index: number }[] {
   const results: { cpf: string; index: number }[] = [];
-  // Formatted: 000.000.000-00
-  const fmtRegex = /\d{3}\.\d{3}\.\d{3}-\d{2}/g;
-  let m;
-  while ((m = fmtRegex.exec(text)) !== null) {
-    results.push({ cpf: normalizeCpfFormat(m[0]), index: m.index });
+  const seen = new Set<string>();
+
+  const add = (raw: string, index: number) => {
+    const normalized = normalizeCpfFormat(raw);
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    results.push({ cpf: normalized, index });
+  };
+
+  // Accepts spaces/noises from PDF extraction, e.g. "093 . 184 . 079 - 12"
+  const relaxedCpfRegex = /\d{3}\s*\.?\s*\d{3}\s*\.?\s*\d{3}\s*[-–—]?\s*\d{2}/g;
+  let m: RegExpExecArray | null;
+  while ((m = relaxedCpfRegex.exec(text)) !== null) {
+    add(m[0], m.index);
   }
-  // Unformatted near "CPF" keyword: CPF/MF sob o nº 00000000000 or CPF/MF sob o nº000000000-00
-  const cpfKeywordRegex = /CPF(?:\/MF)?\s*(?:sob\s*o\s*n[ºo°]\s*|:\s*|n[ºo°]\s*)(\d{3}\.?\d{3}\.?\d{3}[.-]?\d{2})/gi;
+
+  // CPF near CPF/CPF-MF keywords (handles "CPF/MF sob o nº" and variants)
+  const cpfKeywordRegex = /CPF(?:\/MF)?[\s\S]{0,60}?(\d[\d.\-\s]{10,20})/gi;
   while ((m = cpfKeywordRegex.exec(text)) !== null) {
-    const normalized = normalizeCpfFormat(m[1]);
-    // Avoid duplicates
-    if (!results.find(r => r.cpf === normalized)) {
-      results.push({ cpf: normalized, index: m.index });
-    }
+    add(m[1], m.index);
   }
-  return results;
+
+  return results.sort((a, b) => a.index - b.index);
 }
 
-// Extract tenant CPF: find the section between "e de outro" and "doravante denominad"
+// Extract tenant CPF robustly for contracts with LOCADOR + LOCATÁRIO sections
 function extractCpf(text: string): string | null {
-  // Strategy 1: Find tenant section between "e de outro" and "doravante denominad(o/a) LOCATÁRI"
-  const tenantSectionMatch = text.match(/e\s+de\s+outro\s+([\s\S]*?)doravante\s+denominad[oa]/i);
+  const normalizedText = text.replace(/\u00A0/g, " ");
+
+  // Strategy 1: section between "e de outro" and "doravante ... LOCATÁRI(O/A)"
+  const tenantSectionMatch = normalizedText.match(
+    /e\s+de\s+outro(?:\s+lado)?\s*,?\s*([\s\S]{0,3500}?)doravante\s+denominad[oa]s?\s+locat[áa]ri[oa]/i
+  );
   if (tenantSectionMatch) {
-    const tenantSection = tenantSectionMatch[1];
-    const cpfs = findAllCpfs(tenantSection);
-    // The last CPF in the tenant section is typically the tenant's own CPF
-    if (cpfs.length > 0) {
-      return cpfs[cpfs.length - 1].cpf;
+    const tenantCpfs = collectCpfCandidates(tenantSectionMatch[1]);
+    if (tenantCpfs.length > 0) {
+      return tenantCpfs[tenantCpfs.length - 1].cpf;
     }
   }
 
-  // Strategy 2: Find CPF after LOCATÁRIO/LOCATÁRIA keyword
-  const locatarioIdx = text.search(/LOCAT[ÁA]RI[OA]/i);
+  // Strategy 2: nearest CPF before LOCATÁRIO/LOCATÁRIA label
+  const locatarioIdx = normalizedText.search(/LOCAT[ÁA]RI[OA]/i);
   if (locatarioIdx >= 0) {
-    // Check before (tenant info comes before "LOCATÁRIA" in this format)
-    const beforeLocatario = text.substring(Math.max(0, locatarioIdx - 2000), locatarioIdx);
-    const cpfsBefore = findAllCpfs(beforeLocatario);
-    if (cpfsBefore.length > 0) {
-      return cpfsBefore[cpfsBefore.length - 1].cpf;
-    }
-    // Also check after
-    const afterLocatario = text.substring(locatarioIdx);
-    const cpfsAfter = findAllCpfs(afterLocatario);
-    if (cpfsAfter.length > 0) {
-      return cpfsAfter[0].cpf;
-    }
+    const allCpfs = collectCpfCandidates(normalizedText);
+    const before = allCpfs.filter((c) => c.index < locatarioIdx);
+    if (before.length > 0) return before[before.length - 1].cpf;
+
+    const after = allCpfs.filter((c) => c.index >= locatarioIdx);
+    if (after.length > 0) return after[0].cpf;
   }
 
-  // Strategy 3: fallback - return second CPF found (first is usually landlord)
-  const allCpfs = findAllCpfs(text);
-  if (allCpfs.length >= 2) return allCpfs[1].cpf;
-  if (allCpfs.length === 1) return allCpfs[0].cpf;
+  // Strategy 3: fallback to last CPF in the document
+  const allCpfs = collectCpfCandidates(normalizedText);
+  if (allCpfs.length > 0) return allCpfs[allCpfs.length - 1].cpf;
 
   return null;
 }
 
 // Extract tenant name from contract text
 function extractTenantName(text: string): string | null {
-  // Strategy 1: Extract name from "e de outro [NAME], brasileiro/a"
-  const tenantSectionMatch = text.match(/e\s+de\s+outro\s+([^,]+)/i);
+  // Strategy 1: Extract from "e de outro [NOME], ..."
+  const tenantSectionMatch = text.match(/e\s+de\s+outro(?:\s+lado)?\s+([^,]+)/i);
   if (tenantSectionMatch) {
     let name = tenantSectionMatch[1].trim();
     name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|portador|portadora).*/i, "").trim();
-    if (name.length > 3 && name.length < 100) return name;
+    if (name.length > 3 && name.length < 120) return name;
   }
 
-  // Strategy 2: Look for pattern after LOCATÁRIO/LOCATÁRIA
+  // Strategy 2: pattern after LOCATÁRIO/LOCATÁRIA
   const match = text.match(/LOCAT[ÁA]RI[OA][,:]?\s+([^,]+)/i);
   if (match) {
     let name = match[1].trim();
     name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|solteiro|solteira|casado|casada|portador|portadora|inscrito|inscrita).*/i, "").trim();
-    if (name.length > 3 && name.length < 100) return name;
+    if (name.length > 3 && name.length < 120) return name;
   }
+
   return null;
 }
 
