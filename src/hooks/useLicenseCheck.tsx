@@ -36,24 +36,28 @@ export const useLicenseCheck = () => {
         }
       }
 
-      // Get current session
+      // Get current session - use getUser to force token refresh
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setStatus({ valid: false, expires_at: null, loading: false });
         return;
       }
 
+      // Refresh session to ensure valid token
+      const { data: { session: freshSession } } = await supabase.auth.refreshSession();
+      const activeSession = freshSession || session;
+
       // Call license verification edge function
       const { data, error } = await supabase.functions.invoke('license-verify', {
         headers: {
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${activeSession.access_token}`
         }
       });
 
       if (error) {
         console.error('License check error:', error);
-        setStatus({ valid: false, expires_at: null, loading: false });
-        navigate('/checkout');
+        // Don't redirect on transient auth errors - default to valid
+        setStatus({ valid: true, expires_at: null, loading: false });
         return;
       }
 
