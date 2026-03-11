@@ -68,6 +68,7 @@ const DocumentsList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [importDocsOpen, setImportDocsOpen] = useState(false);
 
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ["contracts", user?.id],
