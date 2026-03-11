@@ -78,12 +78,12 @@ const InvoicesList = () => {
   });
 
   const { data: activeContractsCount } = useQuery({
-    queryKey: ["active-contracts-count", user?.id],
+    queryKey: ["active-contracts-count", user?.id, accountId],
     queryFn: async () => {
       const { count, error } = await supabase
         .from("contracts")
         .select("*", { count: "exact", head: true })
-        .eq("user_id", user?.id)
+        .eq(filterColumn, filterValue)
         .eq("status", "active");
 
       if (error) throw error;
