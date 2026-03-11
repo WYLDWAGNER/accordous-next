@@ -241,6 +241,7 @@ const ImportConciliacao = () => {
           parsed.push({
             legacyId: cols[0] || "",
             name: cols[1] || "",
+            fantasyName: cols[2] || "",
             document: cols[3] || "",       // CPF/CNPJ
             rg: cols[4] || "",
             email: cols[5] || "",
@@ -254,6 +255,11 @@ const ImportConciliacao = () => {
             nationality: cols[13] || "",
             maritalStatus: cols[14] || "",
             profession: cols[15] || "",
+            hasRepresentative: cols[16] || "",
+            representativeName: cols[17] || "",
+            representativeEmail: cols[18] || "",
+            representativeDoc: cols[19] || "",
+            registrationDate: cols[20] || "",
             status: "pending",
           });
         }
