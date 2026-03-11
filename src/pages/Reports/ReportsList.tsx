@@ -457,7 +457,7 @@ const ReportsList = () => {
                       {invoices?.slice(0, 10).map((invoice) => (
                         <TableRow key={invoice.id}>
                           <TableCell className="font-medium">
-                            {invoice.properties?.address}
+                            {invoice.properties?.name}
                           </TableCell>
                           <TableCell>
                             {new Date(invoice.reference_month).toLocaleDateString("pt-BR", {
