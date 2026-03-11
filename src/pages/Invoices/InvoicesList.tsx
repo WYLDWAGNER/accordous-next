@@ -30,7 +30,7 @@ const ITEMS_PER_PAGE = 50;
 
 const InvoicesList = () => {
   const { user } = useAuth();
-  const { accountId } = useAccountId();
+  const { accountId, loading: accountLoading } = useAccountId();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,7 +74,7 @@ const InvoicesList = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !accountLoading,
   });
 
   const { data: activeContractsCount } = useQuery({
@@ -89,7 +89,7 @@ const InvoicesList = () => {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !accountLoading,
   });
 
   const generateAllMutation = useMutation({
