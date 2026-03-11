@@ -70,7 +70,27 @@ function collectCpfCandidates(text: string): { cpf: string; index: number }[] {
 function extractCpf(text: string): string | null {
   const normalizedText = text.replace(/\u00A0/g, " ");
 
-  // Strategy 1: section between "e de outro" and "doravante ... LOCATÁRI(O/A)"
+  // Strategy 1 (BEST): Find "LOCATÁRIO:" label and get first CPF AFTER it
+  const locatarioMatch = normalizedText.match(/LOCAT[ÁA]RI[OA]\s*:/i);
+  if (locatarioMatch && locatarioMatch.index !== undefined) {
+    const afterLocatario = normalizedText.substring(locatarioMatch.index);
+    const cpfsAfter = collectCpfCandidates(afterLocatario);
+    if (cpfsAfter.length > 0) {
+      return cpfsAfter[0].cpf;
+    }
+  }
+
+  // Strategy 2: section AFTER "e de outro" - get first CPF there
+  const eDeOutroMatch = normalizedText.match(/e\s+de\s+outro/i);
+  if (eDeOutroMatch && eDeOutroMatch.index !== undefined) {
+    const afterEDeOutro = normalizedText.substring(eDeOutroMatch.index);
+    const cpfsAfter = collectCpfCandidates(afterEDeOutro);
+    if (cpfsAfter.length > 0) {
+      return cpfsAfter[0].cpf;
+    }
+  }
+
+  // Strategy 3: section between "e de outro" and "doravante ... LOCATÁRI(O/A)"
   const tenantSectionMatch = normalizedText.match(
     /e\s+de\s+outro(?:\s+lado)?\s*,?\s*([\s\S]{0,3500}?)doravante\s+denominad[oa]s?\s+locat[áa]ri[oa]/i
   );
@@ -81,18 +101,7 @@ function extractCpf(text: string): string | null {
     }
   }
 
-  // Strategy 2: nearest CPF before LOCATÁRIO/LOCATÁRIA label
-  const locatarioIdx = normalizedText.search(/LOCAT[ÁA]RI[OA]/i);
-  if (locatarioIdx >= 0) {
-    const allCpfs = collectCpfCandidates(normalizedText);
-    const before = allCpfs.filter((c) => c.index < locatarioIdx);
-    if (before.length > 0) return before[before.length - 1].cpf;
-
-    const after = allCpfs.filter((c) => c.index >= locatarioIdx);
-    if (after.length > 0) return after[0].cpf;
-  }
-
-  // Strategy 3: fallback to last CPF in the document
+  // Strategy 4: fallback to last CPF in the document
   const allCpfs = collectCpfCandidates(normalizedText);
   if (allCpfs.length > 0) return allCpfs[allCpfs.length - 1].cpf;
 
