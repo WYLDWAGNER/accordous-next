@@ -196,7 +196,7 @@ const ImportConciliacao = () => {
         const data = evt.target?.result;
         const workbook = XLSX.read(data, { type: "binary" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<any>(sheet, { header: 1 });
+        const rows = XLSX.utils.sheet_to_json<any>(sheet, { header: 1, raw: false });
 
         // Find header row (contains "Contrato")
         let headerIdx = -1;
@@ -233,14 +233,13 @@ const ImportConciliacao = () => {
             dueDate = String(row[3] || "");
           }
 
-          // Amount might be in col 4 or split across 4+5
+          // Amount - always parse as BRL string since raw:false
           let amount: number;
-          if (typeof row[4] === "number") {
-            amount = row[4];
-          } else {
-            // "R$ 1.357,80" might be split: col4="R$", col5="1.357,80"
-            const valStr = String(row[4] || "") + " " + String(row[5] || "");
-            amount = parseBRLValue(valStr);
+          const valStr = String(row[4] || "");
+          amount = parseBRLValue(valStr);
+          if (amount <= 0 && row[5]) {
+            // "R$" in col4, value in col5
+            amount = parseBRLValue(String(row[4] || "") + " " + String(row[5] || ""));
           }
 
           // Status - might be in col 5 or 6 depending on value split
