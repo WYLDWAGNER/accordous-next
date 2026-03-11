@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountId } from "@/hooks/useAccountId";
 import { Save, FileText } from "lucide-react";
 import { z } from "zod";
 
@@ -39,6 +40,7 @@ const PropertyForm = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { accountId } = useAccountId();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(!!id);
   const [formData, setFormData] = useState({
@@ -130,6 +132,7 @@ const PropertyForm = () => {
       // Prepare insert data with only defined values
       const insertData: any = {
         user_id: user?.id,
+        account_id: accountId,
         name: validatedData.name,
         property_type: validatedData.property_type,
         status: validatedData.status,
