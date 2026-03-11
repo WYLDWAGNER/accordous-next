@@ -570,6 +570,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
                         <p className="text-xs text-muted-foreground">
                           CPF: {f.extractedCpf} → {f.tenantName}
                           {f.contractNumber && ` (Contrato #${f.contractNumber})`}
+                          {f.propertyName && ` | 🏠 ${f.propertyName}`}
                         </p>
                       )}
                       {f.status === "unmatched" && (
