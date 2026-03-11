@@ -246,16 +246,16 @@ export default function ContractDetails() {
               <div className="space-y-2">
                 <div>
                   <p className="text-sm text-muted-foreground">Nome</p>
-                  <p className="font-medium">{property.owner_name || "N/A"}</p>
+                  <p className="font-medium">{property?.owner_name || "N/A"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{property.owner_email || "N/A"}</p>
+                    <p className="font-medium">{property?.owner_email || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Telefone</p>
-                    <p className="font-medium">{property.owner_contact || "N/A"}</p>
+                    <p className="font-medium">{property?.owner_contact || "N/A"}</p>
                   </div>
                 </div>
               </div>
