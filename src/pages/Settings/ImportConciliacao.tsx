@@ -25,6 +25,7 @@ import * as XLSX from "xlsx";
 interface ContactRow {
   legacyId: string;
   name: string;
+  fantasyName: string;
   document: string;
   rg: string;
   email: string;
@@ -38,6 +39,11 @@ interface ContactRow {
   nationality: string;
   maritalStatus: string;
   profession: string;
+  hasRepresentative: string;
+  representativeName: string;
+  representativeEmail: string;
+  representativeDoc: string;
+  registrationDate: string;
   status?: "pending" | "success" | "error" | "duplicate";
   message?: string;
 }
