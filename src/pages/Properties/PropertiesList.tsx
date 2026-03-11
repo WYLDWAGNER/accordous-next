@@ -13,19 +13,24 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Building2, AlertCircle, ChevronRight, Filter, User, FileText, Eye, Globe } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, Search, Building2, AlertCircle, ChevronRight, Filter, User, FileText, Eye, Globe, Trash2 } from "lucide-react";
 import { PortalManagementDialog } from "@/components/Properties/PortalManagementDialog";
-import { useQuery } from "@tanstack/react-query";
+import { ImportPropertiesDialog } from "@/components/Properties/ImportPropertiesDialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 const PropertiesList = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("");
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [portalDialogProperty, setPortalDialogProperty] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ["properties", user?.id],
