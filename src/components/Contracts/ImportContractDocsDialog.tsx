@@ -188,11 +188,10 @@ function addressSimilarity(extracted: string, propertyAddr: string): number {
   return matches / Math.max(wordsA.size, wordsB.size);
 }
 
-
+async function extractTextFromPdf(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let fullText = "";
-  // Read first 3 pages (contract data is usually at the top)
   const pagesToRead = Math.min(pdf.numPages, 3);
   for (let i = 1; i <= pagesToRead; i++) {
     const page = await pdf.getPage(i);
