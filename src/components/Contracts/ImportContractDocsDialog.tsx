@@ -412,6 +412,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
               account_id: accountId || undefined,
               tenant_name: fm.extractedName || "Inquilino",
               tenant_document: fm.extractedCpf,
+              property_id: fm.propertyId || undefined,
               rental_value: 0,
               start_date: new Date().toISOString().split("T")[0],
               status: "active",
