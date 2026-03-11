@@ -89,7 +89,7 @@ const InvoicesList = () => {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !accountLoading,
   });
 
   const generateAllMutation = useMutation({
