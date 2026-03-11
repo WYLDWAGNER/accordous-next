@@ -169,6 +169,11 @@ const App = () => (
                 <PortalSettings />
               </ProtectedRoute>
             } />
+            <Route path="/vistorias" element={
+              <ProtectedRoute>
+                <InspectionWizard />
+              </ProtectedRoute>
+            } />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <SuperAdminRoute>
