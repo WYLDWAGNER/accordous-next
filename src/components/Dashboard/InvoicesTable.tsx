@@ -127,7 +127,7 @@ export const InvoicesTable = ({ invoices }: InvoicesTableProps) => {
           <Button 
             variant="link" 
             className="text-info"
-            onClick={() => navigate("/invoices")}
+            onClick={() => navigate("/faturas")}
           >
             VISUALIZAR TODAS AS FATURAS
             <ChevronRight className="ml-1 h-4 w-4" />
