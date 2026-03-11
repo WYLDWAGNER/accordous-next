@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import UserFormDialog from "@/components/Users/UserFormDialog";
+import { ImportContactsDialog } from "@/components/Users/ImportContactsDialog";
 
 interface UserProfile {
   id: string;
@@ -284,10 +285,13 @@ const UsersList = () => {
                   Gerencie os usuários que possuem acesso à sua conta da plataforma.
                 </p>
               </div>
-              <Button onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar novo
-              </Button>
+              <div className="flex gap-2">
+                <ImportContactsDialog onSuccess={() => fetchUsers()} />
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar novo
+                </Button>
+              </div>
             </div>
 
             <Card>
