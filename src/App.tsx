@@ -158,6 +158,11 @@ const App = () => (
                 <GeneralSettings />
               </ProtectedRoute>
             } />
+            <Route path="/configuracoes/importar-conciliacao" element={
+              <ProtectedRoute>
+                <ImportConciliacao />
+              </ProtectedRoute>
+            } />
             <Route path="/configuracoes/portais" element={
               <ProtectedRoute>
                 <PortalSettings />

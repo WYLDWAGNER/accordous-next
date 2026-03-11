@@ -54,6 +54,24 @@ const GeneralSettings = () => {
             </div>
           </CardContent>
         </Card>
+        {/* Conciliação Import */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5" />
+              Importação de Conciliação
+            </CardTitle>
+            <CardDescription>
+              Importe contatos, contratos e faturas a partir de uma planilha de conciliação XLSX.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/configuracoes/importar-conciliacao")}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Importar Conciliação XLSX
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
