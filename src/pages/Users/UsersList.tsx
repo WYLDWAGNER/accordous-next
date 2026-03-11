@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import UserFormDialog from "@/components/Users/UserFormDialog";
+import { ImportContactsDialog } from "@/components/Users/ImportContactsDialog";
 
 interface UserProfile {
   id: string;
