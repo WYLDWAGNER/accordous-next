@@ -41,8 +41,11 @@ const InvoicesList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [referenceMonth, setReferenceMonth] = useState<Date>(new Date());
 
+  const filterColumn = accountId ? "account_id" : "user_id";
+  const filterValue = accountId || user?.id;
+
   const { data: invoices, isLoading } = useQuery({
-    queryKey: ["invoices", user?.id],
+    queryKey: ["invoices", user?.id, accountId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
@@ -65,7 +68,7 @@ const InvoicesList = () => {
             owner_email
           )
         `)
-        .eq("user_id", user?.id)
+        .eq(filterColumn, filterValue)
         .order("due_date", { ascending: false });
 
       if (error) throw error;
