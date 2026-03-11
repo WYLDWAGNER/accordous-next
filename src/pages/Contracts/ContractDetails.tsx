@@ -489,22 +489,53 @@ export default function ContractDetails() {
                         </p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={async () => {
-                        const { data } = await supabase.storage
-                          .from("contract-documents")
-                          .createSignedUrl(doc.path, 3600);
-                        if (data?.signedUrl) {
-                          window.open(data.signedUrl, "_blank");
-                        } else {
-                          toast.error("Erro ao gerar link do documento");
-                        }
-                      }}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          const { data } = await supabase.storage
+                            .from("contract-documents")
+                            .createSignedUrl(doc.path, 3600);
+                          if (data?.signedUrl) {
+                            window.open(data.signedUrl, "_blank");
+                          } else {
+                            toast.error("Erro ao gerar link do documento");
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={async () => {
+                          if (!confirm(`Deseja excluir "${doc.name}"?`)) return;
+                          try {
+                            // Remove from storage
+                            await supabase.storage
+                              .from("contract-documents")
+                              .remove([doc.path]);
+
+                            // Remove from contract documents array
+                            const docs = Array.isArray((contract as any).documents) ? (contract as any).documents : [];
+                            const updatedDocs = docs.filter((_: any, i: number) => i !== idx);
+                            await supabase
+                              .from("contracts")
+                              .update({ documents: updatedDocs } as any)
+                              .eq("id", contract.id);
+
+                            toast.success("Documento excluído");
+                            fetchContractDetails();
+                          } catch (err: any) {
+                            toast.error("Erro ao excluir: " + err.message);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
