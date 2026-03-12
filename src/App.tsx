@@ -52,7 +52,6 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <LicenseProvider>
-            <SidebarProvider>
               <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/register" element={<Register />} />
