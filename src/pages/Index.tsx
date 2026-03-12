@@ -5,9 +5,11 @@ import { PropertySummaryCard } from "@/components/Dashboard/PropertySummaryCard"
 import { CommercialCard } from "@/components/Dashboard/CommercialCard";
 import { CalculatorCard } from "@/components/Dashboard/CalculatorCard";
 import { InvoicesTable } from "@/components/Dashboard/InvoicesTable";
+import { OverdueBreakdownCard } from "@/components/Dashboard/OverdueBreakdownCard";
 import { AlertTriangle, RefreshCw, FileCheck, MessageSquare, Calculator, TrendingUp, Percent } from "lucide-react";
 import { useDashboardStats } from "@/hooks/dashboard/useDashboardStats";
 import { useRecentInvoices } from "@/hooks/dashboard/useRecentInvoices";
+import { useOverdueBreakdown } from "@/hooks/dashboard/useOverdueBreakdown";
 import { usePropertySummary } from "@/hooks/dashboard/usePropertySummary";
 import { useAuth } from "@/hooks/useAuth";
 import { useAccountId } from "@/hooks/useAccountId";
