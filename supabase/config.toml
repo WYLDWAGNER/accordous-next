@@ -44,3 +44,6 @@ verify_jwt = true
 
 [functions.generate-portal-feed]
 verify_jwt = false
+
+[functions.send-cobranca-webhook]
+verify_jwt = false
