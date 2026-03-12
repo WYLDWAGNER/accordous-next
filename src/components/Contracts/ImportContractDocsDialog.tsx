@@ -71,6 +71,45 @@ function extractPropertyUnit(text: string): string | null {
   return null;
 }
 
+// ========== REGRA 4: Data de vigência extraída do TEXTO DO PDF ==========
+function parseContractDate(dateStr: string): string | null {
+  if (!dateStr) return null;
+  
+  if (dateStr.includes('/')) {
+    const [d, m, y] = dateStr.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  
+  const months: Record<string, string> = {
+    janeiro: '01', fevereiro: '02', março: '03', marco: '03', abril: '04',
+    maio: '05', junho: '06', julho: '07', agosto: '08', setembro: '09',
+    outubro: '10', novembro: '11', dezembro: '12'
+  };
+  const match = dateStr.match(/(\d{1,2})\s+de\s+([a-zç]+)\s+de\s+(\d{4})/i);
+  if (match) {
+    const d = match[1].padStart(2, '0');
+    const m = months[match[2].toLowerCase()] || '01';
+    const y = match[3];
+    return `${y}-${m}-${d}`;
+  }
+  
+  return null;
+}
+
+function extractStartDate(text: string): string | null {
+  const normalizedText = text.replace(/\u00A0/g, " ");
+  const clauseMatch = normalizedText.match(/CL[ÁA]USULA\s+TERCEIR[OA]\s*[:\-]?\s*(?:DO\s+)?PRAZO(.*?)(?:CL[ÁA]USULA\s+QUARTA)/is);
+
+  if (clauseMatch) {
+    const clauseText = clauseMatch[1];
+    const dateMatch = clauseText.match(/(\d{2}\/\d{2}\/\d{4}|\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{4})/i);
+    if (dateMatch) {
+      return parseContractDate(dateMatch[1]);
+    }
+  }
+  return null;
+}
+
 async function extractTextFromPdf(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
