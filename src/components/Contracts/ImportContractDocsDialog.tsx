@@ -340,7 +340,8 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
               property_id: fm.propertyId || undefined,
               rental_value: 0,
               start_date: fm.extractedStartDate || new Date().toISOString().split("T")[0],
-              status: "active",
+              end_date: fm.extractedEndDate || undefined,
+              status: fm.extractedStatus || "active",
             } as any)
             .select("id")
             .single();
