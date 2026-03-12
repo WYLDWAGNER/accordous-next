@@ -108,6 +108,19 @@ const Index = () => {
         )}
       </div>
 
+      {/* Row 2.5: Overdue Breakdown */}
+      <div className="mb-6">
+        {overdueLoading ? (
+          <Skeleton className="h-48" />
+        ) : overdueData && overdueData.totalCount > 0 ? (
+          <OverdueBreakdownCard
+            buckets={overdueData.buckets}
+            totalOverdue={overdueData.totalOverdue}
+            totalCount={overdueData.totalCount}
+          />
+        ) : null}
+      </div>
+
       {/* Row 3: Table + Calculators */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div className="lg:col-span-3">
