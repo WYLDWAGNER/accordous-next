@@ -25,7 +25,7 @@ const userSchema = z.object({
   full_name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100),
   email: z.string().email("E-mail inválido").max(255),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100).optional(),
-  role: z.enum(["admin", "full", "agenda", "cadastro_leads", "financeiro", "moderator", "user"]),
+  role: z.enum(["admin", "full", "agenda", "cadastro_leads", "financeiro"]),
   is_active: z.boolean(),
 });
 
@@ -43,7 +43,7 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess, accountId }: User
     full_name: "",
     email: "",
     password: "",
-    role: "user" as const,
+    role: "full" as const,
     is_active: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -63,7 +63,7 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess, accountId }: User
         full_name: "",
         email: "",
         password: "",
-        role: "user",
+        role: "full",
         is_active: true,
       });
     }
@@ -248,12 +248,10 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess, accountId }: User
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="full">Full (Acesso Completo)</SelectItem>
                   <SelectItem value="agenda">Agenda</SelectItem>
                   <SelectItem value="cadastro_leads">Cadastro/Gestão de Leads</SelectItem>
                   <SelectItem value="financeiro">Financeiro</SelectItem>
-                  <SelectItem value="moderator">Moderador</SelectItem>
-                  <SelectItem value="user">Usuário</SelectItem>
                 </SelectContent>
               </Select>
               {errors.role && <p className="text-sm text-destructive">{errors.role}</p>}
