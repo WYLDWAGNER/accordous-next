@@ -232,13 +232,13 @@ const UsersList = () => {
 
   const getRoleBadge = (role: string) => {
     const roleConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+      super_admin: { label: "Super Admin", variant: "default" },
       admin: { label: "Administrador", variant: "default" },
       full: { label: "Full", variant: "secondary" },
       agenda: { label: "Agenda", variant: "outline" },
       cadastro_leads: { label: "Cadastro/Leads", variant: "outline" },
       financeiro: { label: "Financeiro", variant: "outline" },
-      moderator: { label: "Moderador", variant: "secondary" },
-      user: { label: "Usuário", variant: "outline" },
+      trial: { label: "Trial", variant: "outline" },
     };
 
     const config = roleConfig[role] || roleConfig.user;

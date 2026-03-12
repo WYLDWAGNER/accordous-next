@@ -248,12 +248,10 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess, accountId }: User
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="full">Full (Acesso Completo)</SelectItem>
                   <SelectItem value="agenda">Agenda</SelectItem>
                   <SelectItem value="cadastro_leads">Cadastro/Gestão de Leads</SelectItem>
                   <SelectItem value="financeiro">Financeiro</SelectItem>
-                  <SelectItem value="moderator">Moderador</SelectItem>
-                  <SelectItem value="user">Usuário</SelectItem>
                 </SelectContent>
               </Select>
               {errors.role && <p className="text-sm text-destructive">{errors.role}</p>}
