@@ -43,7 +43,7 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess, accountId }: User
     full_name: "",
     email: "",
     password: "",
-    role: "user" as const,
+    role: "full" as const,
     is_active: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
