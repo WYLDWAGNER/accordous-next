@@ -22,211 +22,53 @@ interface ImportContractDocsDialogProps {
 
 interface FileMatch {
   file: File;
-  extractedCpf: string | null;
-  extractedName: string | null;
-  extractedAddress: string | null;
+  extractedContractNumber: string | null;
+  extractedTenantName: string | null;
+  extractedUnit: string | null;
   contractId: string | null;
   contractNumber: string | null;
   tenantName: string | null;
-  contactId: string | null;
   propertyId: string | null;
   propertyName: string | null;
   status: "pending" | "parsing" | "matched" | "unmatched" | "uploaded" | "error";
   errorMsg?: string;
 }
 
-// Normalize CPF to formatted pattern 000.000.000-00
-function normalizeCpfFormat(rawCpf: string): string | null {
-  const digits = rawCpf.replace(/\D/g, "");
-  if (digits.length !== 11) return null;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+// ========== REGRA 1: ID do contrato extraído do NOME DO ARQUIVO ==========
+function extractContractNumberFromFilename(filename: string): string | null {
+  const match = filename.match(/contrato_(\d+)_sem_propriedade/i);
+  return match ? match[1] : null;
 }
 
-function collectCpfCandidates(text: string): { cpf: string; index: number }[] {
-  const results: { cpf: string; index: number }[] = [];
-  const seen = new Set<string>();
-
-  const add = (raw: string, index: number) => {
-    const normalized = normalizeCpfFormat(raw);
-    if (!normalized || seen.has(normalized)) return;
-    seen.add(normalized);
-    results.push({ cpf: normalized, index });
-  };
-
-  // Accepts spaces/noises from PDF extraction, e.g. "093 . 184 . 079 - 12"
-  const relaxedCpfRegex = /\d{3}\s*\.?\s*\d{3}\s*\.?\s*\d{3}\s*[-–—]?\s*\d{2}/g;
-  let m: RegExpExecArray | null;
-  while ((m = relaxedCpfRegex.exec(text)) !== null) {
-    add(m[0], m.index);
-  }
-
-  // CPF near CPF/CPF-MF keywords (handles "CPF/MF sob o nº" and variants)
-  const cpfKeywordRegex = /CPF(?:\/MF)?[\s\S]{0,60}?(\d[\d.\-\s]{10,20})/gi;
-  while ((m = cpfKeywordRegex.exec(text)) !== null) {
-    add(m[1], m.index);
-  }
-
-  return results.sort((a, b) => a.index - b.index);
-}
-
-// Extract tenant CPF robustly for contracts with LOCADOR + LOCATÁRIO sections
-function extractCpf(text: string): string | null {
-  const normalizedText = text.replace(/\u00A0/g, " ");
-
-  // Strategy 1 (BEST): Find "LOCATÁRIO:" label and get first CPF AFTER it
-  const locatarioMatch = normalizedText.match(/LOCAT[ÁA]RI[OA]\s*:/i);
-  if (locatarioMatch && locatarioMatch.index !== undefined) {
-    const afterLocatario = normalizedText.substring(locatarioMatch.index);
-    const cpfsAfter = collectCpfCandidates(afterLocatario);
-    if (cpfsAfter.length > 0) {
-      return cpfsAfter[0].cpf;
-    }
-  }
-
-  // Strategy 2: section AFTER "e de outro" - get first CPF there
-  const eDeOutroMatch = normalizedText.match(/e\s+de\s+outro/i);
-  if (eDeOutroMatch && eDeOutroMatch.index !== undefined) {
-    const afterEDeOutro = normalizedText.substring(eDeOutroMatch.index);
-    const cpfsAfter = collectCpfCandidates(afterEDeOutro);
-    if (cpfsAfter.length > 0) {
-      return cpfsAfter[0].cpf;
-    }
-  }
-
-  // Strategy 3: section between "e de outro" and "doravante ... LOCATÁRI(O/A)"
-  const tenantSectionMatch = normalizedText.match(
-    /e\s+de\s+outro(?:\s+lado)?\s*,?\s*([\s\S]{0,3500}?)doravante\s+denominad[oa]s?\s+locat[áa]ri[oa]/i
-  );
-  if (tenantSectionMatch) {
-    const tenantCpfs = collectCpfCandidates(tenantSectionMatch[1]);
-    if (tenantCpfs.length > 0) {
-      return tenantCpfs[tenantCpfs.length - 1].cpf;
-    }
-  }
-
-  // Strategy 4: fallback to last CPF in the document
-  const allCpfs = collectCpfCandidates(normalizedText);
-  if (allCpfs.length > 0) return allCpfs[allCpfs.length - 1].cpf;
-
-  return null;
-}
-
-// Extract tenant name from contract text
+// ========== REGRA 2: Nome do inquilino extraído do TEXTO DO PDF ==========
 function extractTenantName(text: string): string | null {
   const normalizedText = text.replace(/\u00A0/g, " ");
-  
-  // Nationality/descriptor words that indicate end of name
-  const descriptorPattern = /\s*(brasileiro|brasileira|cubano|cubana|solteiro|solteira|casado|casada|divorciado|divorciada|viúvo|viúva|portador|portadora|inscrito|inscrita|nacionalidade|natural\s+de|residente|nascido|CPF|RG|para\s+tanto|cláusula|cl[aá]usula).*/i;
-
-  // Strategy 1 (BEST): Name BEFORE "doravante denominado(a) LOCATÁRIO(A)"
-  const beforeLocatarioMatch = normalizedText.match(
-    /(?:e\s+de\s+outro(?:\s+lado)?\s*,?\s*)([\s\S]{5,3000}?)(?:doravante\s+denominad[oa]s?\s+(?:simplesmente\s+)?locat[áa]ri[oa])/i
-  );
-  if (beforeLocatarioMatch) {
-    let section = beforeLocatarioMatch[1].trim();
-    // The name is usually the first proper name at the beginning of this section
-    // Remove leading connectors
-    section = section.replace(/^(?:o\s+Sr\.?|a\s+Sra?\.?|o\s+senhor|a\s+senhora)\s*/i, "");
-    // Get the name (first segment before nationality/descriptor words or comma with descriptor)
-    let name = section.split(/,/)[0].trim();
-    name = name.replace(descriptorPattern, "").trim();
-    // Clean trailing punctuation
-    name = name.replace(/[,;:.]+$/, "").trim();
-    if (name.length > 3 && name.length < 120 && !/cl[aá]usula|objeto|contrato|loca[çc][ãa]o/i.test(name)) {
-      return name;
-    }
+  const match = normalizedText.match(/LOCADOR,\s*e\s*de\s*outro\s+([^,]+),/i);
+  if (match) {
+    return match[1].trim();
   }
-
-  // Strategy 2: "LOCATÁRIO(A):" label followed directly by name (not a clause)
-  const locatarioLabelMatch = normalizedText.match(/LOCAT[ÁA]RI[OA]\s*[,:]\s*([^,\n]+)/i);
-  if (locatarioLabelMatch) {
-    let name = locatarioLabelMatch[1].trim();
-    name = name.replace(descriptorPattern, "").trim();
-    name = name.replace(/[,;:.]+$/, "").trim();
-    // Reject if it looks like clause text
-    if (name.length > 3 && name.length < 120 && !/cl[aá]usula|objeto|contrato|loca[çc][ãa]o|para\s+tanto/i.test(name)) {
-      return name;
-    }
-  }
-
-  // Strategy 3: Extract from "e de outro [lado] [NOME], brasileiro/a..."
-  const eDeOutroNameMatch = normalizedText.match(/e\s+de\s+outro(?:\s+lado)?\s*,?\s*(?:o\s+Sr\.?|a\s+Sra?\.?)?\s*([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,6})/);
-  if (eDeOutroNameMatch) {
-    let name = eDeOutroNameMatch[1].trim();
-    name = name.replace(descriptorPattern, "").trim();
-    if (name.length > 3 && name.length < 120 && !/cl[aá]usula|objeto|contrato/i.test(name)) {
-      return name;
-    }
-  }
-
-  // Strategy 4: Find name near CPF in tenant section
-  const cpfNameMatch = normalizedText.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,6})\s*,?\s*(?:brasileiro|brasileira|solteiro|solteira|casado|casada)/);
-  if (cpfNameMatch) {
-    // Only use if it appears after "e de outro" (tenant section)
-    const eDeOutroIdx = normalizedText.search(/e\s+de\s+outro/i);
-    if (eDeOutroIdx >= 0 && normalizedText.indexOf(cpfNameMatch[0]) > eDeOutroIdx) {
-      let name = cpfNameMatch[1].trim();
-      if (name.length > 3 && name.length < 120) return name;
-    }
-  }
-
   return null;
 }
 
-// Extract property address from contract text
-function extractAddress(text: string): string | null {
+// ========== REGRA 3: Unidade do imóvel extraída do TEXTO DO PDF ==========
+function extractPropertyUnit(text: string): string | null {
   const normalizedText = text.replace(/\u00A0/g, " ");
-
-  const patterns = [
-    /im[óo]vel\s+(?:localizado|situado|sito|urbano[^,]*localizado)\s+(?:na|no|à|a)\s+([^,]{10,150})/i,
-    /objeto\s+(?:da|do|desta)\s+(?:presente\s+)?loca[çc][ãa]o[^,]*(?:na|no|à|a)\s+([^,]{10,150})/i,
-    /endere[çc]o[:\s]+([^,]{10,150})/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = normalizedText.match(pattern);
-    if (match) {
-      let addr = (match[1] || match[0]).trim();
-      addr = addr.replace(/\s*(doravante|conforme|de\s+acordo|para\s+os|neste\s+ato).*/i, "").trim();
-      addr = addr.replace(/\.+$/, "").trim();
-      if (addr.length > 8 && addr.length < 200) return addr;
+  
+  // Isolar texto da Cláusula Primeira
+  const clauseMatch = normalizedText.match(
+    /CL[ÁA]USULA PRIMEIRA:\s*DO OBJETO(.*?)(?:CL[ÁA]USULA SEGUNDA|O im[óo]vel descrito)/is
+  );
+  
+  if (clauseMatch) {
+    const clauseText = clauseMatch[1];
+    const unitMatch = clauseText.match(
+      /(Apartamento\s+[0-9A-Za-z]+|Bloco\s+\d+\s+AP\s+\d+)/i
+    );
+    if (unitMatch) {
+      return unitMatch[1].trim();
     }
   }
-
-  // Fallback: find "Rua/Av/Alameda..." pattern
-  const streetMatch = normalizedText.match(/((?:Rua|Avenida|Av\.?|Travessa|Alameda|Pra[çc]a)\s+[^,]{5,100},?\s*n[ºo°]?\s*\d+[^,]*)/i);
-  if (streetMatch) {
-    let addr = streetMatch[1].trim().replace(/\.+$/, "");
-    if (addr.length > 8) return addr;
-  }
-
   return null;
-}
-
-function normalizeForComparison(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function addressSimilarity(extracted: string, propertyAddr: string): number {
-  const a = normalizeForComparison(extracted);
-  const b = normalizeForComparison(propertyAddr);
-
-  if (a.includes(b) || b.includes(a)) return 0.9;
-
-  const wordsA = new Set(a.split(" ").filter(w => w.length > 2));
-  const wordsB = new Set(b.split(" ").filter(w => w.length > 2));
-  if (wordsA.size === 0 || wordsB.size === 0) return 0;
-
-  let matches = 0;
-  for (const w of wordsA) {
-    if (wordsB.has(w)) matches++;
-  }
-  return matches / Math.max(wordsA.size, wordsB.size);
 }
 
 async function extractTextFromPdf(file: File): Promise<string> {
@@ -257,23 +99,10 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
     if (!user?.id) return;
     setLoading(true);
 
-    // Fetch all contacts with documents (CPFs)
-    const { data: contacts, error: contactsErr } = await supabase
-      .from("contacts")
-      .select("id, name, document")
-      .eq("user_id", user.id)
-      .not("document", "is", null);
-
-    if (contactsErr) {
-      toast.error("Erro ao buscar contatos");
-      setLoading(false);
-      return;
-    }
-
-    // Fetch all contracts
+    // Fetch existing contracts
     const { data: contracts, error: contractsErr } = await supabase
       .from("contracts")
-      .select("id, contract_number, tenant_name, tenant_document")
+      .select("id, contract_number, tenant_name, property_id")
       .eq("user_id", user.id);
 
     if (contractsErr) {
@@ -282,40 +111,28 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       return;
     }
 
-    // Fetch all properties for address matching
+    // Fetch properties for unit matching
     const { data: properties } = await supabase
       .from("properties")
-      .select("id, name, address, city, state, number, neighborhood")
+      .select("id, name, address, neighborhood")
       .eq("user_id", user.id);
 
-    // Normalize CPF for comparison
-    const normalizeCpf = (cpf: string) => cpf.replace(/[^0-9]/g, "");
-
-    // Build contact CPF index
-    const contactByCpf = new Map<string, typeof contacts[0]>();
-    contacts?.forEach((c) => {
-      if (c.document) {
-        contactByCpf.set(normalizeCpf(c.document), c);
-      }
-    });
-
-    // Build contract by tenant_document index
-    const contractByDoc = new Map<string, typeof contracts[0]>();
+    // Index contracts by contract_number
+    const contractByNumber = new Map<string, typeof contracts[0]>();
     contracts?.forEach((c) => {
-      if (c.tenant_document) {
-        contractByDoc.set(normalizeCpf(c.tenant_document), c);
+      if (c.contract_number) {
+        contractByNumber.set(c.contract_number, c);
       }
     });
 
     const fileMatches: FileMatch[] = Array.from(selectedFiles).map((file) => ({
       file,
-      extractedCpf: null,
-      extractedName: null,
-      extractedAddress: null,
+      extractedContractNumber: null,
+      extractedTenantName: null,
+      extractedUnit: null,
       contractId: null,
       contractNumber: null,
       tenantName: null,
-      contactId: null,
       propertyId: null,
       propertyName: null,
       status: "pending" as const,
@@ -324,88 +141,68 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
     setFiles(fileMatches);
     setStep("preview");
 
-    // Parse PDFs in batches
     let parsed = 0;
     for (const fm of fileMatches) {
       fm.status = "parsing";
       setFiles([...fileMatches]);
 
       try {
+        // REGRA 1: Extrair ID do contrato do nome do arquivo
+        const contractNum = extractContractNumberFromFilename(fm.file.name);
+        fm.extractedContractNumber = contractNum;
+
+        // Ler texto do PDF
         const text = await extractTextFromPdf(fm.file);
         
-        // Debug: log extracted text and CPF candidates
-        console.log(`[PDF DEBUG] File: ${fm.file.name}`);
-        console.log(`[PDF DEBUG] Text (first 1500 chars):`, text.substring(0, 1500));
-        console.log(`[PDF DEBUG] Has "e de outro":`, /e\s+de\s+outro/i.test(text));
-        console.log(`[PDF DEBUG] Has "doravante denominad":`, /doravante\s+denominad/i.test(text));
-        console.log(`[PDF DEBUG] Has "LOCATÁRI":`, /LOCAT[ÁA]RI[OA]/i.test(text));
-        console.log(`[PDF DEBUG] All CPF candidates:`, collectCpfCandidates(text));
-        
-        const cpf = extractCpf(text);
-        const name = extractTenantName(text);
-        const addr = extractAddress(text);
-        console.log(`[PDF DEBUG] Extracted CPF: ${cpf}, Name: ${name}, Address: ${addr}`);
-        
-        fm.extractedCpf = cpf;
-        fm.extractedName = name;
-        fm.extractedAddress = addr;
+        console.log(`[PDF PARSER] Arquivo: ${fm.file.name}`);
+        console.log(`[PDF PARSER] Nº contrato (filename): ${contractNum}`);
 
-        // Try to match property by address
-        if (addr && properties && properties.length > 0) {
-          let bestScore = 0;
-          let bestProp: typeof properties[0] | null = null;
-          for (const prop of properties) {
-            const fullAddr = [prop.address, prop.number, prop.neighborhood, prop.city, prop.state]
-              .filter(Boolean).join(" ");
-            const score = addressSimilarity(addr, fullAddr);
-            if (score > bestScore) {
-              bestScore = score;
-              bestProp = prop;
+        // REGRA 2: Extrair nome do inquilino
+        const tenantName = extractTenantName(text);
+        fm.extractedTenantName = tenantName;
+        console.log(`[PDF PARSER] Inquilino: ${tenantName}`);
+
+        // REGRA 3: Extrair unidade do imóvel
+        const unit = extractPropertyUnit(text);
+        fm.extractedUnit = unit;
+        console.log(`[PDF PARSER] Unidade: ${unit}`);
+
+        // Matching: buscar contrato existente pelo número
+        if (contractNum) {
+          const existingContract = contractByNumber.get(contractNum);
+          if (existingContract) {
+            fm.contractId = existingContract.id;
+            fm.contractNumber = existingContract.contract_number;
+            fm.tenantName = existingContract.tenant_name;
+            if (existingContract.property_id) {
+              fm.propertyId = existingContract.property_id;
+              const prop = properties?.find(p => p.id === existingContract.property_id);
+              if (prop) fm.propertyName = prop.name || prop.address;
             }
-          }
-          if (bestProp && bestScore >= 0.4) {
-            fm.propertyId = bestProp.id;
-            fm.propertyName = bestProp.name || bestProp.address;
-            console.log(`[PDF DEBUG] Matched property: ${fm.propertyName} (score: ${bestScore.toFixed(2)})`);
-          }
-        }
-
-        if (cpf) {
-          const normalizedCpf = normalizeCpf(cpf);
-
-          // Try to match contract by tenant_document
-          const contract = contractByDoc.get(normalizedCpf);
-          if (contract) {
-            fm.contractId = contract.id;
-            fm.contractNumber = contract.contract_number;
-            fm.tenantName = contract.tenant_name;
             fm.status = "matched";
           } else {
-            // Try to match contact by CPF
-            const contact = contactByCpf.get(normalizedCpf);
-            if (contact) {
-              fm.contactId = contact.id;
-              fm.tenantName = contact.name;
-              // Try to find contract by tenant_name matching contact name
-              const matchedContract = contracts?.find(
-                (c) => c.tenant_name?.toLowerCase() === contact.name?.toLowerCase()
+            // Contrato não existe ainda — será criado no upload
+            fm.contractNumber = contractNum;
+            fm.tenantName = tenantName || "Inquilino";
+            
+            // Tentar vincular imóvel pela unidade extraída
+            if (unit && properties) {
+              const normalizedUnit = unit.toLowerCase();
+              const matchedProp = properties.find(p => 
+                p.name?.toLowerCase().includes(normalizedUnit) ||
+                p.address?.toLowerCase().includes(normalizedUnit)
               );
-              if (matchedContract) {
-                fm.contractId = matchedContract.id;
-                fm.contractNumber = matchedContract.contract_number;
-                fm.status = "matched";
-              } else {
-                // Contact found but no contract linked
-                fm.status = "matched";
-                fm.tenantName = contact.name + " (contato encontrado, contrato será criado)";
+              if (matchedProp) {
+                fm.propertyId = matchedProp.id;
+                fm.propertyName = matchedProp.name || matchedProp.address;
               }
-            } else {
-              fm.status = "unmatched";
             }
+            fm.status = "matched";
+            fm.tenantName = (tenantName || "Inquilino") + " (contrato será criado)";
           }
         } else {
           fm.status = "unmatched";
-          fm.errorMsg = "CPF não encontrado no PDF";
+          fm.errorMsg = "Nome do arquivo não segue o padrão contrato_XXXX_sem_propriedade.pdf";
         }
       } catch (err: any) {
         fm.status = "error";
@@ -425,7 +222,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
     });
     setFiles([...fileMatches]);
     setLoading(false);
-  }, [user?.id]);
+  }, [user?.id, accountId]);
 
   const handleUpload = async () => {
     const matchedFiles = files.filter((f) => f.status === "matched");
@@ -444,15 +241,15 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       try {
         let contractId = fm.contractId;
 
-        // If no contract but contact found, create a contract
-        if (!contractId && fm.contactId && fm.extractedCpf) {
+        // Se não existe contrato, criar um novo
+        if (!contractId && fm.extractedContractNumber) {
           const { data: newContract, error: createErr } = await supabase
             .from("contracts")
             .insert({
               user_id: user!.id,
               account_id: accountId || undefined,
-              tenant_name: fm.extractedName || "Inquilino",
-              tenant_document: fm.extractedCpf,
+              contract_number: fm.extractedContractNumber,
+              tenant_name: fm.extractedTenantName || "Inquilino",
               property_id: fm.propertyId || undefined,
               rental_value: 0,
               start_date: new Date().toISOString().split("T")[0],
@@ -494,7 +291,6 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
           uploaded_at: new Date().toISOString(),
         };
 
-        // Build update payload - include property_id if matched and not yet set
         const updatePayload: any = { documents: [...existingDocs, newDoc] };
         if (fm.propertyId && !contractData?.property_id) {
           updatePayload.property_id = fm.propertyId;
@@ -543,7 +339,8 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
         <DialogHeader>
           <DialogTitle>Importar Documentos de Contratos</DialogTitle>
           <DialogDescription>
-            Faça upload dos PDFs. O sistema extrai o CPF do inquilino de cada PDF e vincula ao contato/contrato correspondente.
+            Faça upload dos PDFs com nome no padrão <code>contrato_XXXX_sem_propriedade.pdf</code>. 
+            O sistema extrai o nº do contrato do nome do arquivo, o inquilino e a unidade do texto do PDF.
           </DialogDescription>
         </DialogHeader>
 
@@ -555,7 +352,9 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
             >
               <Upload className="h-10 w-10 text-muted-foreground mb-3" />
               <p className="text-sm font-medium">Clique ou arraste os PDFs aqui</p>
-              <p className="text-xs text-muted-foreground mt-1">O sistema lerá cada PDF para extrair o CPF do inquilino</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Padrão do nome: contrato_XXXX_sem_propriedade.pdf
+              </p>
               <input
                 id="contract-docs-input"
                 type="file"
@@ -615,17 +414,14 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
                       )}
                       {f.status === "matched" && (
                         <p className="text-xs text-muted-foreground">
-                          CPF: {f.extractedCpf} → {f.tenantName}
-                          {f.contractNumber && ` (Contrato #${f.contractNumber})`}
-                          {f.propertyName && ` | 🏠 ${f.propertyName}`}
+                          Contrato #{f.extractedContractNumber} → {f.extractedTenantName || f.tenantName}
+                          {f.extractedUnit && ` | 🏠 ${f.extractedUnit}`}
+                          {f.propertyName && ` (${f.propertyName})`}
                         </p>
                       )}
                       {f.status === "unmatched" && (
                         <p className="text-xs text-destructive">
-                          {f.extractedCpf 
-                            ? `CPF ${f.extractedCpf} não encontrado nos contatos`
-                            : f.errorMsg || "CPF não encontrado no PDF"
-                          }
+                          {f.errorMsg || "Não foi possível processar"}
                         </p>
                       )}
                       {f.status === "error" && (
