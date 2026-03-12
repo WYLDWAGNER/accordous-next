@@ -37,7 +37,10 @@ const formatCurrency = (value: number) =>
 
 const invoicesToRows = (invoices: any[]) =>
   invoices.map((inv: any) => ({
+  invoices.map((inv: any) => ({
     Cliente: inv.contract?.tenant_name || "N/A",
+    Telefone: inv.contract?.tenant_phone || "-",
+    Email: inv.contract?.tenant_email || "-",
     Imóvel: inv.property?.name || "-",
     Vencimento: new Date(inv.due_date).toLocaleDateString("pt-BR"),
     "Dias em Atraso": inv.daysOverdue,
