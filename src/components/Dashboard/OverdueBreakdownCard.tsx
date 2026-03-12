@@ -61,6 +61,8 @@ const exportToXlsx = (buckets: OverdueBucket[], selectedLabel?: string) => {
     const rows = invoicesToRows(bucket.invoices);
     rows.push({
       Cliente: "",
+      Telefone: "",
+      Email: "",
       Imóvel: "",
       Vencimento: "TOTAL",
       "Dias em Atraso": bucket.count as any,
