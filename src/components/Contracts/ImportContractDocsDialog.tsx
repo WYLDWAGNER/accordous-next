@@ -207,6 +207,10 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
         fm.extractedUnit = unit;
         console.log(`[PDF PARSER] Unidade: ${unit}`);
 
+        // REGRA 4: Extrair data de vigência
+        fm.extractedStartDate = extractStartDate(text);
+        console.log(`[PDF PARSER] Data início: ${fm.extractedStartDate}`);
+
         // Matching: buscar contrato existente pelo número
         if (contractNum) {
           const existingContract = contractByNumber.get(contractNum);
