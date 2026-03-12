@@ -72,6 +72,31 @@ const DocumentsList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [importDocsOpen, setImportDocsOpen] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleDeleteContract = async (contractId: string, documents: any[]) => {
+    if (!confirm("Deseja excluir este contrato e todos os documentos anexados?")) return;
+    setDeleting(contractId);
+    try {
+      // Remove files from storage
+      if (documents && documents.length > 0) {
+        const paths = documents.map((d: any) => d.path).filter(Boolean);
+        if (paths.length > 0) {
+          await supabase.storage.from("contract-documents").remove(paths);
+        }
+      }
+      // Delete contract record
+      const { error } = await supabase.from("contracts").delete().eq("id", contractId);
+      if (error) throw error;
+      toast.success("Contrato excluído com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    } catch (err: any) {
+      toast.error("Erro ao excluir: " + err.message);
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ["contracts", user?.id],
