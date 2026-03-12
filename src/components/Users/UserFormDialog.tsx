@@ -25,7 +25,7 @@ const userSchema = z.object({
   full_name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100),
   email: z.string().email("E-mail inválido").max(255),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100).optional(),
-  role: z.enum(["admin", "full", "agenda", "cadastro_leads", "financeiro", "moderator", "user"]),
+  role: z.enum(["admin", "full", "agenda", "cadastro_leads", "financeiro"]),
   is_active: z.boolean(),
 });
 
