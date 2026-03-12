@@ -319,7 +319,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
               tenant_name: fm.extractedTenantName || "Inquilino",
               property_id: fm.propertyId || undefined,
               rental_value: 0,
-              start_date: new Date().toISOString().split("T")[0],
+              start_date: fm.extractedStartDate || new Date().toISOString().split("T")[0],
               status: "active",
             } as any)
             .select("id")
