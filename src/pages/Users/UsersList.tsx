@@ -241,7 +241,7 @@ const UsersList = () => {
       trial: { label: "Trial", variant: "outline" },
     };
 
-    const config = roleConfig[role] || roleConfig.user;
+    const config = roleConfig[role] || { label: role || "Usuário", variant: "outline" as const };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
