@@ -5,9 +5,11 @@ import { PropertySummaryCard } from "@/components/Dashboard/PropertySummaryCard"
 import { CommercialCard } from "@/components/Dashboard/CommercialCard";
 import { CalculatorCard } from "@/components/Dashboard/CalculatorCard";
 import { InvoicesTable } from "@/components/Dashboard/InvoicesTable";
+import { OverdueBreakdownCard } from "@/components/Dashboard/OverdueBreakdownCard";
 import { AlertTriangle, RefreshCw, FileCheck, MessageSquare, Calculator, TrendingUp, Percent } from "lucide-react";
 import { useDashboardStats } from "@/hooks/dashboard/useDashboardStats";
 import { useRecentInvoices } from "@/hooks/dashboard/useRecentInvoices";
+import { useOverdueBreakdown } from "@/hooks/dashboard/useOverdueBreakdown";
 import { usePropertySummary } from "@/hooks/dashboard/usePropertySummary";
 import { useAuth } from "@/hooks/useAuth";
 import { useAccountId } from "@/hooks/useAccountId";
@@ -18,6 +20,7 @@ const Index = () => {
   const { accountId } = useAccountId();
   const { data: stats, isLoading: statsLoading } = useDashboardStats(user?.id, accountId);
   const { data: invoices, isLoading: invoicesLoading } = useRecentInvoices(user?.id, accountId, 10);
+  const { data: overdueData, isLoading: overdueLoading } = useOverdueBreakdown(user?.id, accountId);
   const { data: propertySummary, isLoading: propertySummaryLoading } = usePropertySummary(user?.id, accountId);
 
   return (
@@ -103,6 +106,19 @@ const Index = () => {
             />
           </>
         )}
+      </div>
+
+      {/* Row 2.5: Overdue Breakdown */}
+      <div className="mb-6">
+        {overdueLoading ? (
+          <Skeleton className="h-48" />
+        ) : overdueData && overdueData.totalCount > 0 ? (
+          <OverdueBreakdownCard
+            buckets={overdueData.buckets}
+            totalOverdue={overdueData.totalOverdue}
+            totalCount={overdueData.totalCount}
+          />
+        ) : null}
       </div>
 
       {/* Row 3: Table + Calculators */}
