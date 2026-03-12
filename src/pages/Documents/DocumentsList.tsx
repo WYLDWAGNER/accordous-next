@@ -361,14 +361,26 @@ const DocumentsList = () => {
                                   </div>
                                 </div>
 
-                                <Button
-                                  variant="outline"
-                                  onClick={() => navigate(`/contratos/${contract.id}`)}
-                                  className="whitespace-nowrap"
-                                >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Visualizar
-                                </Button>
+                                <div className="flex flex-col gap-2">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => navigate(`/contratos/${contract.id}`)}
+                                    className="whitespace-nowrap"
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Visualizar
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive whitespace-nowrap"
+                                    disabled={deleting === contract.id}
+                                    onClick={() => handleDeleteContract(contract.id, (contract as any).documents || [])}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    {deleting === contract.id ? "Excluindo..." : "Excluir"}
+                                  </Button>
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
