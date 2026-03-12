@@ -185,6 +185,8 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       extractedTenantName: null,
       extractedUnit: null,
       extractedStartDate: null,
+      extractedEndDate: null,
+      extractedStatus: null,
       contractId: null,
       contractNumber: null,
       tenantName: null,
