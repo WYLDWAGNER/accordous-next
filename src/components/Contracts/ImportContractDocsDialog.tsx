@@ -98,18 +98,31 @@ function parseContractDate(dateStr: string): string | null {
   return null;
 }
 
-function extractStartDate(text: string): string | null {
+function extractDatesFromClause(text: string): { startDate: string | null; endDate: string | null } {
   const normalizedText = text.replace(/\u00A0/g, " ");
   const clauseMatch = normalizedText.match(/CL[ÁA]USULA\s+TERCEIR[OA]\s*[:\-]?\s*(?:DO\s+)?PRAZO(.*?)(?:CL[ÁA]USULA\s+QUARTA)/is);
 
   if (clauseMatch) {
     const clauseText = clauseMatch[1];
-    const dateMatch = clauseText.match(/(\d{2}\/\d{2}\/\d{4}|\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{4})/i);
-    if (dateMatch) {
-      return parseContractDate(dateMatch[1]);
+    const datePattern = /(\d{2}\/\d{2}\/\d{4}|\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{4})/gi;
+    const allDates: string[] = [];
+    let m;
+    while ((m = datePattern.exec(clauseText)) !== null) {
+      const parsed = parseContractDate(m[1]);
+      if (parsed) allDates.push(parsed);
     }
+    return {
+      startDate: allDates[0] || null,
+      endDate: allDates[1] || null,
+    };
   }
-  return null;
+  return { startDate: null, endDate: null };
+}
+
+function determineContractStatus(endDate: string | null): string {
+  if (!endDate) return "active";
+  const today = new Date().toISOString().split("T")[0];
+  return endDate < today ? "expired" : "active";
 }
 
 async function extractTextFromPdf(file: File): Promise<string> {
