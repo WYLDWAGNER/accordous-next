@@ -25,6 +25,7 @@ interface FileMatch {
   extractedContractNumber: string | null;
   extractedTenantName: string | null;
   extractedUnit: string | null;
+  extractedStartDate: string | null;
   contractId: string | null;
   contractNumber: string | null;
   tenantName: string | null;
@@ -65,6 +66,45 @@ function extractPropertyUnit(text: string): string | null {
     const unitMatch = clauseText.match(unitRegex);
     if (unitMatch) {
       return unitMatch[1].trim();
+    }
+  }
+  return null;
+}
+
+// ========== REGRA 4: Data de vigência extraída do TEXTO DO PDF ==========
+function parseContractDate(dateStr: string): string | null {
+  if (!dateStr) return null;
+  
+  if (dateStr.includes('/')) {
+    const [d, m, y] = dateStr.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  
+  const months: Record<string, string> = {
+    janeiro: '01', fevereiro: '02', março: '03', marco: '03', abril: '04',
+    maio: '05', junho: '06', julho: '07', agosto: '08', setembro: '09',
+    outubro: '10', novembro: '11', dezembro: '12'
+  };
+  const match = dateStr.match(/(\d{1,2})\s+de\s+([a-zç]+)\s+de\s+(\d{4})/i);
+  if (match) {
+    const d = match[1].padStart(2, '0');
+    const m = months[match[2].toLowerCase()] || '01';
+    const y = match[3];
+    return `${y}-${m}-${d}`;
+  }
+  
+  return null;
+}
+
+function extractStartDate(text: string): string | null {
+  const normalizedText = text.replace(/\u00A0/g, " ");
+  const clauseMatch = normalizedText.match(/CL[ÁA]USULA\s+TERCEIR[OA]\s*[:\-]?\s*(?:DO\s+)?PRAZO(.*?)(?:CL[ÁA]USULA\s+QUARTA)/is);
+
+  if (clauseMatch) {
+    const clauseText = clauseMatch[1];
+    const dateMatch = clauseText.match(/(\d{2}\/\d{2}\/\d{4}|\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{4})/i);
+    if (dateMatch) {
+      return parseContractDate(dateMatch[1]);
     }
   }
   return null;
@@ -129,6 +169,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
       extractedContractNumber: null,
       extractedTenantName: null,
       extractedUnit: null,
+      extractedStartDate: null,
       contractId: null,
       contractNumber: null,
       tenantName: null,
@@ -165,6 +206,10 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
         const unit = extractPropertyUnit(text);
         fm.extractedUnit = unit;
         console.log(`[PDF PARSER] Unidade: ${unit}`);
+
+        // REGRA 4: Extrair data de vigência
+        fm.extractedStartDate = extractStartDate(text);
+        console.log(`[PDF PARSER] Data início: ${fm.extractedStartDate}`);
 
         // Matching: buscar contrato existente pelo número
         if (contractNum) {
@@ -274,7 +319,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
               tenant_name: fm.extractedTenantName || "Inquilino",
               property_id: fm.propertyId || undefined,
               rental_value: 0,
-              start_date: new Date().toISOString().split("T")[0],
+              start_date: fm.extractedStartDate || new Date().toISOString().split("T")[0],
               status: "active",
             } as any)
             .select("id")
