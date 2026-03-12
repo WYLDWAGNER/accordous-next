@@ -2,12 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertTriangle, ChevronDown, ChevronRight, Eye, Gavel } from "lucide-react";
+import { AlertTriangle, Eye, Gavel, Download, FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { OverdueBucket } from "@/hooks/dashboard/useOverdueBreakdown";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 interface OverdueBreakdownCardProps {
   buckets: OverdueBucket[];
@@ -26,14 +27,78 @@ const getSeverityColor = (minDays: number) => {
 };
 
 const getSeverityBadge = (minDays: number) => {
-  if (minDays <= 5) return "secondary";
-  if (minDays <= 15) return "outline";
-  if (minDays <= 30) return "destructive";
-  return "destructive";
+  if (minDays <= 5) return "secondary" as const;
+  if (minDays <= 15) return "outline" as const;
+  return "destructive" as const;
 };
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+const invoicesToRows = (invoices: any[]) =>
+  invoices.map((inv: any) => ({
+    Cliente: inv.contract?.tenant_name || "N/A",
+    Imóvel: inv.property?.name || "-",
+    Vencimento: new Date(inv.due_date).toLocaleDateString("pt-BR"),
+    "Dias em Atraso": inv.daysOverdue,
+    Valor: Number(inv.total_amount || 0),
+  }));
+
+const exportToXlsx = (buckets: OverdueBucket[], selectedLabel?: string) => {
+  const wb = XLSX.utils.book_new();
+  const bucketsToExport = selectedLabel
+    ? buckets.filter((b) => b.label === selectedLabel && b.count > 0)
+    : buckets.filter((b) => b.count > 0);
+
+  if (bucketsToExport.length === 0) {
+    toast.error("Nenhuma cobrança para exportar");
+    return;
+  }
+
+  bucketsToExport.forEach((bucket) => {
+    const rows = invoicesToRows(bucket.invoices);
+    rows.push({
+      Cliente: "",
+      Imóvel: "",
+      Vencimento: "TOTAL",
+      "Dias em Atraso": bucket.count as any,
+      Valor: bucket.total,
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    // Format currency column
+    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c: 4 })];
+      if (cell) cell.z = '#,##0.00';
+    }
+    ws["!cols"] = [{ wch: 30 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+    const sheetName = bucket.label.replace(/[^\w\s-]/g, "").substring(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
+  // Summary sheet when exporting all
+  if (!selectedLabel) {
+    const summaryRows = bucketsToExport.map((b) => ({
+      Período: b.label,
+      Quantidade: b.count,
+      "Valor Total": b.total,
+    }));
+    summaryRows.push({
+      Período: "TOTAL GERAL",
+      Quantidade: bucketsToExport.reduce((s, b) => s + b.count, 0),
+      "Valor Total": bucketsToExport.reduce((s, b) => s + b.total, 0),
+    });
+    const ws = XLSX.utils.json_to_sheet(summaryRows);
+    ws["!cols"] = [{ wch: 16 }, { wch: 12 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Resumo");
+  }
+
+  const fileName = selectedLabel
+    ? `cobrancas-atraso-${selectedLabel.replace(/\s/g, "-")}.xlsx`
+    : `cobrancas-atraso-completo.xlsx`;
+  XLSX.writeFile(wb, fileName);
+  toast.success("Relatório exportado com sucesso!");
+};
 
 export const OverdueBreakdownCard = ({
   buckets,
@@ -52,14 +117,27 @@ export const OverdueBreakdownCard = ({
   return (
     <Card className="border-destructive/30">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="h-5 w-5 text-destructive" />
             Cobranças em Atraso por Período
           </CardTitle>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">{totalCount} cobranças</p>
-            <p className="text-sm font-bold text-destructive">{formatCurrency(totalOverdue)}</p>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">{totalCount} cobranças</p>
+              <p className="text-sm font-bold text-destructive">{formatCurrency(totalOverdue)}</p>
+            </div>
+            {activeBuckets.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => exportToXlsx(buckets)}
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                Exportar Tudo
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -97,7 +175,7 @@ export const OverdueBreakdownCard = ({
             {/* Detail table for selected bucket */}
             {openBucket && (
               <div className="border rounded-lg overflow-hidden animate-in slide-in-from-top-2 duration-200">
-                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between">
+                <div className="bg-muted/50 px-4 py-2 flex items-center justify-between flex-wrap gap-2">
                   <span className="text-sm font-medium">
                     Detalhes: {openBucket}
                   </span>
@@ -108,6 +186,15 @@ export const OverdueBreakdownCard = ({
                         Considerar cobrança jurídica
                       </Badge>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-xs h-7"
+                      onClick={() => exportToXlsx(buckets, openBucket)}
+                    >
+                      <Download className="h-3 w-3" />
+                      Exportar grupo
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
