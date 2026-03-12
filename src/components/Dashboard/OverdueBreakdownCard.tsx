@@ -2,13 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, Eye, Gavel, Download, FileSpreadsheet } from "lucide-react";
+import { AlertTriangle, Eye, Gavel, Download, FileSpreadsheet, Send, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { OverdueBucket } from "@/hooks/dashboard/useOverdueBreakdown";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OverdueBreakdownCardProps {
   buckets: OverdueBucket[];
