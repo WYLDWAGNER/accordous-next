@@ -114,6 +114,24 @@ export const OverdueBreakdownCard = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [openBucket, setOpenBucket] = useState<string | null>(null);
+  const [sendingBucket, setSendingBucket] = useState<string | null>(null);
+
+  const handleSendToCobranca = async (bucketLabel: string, invoices: any[]) => {
+    if (invoices.length === 0) return;
+    setSendingBucket(bucketLabel);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-cobranca-webhook", {
+        body: { bucketLabel, invoices },
+      });
+      if (error) throw error;
+      toast.success(data?.message || "Cobranças enviadas com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao enviar para cobrança:", err);
+      toast.error("Falha ao enviar para o sistema de cobrança");
+    } finally {
+      setSendingBucket(null);
+    }
+  };
 
   if (isLoading) return null;
 
