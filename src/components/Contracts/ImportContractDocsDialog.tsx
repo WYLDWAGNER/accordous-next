@@ -113,20 +113,61 @@ function extractCpf(text: string): string | null {
 
 // Extract tenant name from contract text
 function extractTenantName(text: string): string | null {
-  // Strategy 1 (BEST): pattern after "LOCATÁRIO:" label
-  const match = text.match(/LOCAT[ÁA]RI[OA]\s*[,:]\s*([^,]+)/i);
-  if (match) {
-    let name = match[1].trim();
-    name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|solteiro|solteira|casado|casada|portador|portadora|inscrito|inscrita|outros).*/i, "").trim();
-    if (name.length > 3 && name.length < 120) return name;
+  const normalizedText = text.replace(/\u00A0/g, " ");
+  
+  // Nationality/descriptor words that indicate end of name
+  const descriptorPattern = /\s*(brasileiro|brasileira|cubano|cubana|solteiro|solteira|casado|casada|divorciado|divorciada|viúvo|viúva|portador|portadora|inscrito|inscrita|nacionalidade|natural\s+de|residente|nascido|CPF|RG|para\s+tanto|cláusula|cl[aá]usula).*/i;
+
+  // Strategy 1 (BEST): Name BEFORE "doravante denominado(a) LOCATÁRIO(A)"
+  const beforeLocatarioMatch = normalizedText.match(
+    /(?:e\s+de\s+outro(?:\s+lado)?\s*,?\s*)([\s\S]{5,3000}?)(?:doravante\s+denominad[oa]s?\s+(?:simplesmente\s+)?locat[áa]ri[oa])/i
+  );
+  if (beforeLocatarioMatch) {
+    let section = beforeLocatarioMatch[1].trim();
+    // The name is usually the first proper name at the beginning of this section
+    // Remove leading connectors
+    section = section.replace(/^(?:o\s+Sr\.?|a\s+Sra?\.?|o\s+senhor|a\s+senhora)\s*/i, "");
+    // Get the name (first segment before nationality/descriptor words or comma with descriptor)
+    let name = section.split(/,/)[0].trim();
+    name = name.replace(descriptorPattern, "").trim();
+    // Clean trailing punctuation
+    name = name.replace(/[,;:.]+$/, "").trim();
+    if (name.length > 3 && name.length < 120 && !/cl[aá]usula|objeto|contrato|loca[çc][ãa]o/i.test(name)) {
+      return name;
+    }
   }
 
-  // Strategy 2: Extract from "e de outro [NOME], ..."
-  const tenantSectionMatch = text.match(/e\s+de\s+outro(?:\s+lado)?\s+([^,]+)/i);
-  if (tenantSectionMatch) {
-    let name = tenantSectionMatch[1].trim();
-    name = name.replace(/\s*(brasileiro|brasileira|cubano|cubana|portador|portadora).*/i, "").trim();
-    if (name.length > 3 && name.length < 120) return name;
+  // Strategy 2: "LOCATÁRIO(A):" label followed directly by name (not a clause)
+  const locatarioLabelMatch = normalizedText.match(/LOCAT[ÁA]RI[OA]\s*[,:]\s*([^,\n]+)/i);
+  if (locatarioLabelMatch) {
+    let name = locatarioLabelMatch[1].trim();
+    name = name.replace(descriptorPattern, "").trim();
+    name = name.replace(/[,;:.]+$/, "").trim();
+    // Reject if it looks like clause text
+    if (name.length > 3 && name.length < 120 && !/cl[aá]usula|objeto|contrato|loca[çc][ãa]o|para\s+tanto/i.test(name)) {
+      return name;
+    }
+  }
+
+  // Strategy 3: Extract from "e de outro [lado] [NOME], brasileiro/a..."
+  const eDeOutroNameMatch = normalizedText.match(/e\s+de\s+outro(?:\s+lado)?\s*,?\s*(?:o\s+Sr\.?|a\s+Sra?\.?)?\s*([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,6})/);
+  if (eDeOutroNameMatch) {
+    let name = eDeOutroNameMatch[1].trim();
+    name = name.replace(descriptorPattern, "").trim();
+    if (name.length > 3 && name.length < 120 && !/cl[aá]usula|objeto|contrato/i.test(name)) {
+      return name;
+    }
+  }
+
+  // Strategy 4: Find name near CPF in tenant section
+  const cpfNameMatch = normalizedText.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Úa-zà-ú]+){1,6})\s*,?\s*(?:brasileiro|brasileira|solteiro|solteira|casado|casada)/);
+  if (cpfNameMatch) {
+    // Only use if it appears after "e de outro" (tenant section)
+    const eDeOutroIdx = normalizedText.search(/e\s+de\s+outro/i);
+    if (eDeOutroIdx >= 0 && normalizedText.indexOf(cpfNameMatch[0]) > eDeOutroIdx) {
+      let name = cpfNameMatch[1].trim();
+      if (name.length > 3 && name.length < 120) return name;
+    }
   }
 
   return null;
