@@ -295,18 +295,26 @@ const DocumentsList = () => {
                                       )}
                                     </div>
 
-                                    <div className="space-y-2">
+                                    {contract.properties ? (
                                       <div className="flex items-start gap-2 text-sm">
                                         <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div>
                                           <p className="text-muted-foreground">Imóvel:</p>
-                                          <p className="font-medium">{contract.properties?.name}</p>
+                                          <p className="font-medium">{contract.properties.name}</p>
                                           <p className="text-xs text-muted-foreground">
-                                            {contract.properties?.address}, {contract.properties?.neighborhood} - {contract.properties?.city}/{contract.properties?.state}
+                                            {contract.properties.address}{contract.properties.neighborhood ? `, ${contract.properties.neighborhood}` : ""} - {contract.properties.city}/{contract.properties.state}
                                           </p>
                                         </div>
                                       </div>
-                                    </div>
+                                    ) : (
+                                      <div className="flex items-start gap-2 text-sm">
+                                        <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div>
+                                          <p className="text-muted-foreground">Imóvel:</p>
+                                          <p className="text-xs text-muted-foreground italic">Nenhum imóvel vinculado</p>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
