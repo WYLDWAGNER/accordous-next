@@ -505,6 +505,13 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
                           Contrato #{f.extractedContractNumber} → {f.extractedTenantName || f.tenantName}
                           {f.extractedUnit && ` | 🏠 ${f.extractedUnit}`}
                           {f.propertyName && ` (${f.propertyName})`}
+                          {f.extractedStartDate && ` | 📅 ${f.extractedStartDate}`}
+                          {f.extractedEndDate && ` → ${f.extractedEndDate}`}
+                          {f.extractedStatus && (
+                            <span className={f.extractedStatus === "expired" ? "ml-1 font-semibold text-destructive" : "ml-1 font-semibold text-green-600"}>
+                              [{f.extractedStatus === "expired" ? "VENCIDO" : "ATIVO"}]
+                            </span>
+                          )}
                         </p>
                       )}
                       {f.status === "unmatched" && (
