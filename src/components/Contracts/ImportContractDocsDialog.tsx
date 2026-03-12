@@ -56,15 +56,13 @@ function extractPropertyUnit(text: string): string | null {
   const normalizedText = text.replace(/\u00A0/g, " ");
   
   // Isolar texto da Cláusula Primeira
-  const clauseMatch = normalizedText.match(
-    /CL[ÁA]USULA PRIMEIRA:\s*DO OBJETO(.*?)(?:CL[ÁA]USULA SEGUNDA|O im[óo]vel descrito)/is
-  );
+  const clauseRegex = /CL[ÁA]USULA (?:PRIMEIRA|1[ªa]|0?1)\s*(?::|-)?\s*(?:DO )?OBJETO(.*?)(?:CL[ÁA]USULA (?:SEGUNDA|2)|O im[óo]vel descrito)/is;
+  const clauseMatch = normalizedText.match(clauseRegex);
   
   if (clauseMatch) {
     const clauseText = clauseMatch[1];
-    const unitMatch = clauseText.match(
-      /(Apartamento\s+[0-9A-Za-z]+|Bloco\s+\d+\s+AP\s+\d+)/i
-    );
+    const unitRegex = /(Apartamento\s+[0-9A-Za-z]+|Bloco\s+\d+\s+AP\s+\d+|Kitnet\s+[0-9A-Za-z]+|Apto\s+[0-9A-Za-z]+)/i;
+    const unitMatch = clauseText.match(unitRegex);
     if (unitMatch) {
       return unitMatch[1].trim();
     }
