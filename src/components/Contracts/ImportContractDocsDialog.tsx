@@ -186,11 +186,34 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
             
             // Tentar vincular imóvel pela unidade extraída
             if (unit && properties) {
-              const normalizedUnit = unit.toLowerCase();
-              const matchedProp = properties.find(p => 
-                p.name?.toLowerCase().includes(normalizedUnit) ||
-                p.address?.toLowerCase().includes(normalizedUnit)
-              );
+              let b = "";
+              let a = "";
+              const bMatch = unit.match(/bloco\s*(\d+)/i);
+              const aMatch = unit.match(/(?:ap|apto|apartamento)\s*(\d+)/i);
+              
+              if (bMatch && aMatch) {
+                b = parseInt(bMatch[1], 10).toString();
+                a = parseInt(aMatch[1], 10).toString();
+              }
+
+              const matchedProp = properties.find(p => {
+                const addr = (p.address || "").toLowerCase();
+
+                if (b && a) {
+                  const paddedA = a.length === 1 ? `0${a}` : a;
+                  const combinedA = `${b}${paddedA}`;
+                  
+                  const blockRegex = new RegExp(`bloco\\s*-?\\s*0?${b}\\b`, 'i');
+                  const apRegex = new RegExp(`(?:ap|apto|apartamento)\\s*-?\\s*(?:0?${a}|${combinedA})\\b`, 'i');
+                  
+                  return blockRegex.test(addr) && apRegex.test(addr);
+                } else {
+                  const cleanUnit = unit.toLowerCase().replace(/(kitnet|apartamento|apto|ap|bloco|do|residencial|pinhais)/g, '').replace(/\s+/g, '');
+                  const propAddress = addr.replace(/\s+/g, '');
+                  return cleanUnit.length > 0 && propAddress.includes(cleanUnit);
+                }
+              });
+
               if (matchedProp) {
                 fm.propertyId = matchedProp.id;
                 fm.propertyName = matchedProp.name || matchedProp.address;
