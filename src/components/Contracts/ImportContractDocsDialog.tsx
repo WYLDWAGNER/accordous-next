@@ -43,7 +43,8 @@ function extractContractNumberFromFilename(filename: string): string | null {
 // ========== REGRA 2: Nome do inquilino extraído do TEXTO DO PDF ==========
 function extractTenantName(text: string): string | null {
   const normalizedText = text.replace(/\u00A0/g, " ");
-  const match = normalizedText.match(/LOCADOR,\s*e\s*de\s*outro\s+([^,]+),/i);
+  const tenantRegex = /LOCADOR(?:A|ES)?\s*[,;]?\s*e\s+de\s+outro(?:\s+lado)?\s*[,;]?\s*([^,]+),/i;
+  const match = normalizedText.match(tenantRegex);
   if (match) {
     return match[1].trim();
   }
