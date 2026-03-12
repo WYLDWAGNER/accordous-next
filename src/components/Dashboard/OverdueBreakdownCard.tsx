@@ -72,10 +72,10 @@ const exportToXlsx = (buckets: OverdueBucket[], selectedLabel?: string) => {
     // Format currency column
     const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const cell = ws[XLSX.utils.encode_cell({ r, c: 4 })];
+      const cell = ws[XLSX.utils.encode_cell({ r, c: 6 })];
       if (cell) cell.z = '#,##0.00';
     }
-    ws["!cols"] = [{ wch: 30 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+    ws["!cols"] = [{ wch: 30 }, { wch: 16 }, { wch: 28 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
     const sheetName = bucket.label.replace(/[^\w\s-]/g, "").substring(0, 31);
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
   });
