@@ -25,6 +25,7 @@ interface FileMatch {
   extractedContractNumber: string | null;
   extractedTenantName: string | null;
   extractedUnit: string | null;
+  extractedStartDate: string | null;
   contractId: string | null;
   contractNumber: string | null;
   tenantName: string | null;
