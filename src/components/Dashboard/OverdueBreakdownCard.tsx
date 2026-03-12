@@ -219,6 +219,23 @@ export const OverdueBreakdownCard = ({
                       Exportar grupo
                     </Button>
                     <Button
+                      variant="default"
+                      size="sm"
+                      className="gap-1 text-xs h-7"
+                      disabled={sendingBucket === openBucket}
+                      onClick={() => {
+                        const bucket = buckets.find((b) => b.label === openBucket);
+                        if (bucket) handleSendToCobranca(bucket.label, bucket.invoices);
+                      }}
+                    >
+                      {sendingBucket === openBucket ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Send className="h-3 w-3" />
+                      )}
+                      Enviar p/ cobrança
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setOpenBucket(null)}
