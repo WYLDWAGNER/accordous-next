@@ -28,8 +28,11 @@ import {
   User,
   Calendar,
   Eye,
-  Upload
+  Upload,
+  Trash2
 } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { ImportContractDocsDialog } from "@/components/Contracts/ImportContractDocsDialog";
 
 const contractTemplates = [
@@ -69,6 +72,31 @@ const DocumentsList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [importDocsOpen, setImportDocsOpen] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleDeleteContract = async (contractId: string, documents: any[]) => {
+    if (!confirm("Deseja excluir este contrato e todos os documentos anexados?")) return;
+    setDeleting(contractId);
+    try {
+      // Remove files from storage
+      if (documents && documents.length > 0) {
+        const paths = documents.map((d: any) => d.path).filter(Boolean);
+        if (paths.length > 0) {
+          await supabase.storage.from("contract-documents").remove(paths);
+        }
+      }
+      // Delete contract record
+      const { error } = await supabase.from("contracts").delete().eq("id", contractId);
+      if (error) throw error;
+      toast.success("Contrato excluído com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    } catch (err: any) {
+      toast.error("Erro ao excluir: " + err.message);
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ["contracts", user?.id],
@@ -333,14 +361,26 @@ const DocumentsList = () => {
                                   </div>
                                 </div>
 
-                                <Button
-                                  variant="outline"
-                                  onClick={() => navigate(`/contratos/${contract.id}`)}
-                                  className="whitespace-nowrap"
-                                >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Visualizar
-                                </Button>
+                                <div className="flex flex-col gap-2">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => navigate(`/contratos/${contract.id}`)}
+                                    className="whitespace-nowrap"
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Visualizar
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive whitespace-nowrap"
+                                    disabled={deleting === contract.id}
+                                    onClick={() => handleDeleteContract(contract.id, (contract as any).documents || [])}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    {deleting === contract.id ? "Excluindo..." : "Excluir"}
+                                  </Button>
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
