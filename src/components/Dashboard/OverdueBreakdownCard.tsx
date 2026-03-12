@@ -2,13 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, Eye, Gavel, Download, FileSpreadsheet } from "lucide-react";
+import { AlertTriangle, Eye, Gavel, Download, FileSpreadsheet, Send, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { OverdueBucket } from "@/hooks/dashboard/useOverdueBreakdown";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OverdueBreakdownCardProps {
   buckets: OverdueBucket[];
@@ -113,6 +114,24 @@ export const OverdueBreakdownCard = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [openBucket, setOpenBucket] = useState<string | null>(null);
+  const [sendingBucket, setSendingBucket] = useState<string | null>(null);
+
+  const handleSendToCobranca = async (bucketLabel: string, invoices: any[]) => {
+    if (invoices.length === 0) return;
+    setSendingBucket(bucketLabel);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-cobranca-webhook", {
+        body: { bucketLabel, invoices },
+      });
+      if (error) throw error;
+      toast.success(data?.message || "Cobranças enviadas com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao enviar para cobrança:", err);
+      toast.error("Falha ao enviar para o sistema de cobrança");
+    } finally {
+      setSendingBucket(null);
+    }
+  };
 
   if (isLoading) return null;
 
@@ -198,6 +217,23 @@ export const OverdueBreakdownCard = ({
                     >
                       <Download className="h-3 w-3" />
                       Exportar grupo
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="gap-1 text-xs h-7"
+                      disabled={sendingBucket === openBucket}
+                      onClick={() => {
+                        const bucket = buckets.find((b) => b.label === openBucket);
+                        if (bucket) handleSendToCobranca(bucket.label, bucket.invoices);
+                      }}
+                    >
+                      {sendingBucket === openBucket ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Send className="h-3 w-3" />
+                      )}
+                      Enviar p/ cobrança
                     </Button>
                     <Button
                       variant="ghost"
