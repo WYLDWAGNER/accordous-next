@@ -450,9 +450,7 @@ const InvoiceDetails = () => {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
-    </div>
+    </AppLayout>
   );
 };
 
