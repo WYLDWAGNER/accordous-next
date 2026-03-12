@@ -224,9 +224,12 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
         fm.extractedUnit = unit;
         console.log(`[PDF PARSER] Unidade: ${unit}`);
 
-        // REGRA 4: Extrair data de vigência
-        fm.extractedStartDate = extractStartDate(text);
-        console.log(`[PDF PARSER] Data início: ${fm.extractedStartDate}`);
+        // REGRA 4: Extrair datas de vigência e status
+        const { startDate, endDate } = extractDatesFromClause(text);
+        fm.extractedStartDate = startDate;
+        fm.extractedEndDate = endDate;
+        fm.extractedStatus = determineContractStatus(endDate);
+        console.log(`[PDF PARSER] Data início: ${startDate} | Data fim: ${endDate} | Status: ${fm.extractedStatus}`);
 
         // Matching: buscar contrato existente pelo número
         if (contractNum) {
