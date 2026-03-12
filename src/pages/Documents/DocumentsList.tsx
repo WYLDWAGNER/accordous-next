@@ -327,7 +327,7 @@ const DocumentsList = () => {
 
                                 <Button
                                   variant="outline"
-                                  onClick={() => navigate(`/imoveis/${contract.property_id}`)}
+                                  onClick={() => navigate(`/contratos/${contract.id}`)}
                                   className="whitespace-nowrap"
                                 >
                                   <Eye className="h-4 w-4 mr-2" />
