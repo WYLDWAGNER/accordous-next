@@ -28,8 +28,11 @@ import {
   User,
   Calendar,
   Eye,
-  Upload
+  Upload,
+  Trash2
 } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { ImportContractDocsDialog } from "@/components/Contracts/ImportContractDocsDialog";
 
 const contractTemplates = [
