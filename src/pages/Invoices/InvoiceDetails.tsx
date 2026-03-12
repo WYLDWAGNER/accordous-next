@@ -138,17 +138,11 @@ const InvoiceDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-background">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title="Detalhes da Fatura" />
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-            </div>
-          </main>
+      <AppLayout title="Detalhes da Fatura">
+        <div className="flex items-center justify-center h-64">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
