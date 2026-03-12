@@ -36,7 +36,7 @@ export const useOverdueBreakdown = (userId: string | undefined, accountId: strin
           due_date,
           total_amount,
           status,
-          contract:contracts(tenant_name),
+          contract:contracts(tenant_name, tenant_phone, tenant_email),
           property:properties(name)
         `)
         .eq(filterColumn, filterValue)

@@ -38,6 +38,8 @@ const formatCurrency = (value: number) =>
 const invoicesToRows = (invoices: any[]) =>
   invoices.map((inv: any) => ({
     Cliente: inv.contract?.tenant_name || "N/A",
+    Telefone: inv.contract?.tenant_phone || "-",
+    Email: inv.contract?.tenant_email || "-",
     Imóvel: inv.property?.name || "-",
     Vencimento: new Date(inv.due_date).toLocaleDateString("pt-BR"),
     "Dias em Atraso": inv.daysOverdue,
@@ -59,6 +61,8 @@ const exportToXlsx = (buckets: OverdueBucket[], selectedLabel?: string) => {
     const rows = invoicesToRows(bucket.invoices);
     rows.push({
       Cliente: "",
+      Telefone: "",
+      Email: "",
       Imóvel: "",
       Vencimento: "TOTAL",
       "Dias em Atraso": bucket.count as any,
@@ -68,10 +72,10 @@ const exportToXlsx = (buckets: OverdueBucket[], selectedLabel?: string) => {
     // Format currency column
     const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const cell = ws[XLSX.utils.encode_cell({ r, c: 4 })];
+      const cell = ws[XLSX.utils.encode_cell({ r, c: 6 })];
       if (cell) cell.z = '#,##0.00';
     }
-    ws["!cols"] = [{ wch: 30 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+    ws["!cols"] = [{ wch: 30 }, { wch: 16 }, { wch: 28 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
     const sheetName = bucket.label.replace(/[^\w\s-]/g, "").substring(0, 31);
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
   });
