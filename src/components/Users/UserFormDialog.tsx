@@ -63,7 +63,7 @@ const UserFormDialog = ({ open, onOpenChange, user, onSuccess, accountId }: User
         full_name: "",
         email: "",
         password: "",
-        role: "user",
+        role: "full",
         is_active: true,
       });
     }
