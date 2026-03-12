@@ -148,24 +148,18 @@ const InvoiceDetails = () => {
 
   if (!invoice) {
     return (
-      <div className="flex h-screen bg-background">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title="Fatura não encontrada" />
-          <main className="flex-1 overflow-y-auto p-6">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Fatura não encontrada</h3>
-                <Button onClick={() => navigate("/faturas")} className="mt-4">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Voltar para Faturas
-                </Button>
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </div>
+      <AppLayout title="Fatura não encontrada">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <FileText className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Fatura não encontrada</h3>
+            <Button onClick={() => navigate("/faturas")} className="mt-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para Faturas
+            </Button>
+          </CardContent>
+        </Card>
+      </AppLayout>
     );
   }
 
