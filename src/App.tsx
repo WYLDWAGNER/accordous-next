@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LicenseProvider } from "@/contexts/LicenseContext";
-import { SidebarProvider } from "@/components/ui/sidebar";
+
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import SuperAdminRoute from "@/components/SuperAdminRoute";
