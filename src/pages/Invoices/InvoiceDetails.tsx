@@ -180,7 +180,7 @@ const InvoiceDetails = () => {
                 Voltar
               </Button>
               <div className="flex gap-2">
-                {invoice.status === "pending" && (
+                {(invoice.status === "pending" || invoice.status === "overdue") && (
                   <>
                     <Button
                       variant="outline"
