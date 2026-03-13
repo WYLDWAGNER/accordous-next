@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const NotificationSettings = () => {
+  const isMobile = useIsMobile();
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [isTestingWhatsApp, setIsTestingWhatsApp] = useState(false);
   const [lastRun, setLastRun] = useState<Date | null>(null);
