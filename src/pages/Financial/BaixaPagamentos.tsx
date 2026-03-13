@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const BaixaPagamentos = () => {
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [selectedLancamento, setSelectedLancamento] = useState<any>(null);
   const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().split('T')[0]);
