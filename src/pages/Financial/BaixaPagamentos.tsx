@@ -360,7 +360,9 @@ const BaixaPagamentos = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 

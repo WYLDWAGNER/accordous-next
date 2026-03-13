@@ -268,7 +268,9 @@ const NotificationSettings = () => {
           </div>
         </main>
       </div>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 
