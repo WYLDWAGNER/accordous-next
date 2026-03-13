@@ -124,12 +124,23 @@ export const LicenseProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    // Listen for auth state changes to clear stale cache
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        sessionStorage.removeItem(CACHE_KEY);
+        checkLicense(true);
+      }
+    });
+
     checkLicense();
 
     // Check every 10 minutes
     const interval = setInterval(() => checkLicense(true), CACHE_DURATION);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
