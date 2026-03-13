@@ -24,16 +24,28 @@ export const useDashboardStats = (userId: string | undefined, accountId: string 
         .eq(filterColumn, filterValue)
         .eq("status", "active");
 
-      // Contracts expiring in next 180 days
+      // Contracts expiring in next 30 days
       const now = new Date();
-      const in180Days = addDays(now, 180);
-      const { count: contractsExpiring } = await supabase
+      const in30Days = addDays(now, 30);
+      const { count: contractsExpiring30 } = await supabase
         .from("contracts")
         .select("*", { count: "exact", head: true })
         .eq(filterColumn, filterValue)
         .eq("status", "active")
         .not("end_date", "is", null)
-        .lte("end_date", in180Days.toISOString().split("T")[0]);
+        .gte("end_date", now.toISOString().split("T")[0])
+        .lte("end_date", in30Days.toISOString().split("T")[0]);
+
+      // Contracts expiring between 31 and 50 days
+      const in50Days = addDays(now, 50);
+      const { count: contractsExpiring50 } = await supabase
+        .from("contracts")
+        .select("*", { count: "exact", head: true })
+        .eq(filterColumn, filterValue)
+        .eq("status", "active")
+        .not("end_date", "is", null)
+        .gt("end_date", in30Days.toISOString().split("T")[0])
+        .lte("end_date", in50Days.toISOString().split("T")[0]);
 
       // Contracts needing readjustment (active contracts older than 12 months)
       const twelveMonthsAgo = new Date();
