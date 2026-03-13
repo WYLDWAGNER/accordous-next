@@ -2,6 +2,16 @@ import { Bell, HelpCircle, User, Sun, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { createContext, useContext } from "react";
+
+// Check if we're inside a SidebarProvider by using a flag from AppLayout
+export const SidebarAvailableContext = createContext(false);
+
+const SafeSidebarTrigger = ({ className }: { className?: string }) => {
+  const hasSidebar = useContext(SidebarAvailableContext);
+  if (!hasSidebar) return null;
+  return <SidebarTrigger className={className} />;
+};
 
 interface HeaderProps {
   title: string;
@@ -11,7 +21,7 @@ export const Header = ({ title }: HeaderProps) => {
   return (
     <div className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
       <div className="flex items-center gap-2">
-        <SidebarTrigger className="md:hidden" />
+        <SafeSidebarTrigger className="md:hidden" />
         <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
       </div>
       
