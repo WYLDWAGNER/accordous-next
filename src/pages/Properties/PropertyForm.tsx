@@ -501,7 +501,9 @@ const PropertyForm = () => {
           </form>
         </main>
       </div>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 
