@@ -34,6 +34,7 @@ import imageCompression from "browser-image-compression";
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   
   // Refs para inputs de arquivo
