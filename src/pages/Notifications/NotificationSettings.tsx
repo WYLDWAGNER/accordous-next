@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { Header, SidebarAvailableContext } from "@/components/Layout/Header";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

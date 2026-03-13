@@ -1,7 +1,9 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { Header, SidebarAvailableContext } from "@/components/Layout/Header";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { ScheduleVisitDialog } from "@/components/Properties/ScheduleVisitDialog";
 import { LinkedPersonsDialog } from "@/components/Properties/LinkedPersonsDialog";
