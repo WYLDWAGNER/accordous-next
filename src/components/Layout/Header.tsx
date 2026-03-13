@@ -1,7 +1,16 @@
 import { Bell, HelpCircle, User, Sun, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+
+const SafeSidebarTrigger = ({ className }: { className?: string }) => {
+  try {
+    useSidebar();
+    return <SidebarTrigger className={className} />;
+  } catch {
+    return null;
+  }
+};
 
 interface HeaderProps {
   title: string;
