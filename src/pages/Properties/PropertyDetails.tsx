@@ -1238,7 +1238,9 @@ const PropertyDetails = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 
