@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface LicenseContextType {
@@ -24,8 +24,13 @@ export const LicenseProvider = ({ children }: { children: ReactNode }) => {
     daysRemaining: null,
     isTrial: false,
   });
+  const isChecking = useRef(false);
 
   const checkLicense = async (skipCache = false) => {
+    // Prevent concurrent calls that cause refresh loops
+    if (isChecking.current) return;
+    isChecking.current = true;
+
     try {
       // Check cache first
       if (!skipCache) {
@@ -39,7 +44,7 @@ export const LicenseProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      // Get current session
+      // Get current session (do NOT call refreshSession to avoid triggering TOKEN_REFRESHED loop)
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setState({
@@ -53,14 +58,10 @@ export const LicenseProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Refresh session to ensure valid token
-      const { data: { session: freshSession } } = await supabase.auth.refreshSession();
-      const activeSession = freshSession || session;
-
-      // Call license verification edge function
+      // Call license verification edge function with current token
       const { data, error } = await supabase.functions.invoke('license-verify', {
         headers: {
-          Authorization: `Bearer ${activeSession.access_token}`
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
@@ -88,7 +89,6 @@ export const LicenseProvider = ({ children }: { children: ReactNode }) => {
         const diffTime = expiryDate.getTime() - now.getTime();
         daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        // Check if it's a trial (14 days or less from creation)
         if (daysRemaining <= 14 && daysRemaining > 0) {
           isTrial = true;
         }
@@ -120,13 +120,15 @@ export const LicenseProvider = ({ children }: { children: ReactNode }) => {
         daysRemaining: null,
         isTrial: false,
       });
+    } finally {
+      isChecking.current = false;
     }
   };
 
   useEffect(() => {
-    // Listen for auth state changes to clear stale cache
+    // Listen for auth state changes - only re-check on SIGNED_IN (not TOKEN_REFRESHED)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'SIGNED_IN') {
         sessionStorage.removeItem(CACHE_KEY);
         checkLicense(true);
       }
