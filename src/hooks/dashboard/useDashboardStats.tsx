@@ -124,7 +124,8 @@ export const useDashboardStats = (userId: string | undefined, accountId: string 
       return {
         totalProperties: totalProperties || 0,
         activeContracts: activeContracts || 0,
-        contractsExpiring: contractsExpiring || 0,
+        contractsExpiring30: contractsExpiring30 || 0,
+        contractsExpiring50: contractsExpiring50 || 0,
         contractsReadjustment: contractsReadjustment || 0,
         monthlyRevenue,
         pendingInvoices: pendingInvoices || 0,
