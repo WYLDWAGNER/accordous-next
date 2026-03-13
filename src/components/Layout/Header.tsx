@@ -20,7 +20,7 @@ export const Header = ({ title }: HeaderProps) => {
   return (
     <div className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
       <div className="flex items-center gap-2">
-        <SidebarTrigger className="md:hidden" />
+        <SafeSidebarTrigger className="md:hidden" />
         <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
       </div>
       
