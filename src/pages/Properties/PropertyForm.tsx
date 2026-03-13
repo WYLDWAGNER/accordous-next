@@ -226,8 +226,10 @@ const PropertyForm = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+    <SidebarProvider defaultOpen={!isMobile}>
+      <SidebarAvailableContext.Provider value={true}>
+        <div className="flex h-screen w-full bg-gray-50">
+          <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={id ? "Editar Imóvel" : "Cadastrar Imóvel"} />
