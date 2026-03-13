@@ -39,11 +39,20 @@ const Index = () => {
             <ContractStatCard
               icon={AlertTriangle}
               iconColor="text-warning"
-              title="Contratos à vencer"
-              subtitle="Nos próximos 180 dias"
-              value={stats?.contractsExpiring || 0}
+              title="Vencendo em até 30 dias"
+              subtitle="Contratos próximos do vencimento"
+              value={stats?.contractsExpiring30 || 0}
               linkText="Ver contratos"
-              linkTo="/contratos"
+              linkTo="/contratos?filter=expiring30"
+            />
+            <ContractStatCard
+              icon={AlertTriangle}
+              iconColor="text-orange-500"
+              title="Vencendo em até 50 dias"
+              subtitle="Contratos a vencer em breve"
+              value={stats?.contractsExpiring50 || 0}
+              linkText="Ver contratos"
+              linkTo="/contratos?filter=expiring50"
             />
             <ContractStatCard
               icon={RefreshCw}
@@ -51,7 +60,7 @@ const Index = () => {
               title="Contratos em reajuste"
               value={stats?.contractsReadjustment || 0}
               linkText="Ver contratos"
-              linkTo="/contratos"
+              linkTo="/contratos?filter=readjustment"
             />
             <ContractStatCard
               icon={FileCheck}
@@ -59,16 +68,7 @@ const Index = () => {
               title="Contratos ativos"
               value={stats?.activeContracts || 0}
               linkText="Ver contratos"
-              linkTo="/contratos"
-            />
-            <ContractStatCard
-              icon={MessageSquare}
-              iconColor="text-muted-foreground"
-              title="Respostas de propostas"
-              subtitle=""
-              value={`0 nova(s)`}
-              linkText="Consultar"
-              linkTo="/contatos"
+              linkTo="/contratos?filter=active"
             />
           </>
         )}
