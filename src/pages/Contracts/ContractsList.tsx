@@ -108,8 +108,32 @@ const ContractsList = () => {
     return variants[status as keyof typeof variants] || variants.active;
   };
 
+  const filterLabels: Record<string, string> = {
+    expiring30: "Contratos vencendo em até 30 dias",
+    expiring50: "Contratos vencendo entre 31 e 50 dias",
+    readjustment: "Contratos pendentes de reajuste",
+    active: "Contratos ativos",
+  };
+
   return (
     <AppLayout title="Contratos">
+          {dashboardFilter && filterLabels[dashboardFilter] && (
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="secondary" className="text-sm py-1 px-3">
+                {filterLabels[dashboardFilter]}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchParams({});
+                  setStatusFilter("all");
+                }}
+              >
+                Limpar filtro
+              </Button>
+            </div>
+          )}
           {/* Actions Bar */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
