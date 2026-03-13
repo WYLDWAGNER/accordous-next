@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,22 @@ import { Plus, Search, FileCheck, MapPin, User, Eye, Edit, Calendar } from "luci
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { addDays } from "date-fns";
 
 const ContractsList = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const dashboardFilter = searchParams.get("filter");
+
+  // Set status filter from URL on mount
+  useEffect(() => {
+    if (dashboardFilter === "active") {
+      setStatusFilter("active");
+    }
+  }, [dashboardFilter]);
 
   const { data: contracts, isLoading } = useQuery({
     queryKey: ["contracts", user?.id],
@@ -39,15 +50,53 @@ const ContractsList = () => {
     enabled: !!user?.id,
   });
 
-  const filteredContracts = contracts?.filter((contract) => {
-    const matchesSearch =
-      contract.tenant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.properties?.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredContracts = useMemo(() => {
+    if (!contracts) return [];
 
-    const matchesStatus = statusFilter === "all" || contract.status === statusFilter;
+    let result = contracts;
 
-    return matchesSearch && matchesStatus;
-  });
+    // Apply dashboard-specific filters
+    const now = new Date();
+    if (dashboardFilter === "expiring30") {
+      const in30 = addDays(now, 30);
+      result = result.filter((c) => {
+        if (c.status !== "active" || !c.end_date) return false;
+        const end = new Date(c.end_date);
+        return end >= now && end <= in30;
+      });
+    } else if (dashboardFilter === "expiring50") {
+      const in30 = addDays(now, 30);
+      const in50 = addDays(now, 50);
+      result = result.filter((c) => {
+        if (c.status !== "active" || !c.end_date) return false;
+        const end = new Date(c.end_date);
+        return end > in30 && end <= in50;
+      });
+    } else if (dashboardFilter === "readjustment") {
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+      result = result.filter((c) => {
+        if (c.status !== "active") return false;
+        return new Date(c.start_date) <= twelveMonthsAgo;
+      });
+    } else {
+      // Standard filters when no dashboard filter
+      const matchesStatus = (c: any) => statusFilter === "all" || c.status === statusFilter;
+      result = result.filter(matchesStatus);
+    }
+
+    // Always apply search
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.tenant_name.toLowerCase().includes(term) ||
+          c.properties?.name?.toLowerCase().includes(term)
+      );
+    }
+
+    return result;
+  }, [contracts, dashboardFilter, statusFilter, searchTerm]);
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -59,8 +108,32 @@ const ContractsList = () => {
     return variants[status as keyof typeof variants] || variants.active;
   };
 
+  const filterLabels: Record<string, string> = {
+    expiring30: "Contratos vencendo em até 30 dias",
+    expiring50: "Contratos vencendo entre 31 e 50 dias",
+    readjustment: "Contratos pendentes de reajuste",
+    active: "Contratos ativos",
+  };
+
   return (
     <AppLayout title="Contratos">
+          {dashboardFilter && filterLabels[dashboardFilter] && (
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="secondary" className="text-sm py-1 px-3">
+                {filterLabels[dashboardFilter]}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchParams({});
+                  setStatusFilter("all");
+                }}
+              >
+                Limpar filtro
+              </Button>
+            </div>
+          )}
           {/* Actions Bar */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
