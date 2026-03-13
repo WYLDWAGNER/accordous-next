@@ -88,8 +88,10 @@ const BaixaPagamentos = () => {
   const atrasados = lancamentos?.filter(l => l.status === 'atrasado' || (l.status === 'pendente' && new Date(l.data_vencimento) < new Date())) || [];
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <SidebarProvider defaultOpen={!isMobile}>
+      <SidebarAvailableContext.Provider value={true}>
+        <div className="flex h-screen w-full bg-background">
+          <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title="Baixa de Pagamentos" />
