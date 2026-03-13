@@ -40,6 +40,7 @@ const propertySchema = z.object({
 const PropertyForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const { user } = useAuth();
   const { accountId } = useAccountId();
