@@ -1,7 +1,9 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { Header, SidebarAvailableContext } from "@/components/Layout/Header";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { ScheduleVisitDialog } from "@/components/Properties/ScheduleVisitDialog";
 import { LinkedPersonsDialog } from "@/components/Properties/LinkedPersonsDialog";
@@ -32,6 +34,7 @@ import imageCompression from "browser-image-compression";
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   
   // Refs para inputs de arquivo
@@ -469,38 +472,46 @@ const PropertyDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-            <p className="mt-4 text-muted-foreground">Carregando...</p>
+      <SidebarProvider defaultOpen={!isMobile}>
+        <SidebarAvailableContext.Provider value={true}>
+          <div className="flex h-screen w-full bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
+                <p className="mt-4 text-muted-foreground">Carregando...</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </SidebarAvailableContext.Provider>
+      </SidebarProvider>
     );
   }
 
   if (!property) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title="Imóvel não encontrado" />
-          <main className="flex-1 flex items-center justify-center p-6">
-            <Card className="w-full max-w-md">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <Building2 className="h-16 w-16 text-gray-300 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Imóvel não encontrado</h3>
-                <p className="text-gray-500 text-center mb-4">
-                  O imóvel que você está procurando não existe ou foi removido.
-                </p>
-                <Button onClick={() => navigate("/imoveis")}>Voltar para lista</Button>
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </div>
+      <SidebarProvider defaultOpen={!isMobile}>
+        <SidebarAvailableContext.Provider value={true}>
+          <div className="flex h-screen w-full bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <Header title="Imóvel não encontrado" />
+              <main className="flex-1 flex items-center justify-center p-6">
+                <Card className="w-full max-w-md">
+                  <CardContent className="flex flex-col items-center justify-center py-16">
+                    <Building2 className="h-16 w-16 text-gray-300 mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Imóvel não encontrado</h3>
+                    <p className="text-gray-500 text-center mb-4">
+                      O imóvel que você está procurando não existe ou foi removido.
+                    </p>
+                    <Button onClick={() => navigate("/imoveis")}>Voltar para lista</Button>
+                  </CardContent>
+                </Card>
+              </main>
+            </div>
+          </div>
+        </SidebarAvailableContext.Provider>
+      </SidebarProvider>
     );
   }
 
@@ -527,8 +538,10 @@ const PropertyDetails = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+    <SidebarProvider defaultOpen={!isMobile}>
+      <SidebarAvailableContext.Provider value={true}>
+        <div className="flex h-screen w-full bg-gray-50">
+          <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={property.name} />
@@ -1225,7 +1238,9 @@ const PropertyDetails = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 

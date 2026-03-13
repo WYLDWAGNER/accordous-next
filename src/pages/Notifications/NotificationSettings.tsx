@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { Header, SidebarAvailableContext } from "@/components/Layout/Header";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +15,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const NotificationSettings = () => {
+  const isMobile = useIsMobile();
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [isTestingWhatsApp, setIsTestingWhatsApp] = useState(false);
   const [lastRun, setLastRun] = useState<Date | null>(null);
@@ -42,8 +45,10 @@ const NotificationSettings = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <SidebarProvider defaultOpen={!isMobile}>
+      <SidebarAvailableContext.Provider value={true}>
+        <div className="flex h-screen w-full bg-background">
+          <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title="Notificações e Lembretes" />
@@ -263,7 +268,9 @@ const NotificationSettings = () => {
           </div>
         </main>
       </div>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 

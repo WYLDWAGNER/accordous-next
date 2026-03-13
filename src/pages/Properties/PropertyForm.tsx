@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { Header, SidebarAvailableContext } from "@/components/Layout/Header";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +40,7 @@ const propertySchema = z.object({
 const PropertyForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const { user } = useAuth();
   const { accountId } = useAccountId();
@@ -206,21 +209,27 @@ const PropertyForm = () => {
 
   if (isLoadingData) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-            <p className="mt-4 text-muted-foreground">Carregando dados...</p>
+      <SidebarProvider defaultOpen={!isMobile}>
+        <SidebarAvailableContext.Provider value={true}>
+          <div className="flex h-screen w-full bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
+                <p className="mt-4 text-muted-foreground">Carregando dados...</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </SidebarAvailableContext.Provider>
+      </SidebarProvider>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+    <SidebarProvider defaultOpen={!isMobile}>
+      <SidebarAvailableContext.Provider value={true}>
+        <div className="flex h-screen w-full bg-gray-50">
+          <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={id ? "Editar Imóvel" : "Cadastrar Imóvel"} />
@@ -492,7 +501,9 @@ const PropertyForm = () => {
           </form>
         </main>
       </div>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 

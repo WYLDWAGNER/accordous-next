@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Layout/Sidebar";
-import { Header } from "@/components/Layout/Header";
+import { Header, SidebarAvailableContext } from "@/components/Layout/Header";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const BaixaPagamentos = () => {
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [selectedLancamento, setSelectedLancamento] = useState<any>(null);
   const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().split('T')[0]);
@@ -85,8 +88,10 @@ const BaixaPagamentos = () => {
   const atrasados = lancamentos?.filter(l => l.status === 'atrasado' || (l.status === 'pendente' && new Date(l.data_vencimento) < new Date())) || [];
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <SidebarProvider defaultOpen={!isMobile}>
+      <SidebarAvailableContext.Provider value={true}>
+        <div className="flex h-screen w-full bg-background">
+          <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title="Baixa de Pagamentos" />
@@ -355,7 +360,9 @@ const BaixaPagamentos = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </SidebarAvailableContext.Provider>
+    </SidebarProvider>
   );
 };
 
