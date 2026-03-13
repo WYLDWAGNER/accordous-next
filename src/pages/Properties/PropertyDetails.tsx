@@ -472,15 +472,19 @@ const PropertyDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-            <p className="mt-4 text-muted-foreground">Carregando...</p>
+      <SidebarProvider defaultOpen={!isMobile}>
+        <SidebarAvailableContext.Provider value={true}>
+          <div className="flex h-screen w-full bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
+                <p className="mt-4 text-muted-foreground">Carregando...</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </SidebarAvailableContext.Provider>
+      </SidebarProvider>
     );
   }
 
