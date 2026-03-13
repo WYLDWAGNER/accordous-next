@@ -490,24 +490,28 @@ const PropertyDetails = () => {
 
   if (!property) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title="Imóvel não encontrado" />
-          <main className="flex-1 flex items-center justify-center p-6">
-            <Card className="w-full max-w-md">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <Building2 className="h-16 w-16 text-gray-300 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Imóvel não encontrado</h3>
-                <p className="text-gray-500 text-center mb-4">
-                  O imóvel que você está procurando não existe ou foi removido.
-                </p>
-                <Button onClick={() => navigate("/imoveis")}>Voltar para lista</Button>
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </div>
+      <SidebarProvider defaultOpen={!isMobile}>
+        <SidebarAvailableContext.Provider value={true}>
+          <div className="flex h-screen w-full bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <Header title="Imóvel não encontrado" />
+              <main className="flex-1 flex items-center justify-center p-6">
+                <Card className="w-full max-w-md">
+                  <CardContent className="flex flex-col items-center justify-center py-16">
+                    <Building2 className="h-16 w-16 text-gray-300 mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Imóvel não encontrado</h3>
+                    <p className="text-gray-500 text-center mb-4">
+                      O imóvel que você está procurando não existe ou foi removido.
+                    </p>
+                    <Button onClick={() => navigate("/imoveis")}>Voltar para lista</Button>
+                  </CardContent>
+                </Card>
+              </main>
+            </div>
+          </div>
+        </SidebarAvailableContext.Provider>
+      </SidebarProvider>
     );
   }
 
