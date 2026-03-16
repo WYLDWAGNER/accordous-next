@@ -21,7 +21,7 @@ const statusConfig: Record<StatusBaixa, { label: string; className: string }> = 
 };
 
 const ImportarExtrato = () => {
-  const { linhas, carregando, erro, etapa, resumo, importarArquivo, atualizarLinha } = useExtrato();
+  const { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias } = useExtrato();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
