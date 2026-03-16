@@ -37,6 +37,7 @@ const ContractsList = () => {
           properties (
             name,
             address,
+            neighborhood,
             city,
             state
           )
@@ -87,11 +88,19 @@ const ContractsList = () => {
     // Always apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.tenant_name.toLowerCase().includes(term) ||
-          c.properties?.name?.toLowerCase().includes(term)
-      );
+      result = result.filter((c) => {
+        const fields = [
+          c.tenant_name,
+          c.tenant_document,
+          c.tenant_email,
+          c.tenant_phone,
+          c.contract_number,
+          c.properties?.name,
+          c.properties?.address,
+          c.properties?.city,
+        ];
+        return fields.some((f) => f?.toLowerCase().includes(term));
+      });
     }
 
     return result;
@@ -138,7 +147,7 @@ const ContractsList = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Buscar por inquilino ou imóvel..."
+                placeholder="Buscar por inquilino, imóvel, CPF, e-mail, nº contrato..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -189,6 +198,11 @@ const ContractsList = () => {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="text-lg font-semibold">{contract.tenant_name}</h3>
+                                {contract.properties?.name && (
+                                  <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                    {contract.properties.name}
+                                  </span>
+                                )}
                                 <Badge variant={getStatusBadge(contract.status).variant}>
                                   {getStatusBadge(contract.status).label}
                                 </Badge>
