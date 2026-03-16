@@ -52,16 +52,30 @@ const ContractWizard = () => {
   });
 
   const { data: property } = useQuery({
-    queryKey: ["property", propertyId],
+    queryKey: ["property", selectedPropertyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
         .select("*")
-        .eq("id", propertyId)
+        .eq("id", selectedPropertyId)
         .single();
 
       if (error) throw error;
       return data;
+    },
+    enabled: !!selectedPropertyId,
+  });
+
+  // Fetch all properties for the selector
+  const { data: allProperties = [] } = useQuery({
+    queryKey: ["properties-for-contract"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id, name, address, city, status")
+        .order("name");
+      if (error) throw error;
+      return data || [];
     },
   });
 
