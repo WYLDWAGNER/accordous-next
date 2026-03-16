@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { parseExtrato, prepararPayloadIA, aplicarRespostaIA, type LinhaParsed, type RespostaIA } from "@/lib/parseExtrato";
-
-const PROMPT_IA = `Você analisa pagamentos de aluguel. Vencimento: dia 6. Multa atraso: 10%. Regras de status: OK (pago até dia 6), ATRASADO (após dia 6), PARCIAL (valor < 500), NAO_ALUGUEL (valor > 5000), DUPLICADO (mesmo nome aparece 2x). Prioridade: CRITICO=PARCIAL ou DUPLICADO, ATENCAO=ATRASADO, NORMAL=outros. Retorne APENAS array JSON com os mesmos ids mais os campos: status, dias_atraso, multa_devida, observacao, acao_recomendada, prioridade.`;
+import { supabase } from "@/integrations/supabase/client";
 
 export function useExtrato() {
   const [linhas, setLinhas] = useState<LinhaParsed[]>([]);
@@ -17,20 +16,16 @@ export function useExtrato() {
       setLinhas(parsed);
 
       setEtapa("ia");
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 4096,
-          system: PROMPT_IA,
-          messages: [{ role: "user", content: prepararPayloadIA(parsed) }],
-        }),
-      });
-      if (!resp.ok) throw new Error(`Erro API: ${resp.status}`);
-      const data = await resp.json();
-      const texto = (data.content?.[0]?.text ?? "").replace(/```json|```/g, "").trim();
-      const respostas: RespostaIA[] = JSON.parse(texto);
+      const payload = prepararPayloadIA(parsed);
+      const pagamentos = JSON.parse(payload);
+
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(
+        "analisar-extrato",
+        { body: { pagamentos } }
+      );
+
+      if (fnError) throw new Error(fnError.message);
+      const respostas: RespostaIA[] = fnData.resultado;
       setLinhas(aplicarRespostaIA(parsed, respostas));
       setEtapa("revisao");
     } catch (e) {
