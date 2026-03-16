@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.send-cobranca-webhook]
 verify_jwt = false
+
+[functions.analisar-extrato]
+verify_jwt = false
