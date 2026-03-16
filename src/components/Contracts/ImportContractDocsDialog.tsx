@@ -157,7 +157,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
     const { data: contracts, error: contractsErr } = await supabase
       .from("contracts")
       .select("id, contract_number, tenant_name, property_id")
-      .eq("user_id", user.id);
+;
 
     if (contractsErr) {
       toast.error("Erro ao buscar contratos");
