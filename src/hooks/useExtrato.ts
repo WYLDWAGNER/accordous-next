@@ -39,12 +39,13 @@ export function useExtrato() {
       .in("status", ["pending", "overdue"]);
 
     return {
-      contratos: (contratos || []).map(c => ({
+      contratos: (contratos || []).map((c: any) => ({
         id: c.id,
         inquilino: normalizeName(c.tenant_name),
         documento: c.tenant_document,
         valor_aluguel: c.rental_value,
         dia_vencimento: c.payment_day,
+        imovel_nome: c.properties?.name || null,
       })),
       faturas_abertas: (faturas || []).map(f => ({
         id: f.id,
