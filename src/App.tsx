@@ -213,6 +213,11 @@ const App = () => (
                 </AdminRoute>
               </ProtectedRoute>
             } />
+            <Route path="/contratos/vincular-imoveis" element={
+              <ProtectedRoute>
+                <LinkContractsToProperties />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
               </Routes>
