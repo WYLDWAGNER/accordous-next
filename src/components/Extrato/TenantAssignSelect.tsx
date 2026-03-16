@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check, ChevronsUpDown, Save, UserCheck } from "lucide-react";
+import { Check, ChevronsUpDown, Save, UserCheck, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Contrato {
@@ -26,12 +26,24 @@ interface TenantAssignSelectProps {
 export function TenantAssignSelect({ nomeExtrato, currentMatch, contratos, onAssign, saving }: TenantAssignSelectProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string>("");
+  const [editing, setEditing] = useState(false);
 
-  if (currentMatch) {
+  if (currentMatch && !editing) {
     return (
-      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-        {currentMatch}
-      </Badge>
+      <div className="flex items-center gap-1.5">
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          {currentMatch}
+        </Badge>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6"
+          onClick={() => setEditing(true)}
+          title="Corrigir vinculação"
+        >
+          <Pencil className="h-3 w-3 text-muted-foreground" />
+        </Button>
+      </div>
     );
   }
 
