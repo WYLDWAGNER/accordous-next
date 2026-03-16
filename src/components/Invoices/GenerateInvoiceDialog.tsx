@@ -148,33 +148,64 @@ export function GenerateInvoiceDialog() {
             </Popover>
           </div>
 
-          {selectedContractData && (
-            <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-              <h4 className="font-medium text-sm">Pré-visualização</h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Inquilino:</span>
-                  <span className="font-medium">{selectedContractData.tenant_name}</span>
+          {selectedContractData && (() => {
+            const extraCharges = Array.isArray(selectedContractData.extra_charges) 
+              ? (selectedContractData.extra_charges as Array<{ description: string; value_per_installment: number; charge_type: string; frequency: string; installments: number | null; charge_until_end: boolean; status: string }>).filter(c => c.status === "active")
+              : [];
+            const extraTotal = extraCharges.reduce((sum, c) => sum + (c.value_per_installment || 0), 0);
+            const totalFatura = Number(selectedContractData.rental_value) + extraTotal;
+
+            return (
+              <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                <h4 className="font-medium text-sm">Pré-visualização</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Inquilino:</span>
+                    <span className="font-medium">{selectedContractData.tenant_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Valor do Aluguel:</span>
+                    <span className="font-medium">
+                      R$ {Number(selectedContractData.rental_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Dia de Vencimento:</span>
+                    <span className="font-medium">{selectedContractData.payment_day || 5}</span>
+                  </div>
+                  {selectedContractData.pre_paid && (
+                    <div className="flex justify-between text-primary">
+                      <span>Pré-pago:</span>
+                      <span className="font-medium">Sim</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Valor do Aluguel:</span>
-                  <span className="font-medium">
-                    R$ {Number(selectedContractData.rental_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Dia de Vencimento:</span>
-                  <span className="font-medium">{selectedContractData.payment_day || 5}</span>
-                </div>
-                {selectedContractData.pre_paid && (
-                  <div className="flex justify-between text-primary">
-                    <span>Pré-pago:</span>
-                    <span className="font-medium">Sim</span>
+
+                {extraCharges.length > 0 && (
+                  <div className="border-t pt-3 space-y-2">
+                    <h5 className="font-medium text-sm text-muted-foreground">Cobranças Adicionais</h5>
+                    <div className="space-y-1 text-sm">
+                      {extraCharges.map((charge, idx) => (
+                        <div key={idx} className="flex justify-between">
+                          <span className="text-muted-foreground">{charge.description}:</span>
+                          <span className="font-medium">
+                            R$ {Number(charge.value_per_installment).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
+
+                <div className="border-t pt-2">
+                  <div className="flex justify-between font-semibold text-sm">
+                    <span>Total Estimado:</span>
+                    <span>R$ {totalFatura.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>
