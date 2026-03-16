@@ -130,6 +130,10 @@ export function useExtrato() {
     setLinhas((prev) => prev.map((l) => l.id === id ? { ...l, ...campos } : l));
   }
 
+  function removerLinha(id: string) {
+    setLinhas((prev) => prev.filter((l) => l.id !== id));
+  }
+
   const naoIdentificados = linhas.filter((l) => !l.inquilino_matched && l.status !== "NAO_ALUGUEL");
 
   const resumo = {
@@ -141,5 +145,5 @@ export function useExtrato() {
     naoIdentificados: naoIdentificados.length,
   };
 
-  return { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias };
+  return { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, removerLinha, salvarAlias };
 }

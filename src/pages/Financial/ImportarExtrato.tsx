@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { useExtrato } from "@/hooks/useExtrato";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle, UserX, FileDown } from "lucide-react";
+import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle, UserX, FileDown, Trash2, Settings2 } from "lucide-react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { TenantAssignSelect } from "@/components/Extrato/TenantAssignSelect";
+import { AliasManager } from "@/components/Extrato/AliasManager";
 import type { StatusBaixa } from "@/lib/parseExtrato";
 
 const statusConfig: Record<StatusBaixa, { label: string; className: string }> = {
@@ -23,9 +24,10 @@ const statusConfig: Record<StatusBaixa, { label: string; className: string }> = 
 };
 
 const ImportarExtrato = () => {
-  const { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias } = useExtrato();
+  const { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, removerLinha, salvarAlias } = useExtrato();
   const inputRef = useRef<HTMLInputElement>(null);
   const [mostrarNaoIdentificados, setMostrarNaoIdentificados] = useState(false);
+  const [mostrarAliases, setMostrarAliases] = useState(false);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -213,6 +215,7 @@ const ImportarExtrato = () => {
                         <TableHead>Status</TableHead>
                         <TableHead>Observação</TableHead>
                         <TableHead className="text-center">Baixa</TableHead>
+                        <TableHead className="text-center w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -255,6 +258,17 @@ const ImportarExtrato = () => {
                                 checked={l.baixa_realizada}
                                 onCheckedChange={(v) => atualizarLinha(l.id, { baixa_realizada: !!v })}
                               />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => removerLinha(l.id)}
+                                title="Remover registro"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         );
@@ -316,6 +330,15 @@ const ImportarExtrato = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Gerenciar Aliases */}
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setMostrarAliases(!mostrarAliases)}>
+                <Settings2 className="h-4 w-4 mr-2" />
+                {mostrarAliases ? "Ocultar" : "Gerenciar"} Aliases
+              </Button>
+            </div>
+            {mostrarAliases && <AliasManager />}
           </>
         )}
       </div>
