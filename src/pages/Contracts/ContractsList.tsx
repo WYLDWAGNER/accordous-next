@@ -87,11 +87,19 @@ const ContractsList = () => {
     // Always apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.tenant_name.toLowerCase().includes(term) ||
-          c.properties?.name?.toLowerCase().includes(term)
-      );
+      result = result.filter((c) => {
+        const fields = [
+          c.tenant_name,
+          c.tenant_document,
+          c.tenant_email,
+          c.tenant_phone,
+          c.contract_number,
+          c.properties?.name,
+          c.properties?.address,
+          c.properties?.city,
+        ];
+        return fields.some((f) => f?.toLowerCase().includes(term));
+      });
     }
 
     return result;
