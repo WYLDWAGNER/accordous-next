@@ -10,6 +10,7 @@ interface ContratoContexto {
   documento: string | null;
   valor_aluguel: number;
   dia_vencimento: number | null;
+  imovel_nome: string | null;
 }
 
 export function useExtrato() {
