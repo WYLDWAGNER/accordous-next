@@ -120,6 +120,14 @@ const ContractWizard = () => {
     }
     
     if (currentStep === 2) {
+      if (!selectedPropertyId) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "Selecione o imóvel para este contrato",
+          variant: "destructive",
+        });
+        return;
+      }
       if (!formData.start_date || !formData.rental_value) {
         toast({
           title: "Campos obrigatórios",
