@@ -14,33 +14,49 @@ serve(async (req) => {
     const { pagamentos } = await req.json();
     if (!pagamentos?.length) throw new Error("Nenhum pagamento recebido.");
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada.");
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
 
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
-        system: PROMPT_IA,
-        messages: [{ role: "user", content: JSON.stringify(pagamentos) }],
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: PROMPT_IA },
+          { role: "user", content: JSON.stringify(pagamentos) },
+        ],
       }),
     });
 
-    if (!resp.ok) throw new Error(`Anthropic API error: ${resp.status}`);
+    if (resp.status === 429) {
+      return new Response(JSON.stringify({ error: "Rate limit excedido. Tente novamente em alguns segundos." }), {
+        status: 429, headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+    if (resp.status === 402) {
+      return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
+        status: 402, headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error("AI Gateway error:", resp.status, errText);
+      throw new Error(`AI Gateway error: ${resp.status}`);
+    }
+
     const data = await resp.json();
-    const texto = (data.content?.[0]?.text ?? "").replace(/```json|```/g, "").trim();
+    const texto = (data.choices?.[0]?.message?.content ?? "").replace(/```json|```/g, "").trim();
     const resultado = JSON.parse(texto);
 
     return new Response(JSON.stringify({ resultado }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   } catch (e) {
+    console.error("analisar-extrato error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }),
       { status: 500, headers: { ...CORS, "Content-Type": "application/json" } }
