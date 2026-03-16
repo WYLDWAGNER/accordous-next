@@ -179,7 +179,7 @@ const ContractWizard = () => {
         description: "Contrato criado com sucesso",
       });
 
-      navigate(`/imoveis/${propertyId}`);
+      navigate(selectedPropertyId ? `/imoveis/${selectedPropertyId}` : "/documentos");
     } catch (error: any) {
       toast({
         title: "Erro ao criar contrato",
