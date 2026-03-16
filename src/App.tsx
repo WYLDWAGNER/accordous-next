@@ -89,6 +89,11 @@ const App = () => (
                 <ContractsList />
               </ProtectedRoute>
             } />
+            <Route path="/contratos/novo" element={
+              <ProtectedRoute>
+                <ContractWizard />
+              </ProtectedRoute>
+            } />
             <Route path="/contratos/novo/:propertyId" element={
               <ProtectedRoute>
                 <ContractWizard />
