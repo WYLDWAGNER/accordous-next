@@ -169,7 +169,7 @@ export function ImportContractDocsDialog({ open, onOpenChange, onComplete }: Imp
     const { data: properties } = await supabase
       .from("properties")
       .select("id, name, address, neighborhood")
-      .eq("user_id", user.id);
+      ;
 
     // Index contracts by contract_number
     const contractByNumber = new Map<string, typeof contracts[0]>();

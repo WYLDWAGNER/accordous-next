@@ -53,7 +53,6 @@ const PropertiesList = () => {
       const { data, error } = await supabase
         .from("invoices")
         .select("id")
-        .eq("user_id", user?.id)
         .eq("status", "pending")
         .limit(1);
 
