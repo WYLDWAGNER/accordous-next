@@ -42,6 +42,7 @@ import ImportConciliacao from "./pages/Settings/ImportConciliacao";
 import ContactsList from "./pages/Contacts/ContactsList";
 import ContactDetails from "./pages/Contacts/ContactDetails";
 import InspectionWizard from "./pages/Inspections/InspectionWizard";
+import LinkContractsToProperties from "./pages/Contracts/LinkContractsToProperties";
 
 const queryClient = new QueryClient();
 
@@ -210,6 +211,11 @@ const App = () => (
                 <AdminRoute>
                   <LicenseManagement />
                 </AdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/contratos/vincular-imoveis" element={
+              <ProtectedRoute>
+                <LinkContractsToProperties />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
