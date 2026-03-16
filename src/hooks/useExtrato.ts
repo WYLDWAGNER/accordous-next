@@ -1,12 +1,25 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { parseExtrato, prepararPayloadIA, aplicarRespostaIA, type LinhaParsed, type RespostaIA } from "@/lib/parseExtrato";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccountId } from "@/hooks/useAccountId";
+import { toast } from "sonner";
+
+interface ContratoContexto {
+  id: string;
+  inquilino: string;
+  documento: string | null;
+  valor_aluguel: number;
+  dia_vencimento: number | null;
+}
 
 export function useExtrato() {
+  const { accountId } = useAccountId();
   const [linhas, setLinhas] = useState<LinhaParsed[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [etapa, setEtapa] = useState<"idle"|"parse"|"ia"|"revisao">("idle");
+  const [contratos, setContratos] = useState<ContratoContexto[]>([]);
+  const [salvandoAlias, setSalvandoAlias] = useState<string | null>(null);
 
   function normalizeName(name: string): string {
     return name.replace(/\s+/g, ' ').trim();
