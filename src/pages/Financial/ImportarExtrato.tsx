@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { useExtrato } from "@/hooks/useExtrato";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle } from "lucide-react";
+import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle, UserX, Download } from "lucide-react";
 import { TenantAssignSelect } from "@/components/Extrato/TenantAssignSelect";
 import type { StatusBaixa } from "@/lib/parseExtrato";
 
@@ -23,6 +23,7 @@ const statusConfig: Record<StatusBaixa, { label: string; className: string }> = 
 const ImportarExtrato = () => {
   const { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias } = useExtrato();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [mostrarNaoIdentificados, setMostrarNaoIdentificados] = useState(false);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,6 +40,21 @@ const ImportarExtrato = () => {
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
   const criticosSemBaixa = linhas.filter((l) => l.prioridade === "CRITICO" && !l.baixa_realizada).length;
+  const naoIdentificados = linhas.filter((l) => !l.inquilino_matched && l.status !== "NAO_ALUGUEL");
+
+  const exportarNaoIdentificados = () => {
+    const header = "Data,Nome Extrato,Valor,Status,Observação\n";
+    const rows = naoIdentificados.map((l) =>
+      `"${l.data_pix || l.data_banco}","${l.nome_limpo}","${l.credito ?? ""}","${l.status}","${l.observacao || ""}"`
+    ).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "nao-identificados.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <AppLayout title="Importar Extrato Bancário">
@@ -96,7 +112,7 @@ const ImportarExtrato = () => {
         {etapa === "revisao" && (
           <>
             {/* Cards resumo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <Card>
                 <CardContent className="p-5 flex items-center gap-3">
                   <div className="rounded-full p-3 bg-blue-500/10">
@@ -138,6 +154,20 @@ const ImportarExtrato = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Total multas</p>
                     <p className="text-2xl font-bold text-red-600">{formatCurrency(resumo.totalMultas)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card
+                className={`border-orange-200 cursor-pointer transition-colors ${mostrarNaoIdentificados ? "ring-2 ring-orange-400" : "hover:bg-muted/30"}`}
+                onClick={() => setMostrarNaoIdentificados(!mostrarNaoIdentificados)}
+              >
+                <CardContent className="p-5 flex items-center gap-3">
+                  <div className="rounded-full p-3 bg-orange-500/10">
+                    <UserX className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Não identificados</p>
+                    <p className="text-2xl font-bold text-orange-600">{resumo.naoIdentificados}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -220,6 +250,58 @@ const ImportarExtrato = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Relatório Não Identificados */}
+            {mostrarNaoIdentificados && naoIdentificados.length > 0 && (
+              <Card className="border-orange-200">
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <div className="flex items-center gap-2">
+                      <UserX className="h-5 w-5 text-orange-600" />
+                      <h3 className="font-semibold">Pagamentos Não Identificados ({naoIdentificados.length})</h3>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={exportarNaoIdentificados}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar CSV
+                    </Button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Nome Extrato</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead>Vincular a</TableHead>
+                          <TableHead>Observação</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {naoIdentificados.map((l) => (
+                          <TableRow key={l.id} className="bg-orange-50/50">
+                            <TableCell className="whitespace-nowrap text-sm">{l.data_pix || l.data_banco}</TableCell>
+                            <TableCell className="text-sm font-medium">{l.nome_limpo}</TableCell>
+                            <TableCell className="text-right font-semibold whitespace-nowrap">
+                              {l.credito != null ? formatCurrency(l.credito) : "-"}
+                            </TableCell>
+                            <TableCell>
+                              <TenantAssignSelect
+                                nomeExtrato={l.nome_limpo}
+                                currentMatch={l.inquilino_matched}
+                                contratos={contratos}
+                                onAssign={(contractId, tenantName) => salvarAlias(l.nome_limpo, contractId, tenantName, l.id)}
+                                saving={salvandoAlias === l.id}
+                              />
+                            </TableCell>
+                            <TableCell className="text-sm max-w-[250px] truncate" title={l.observacao || ""}>{l.observacao || "-"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </div>
