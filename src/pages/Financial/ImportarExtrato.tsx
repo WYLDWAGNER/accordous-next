@@ -258,7 +258,17 @@ const ImportarExtrato = () => {
                                 onCheckedChange={(v) => atualizarLinha(l.id, { baixa_realizada: !!v })}
                               />
                             </TableCell>
-                          </TableRow>
+                            <TableCell className="text-center">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => removerLinha(l.id)}
+                                title="Remover registro"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TableCell>
                         );
                       })}
                     </TableBody>
