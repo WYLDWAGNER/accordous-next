@@ -320,12 +320,12 @@ const ContractWizard = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="contract_number">Número do Contrato</Label>
+              <Label htmlFor="contract_number">Número do Contrato (gerado automaticamente)</Label>
               <Input
                 id="contract_number"
                 value={formData.contract_number}
-                onChange={(e) => updateFormData("contract_number", e.target.value)}
-                placeholder="Número ou identificação do contrato"
+                readOnly
+                className="bg-muted font-mono"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
