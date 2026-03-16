@@ -426,12 +426,12 @@ export function ExtraChargesDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Valor por Parcela (R$)</FormLabel>
+                        <p className="text-xs text-muted-foreground">Use valor negativo para desconto</p>
                         <FormControl>
                           <Input
                             type="number"
                             step="0.01"
-                            min="0.01"
-                            placeholder="0.00"
+                            placeholder="0.00 (negativo = desconto)"
                             {...field}
                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
