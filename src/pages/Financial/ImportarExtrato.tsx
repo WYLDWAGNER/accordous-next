@@ -4,11 +4,11 @@ import { useExtrato } from "@/hooks/useExtrato";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle } from "lucide-react";
+import { TenantAssignSelect } from "@/components/Extrato/TenantAssignSelect";
 import type { StatusBaixa } from "@/lib/parseExtrato";
 
 const statusConfig: Record<StatusBaixa, { label: string; className: string }> = {
