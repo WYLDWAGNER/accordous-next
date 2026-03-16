@@ -215,7 +215,7 @@ const ImportarExtrato = () => {
                         <TableHead>Status</TableHead>
                         <TableHead>Observação</TableHead>
                         <TableHead className="text-center">Baixa</TableHead>
-                      </TableRow>
+                        <TableHead className="text-center w-[50px]"></TableHead>
                     </TableHeader>
                     <TableBody>
                       {linhas.map((l) => {
