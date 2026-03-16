@@ -23,6 +23,7 @@ const ContractWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState(propertyId || "");
   const [generatedContractNumber, setGeneratedContractNumber] = useState("");
+  const [showAllProperties, setShowAllProperties] = useState(false);
 
   // Form data state
   const [formData, setFormData] = useState({
