@@ -185,13 +185,13 @@ const ImportarExtrato = () => {
                             <TableCell className="whitespace-nowrap text-sm">{l.data_pix || l.data_banco}</TableCell>
                             <TableCell className="text-sm max-w-[160px] truncate">{l.nome_limpo}</TableCell>
                             <TableCell>
-                              {l.inquilino_matched ? (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  {l.inquilino_matched}
-                                </Badge>
-                              ) : (
-                                <span className="text-sm text-muted-foreground italic">Não identificado</span>
-                              )}
+                              <TenantAssignSelect
+                                nomeExtrato={l.nome_limpo}
+                                currentMatch={l.inquilino_matched}
+                                contratos={contratos}
+                                onAssign={(contractId, tenantName) => salvarAlias(l.nome_limpo, contractId, tenantName, l.id)}
+                                saving={salvandoAlias === l.id}
+                              />
                             </TableCell>
                             <TableCell className="text-right font-semibold whitespace-nowrap">
                               {l.credito != null ? formatCurrency(l.credito) : "-"}
