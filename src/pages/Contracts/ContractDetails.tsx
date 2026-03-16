@@ -231,27 +231,43 @@ export default function ContractDetails() {
         {property ? (
           <Card>
             <CardHeader>
-              <CardTitle>Imóvel</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Imóvel
+                <Badge variant="outline" className="text-base font-semibold">{property.name}</Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Tipo</p>
                   <p className="font-medium">{property.property_type}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Disponível</p>
-                  <p className="font-medium">{property.status === "available" ? "Sim" : "Não"}</p>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="font-medium">{property.status === "available" ? "Disponível" : property.status === "rented" ? "Alugado" : property.status}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">CEP</p>
+                  <p className="font-medium">{property.postal_code || "N/A"}</p>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Endereço</p>
-                <p className="font-medium">{property.address}, {property.city}/{property.state}</p>
+                <p className="text-sm text-muted-foreground">Endereço Completo</p>
+                <p className="font-medium">
+                  {property.address}{property.number ? `, ${property.number}` : ""}
+                  {property.complement ? ` - ${property.complement}` : ""}
+                  {property.neighborhood ? `, ${property.neighborhood}` : ""}
+                  {` - ${property.city}/${property.state}`}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Área Útil</p>
                   <p className="font-medium">{property.useful_area ? `${property.useful_area} m²` : "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Área Construída</p>
+                  <p className="font-medium">{property.built_area ? `${property.built_area} m²` : "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Terreno</p>
