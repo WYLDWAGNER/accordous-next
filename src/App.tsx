@@ -42,6 +42,7 @@ import ImportConciliacao from "./pages/Settings/ImportConciliacao";
 import ContactsList from "./pages/Contacts/ContactsList";
 import ContactDetails from "./pages/Contacts/ContactDetails";
 import InspectionWizard from "./pages/Inspections/InspectionWizard";
+import LinkContractsToProperties from "./pages/Contracts/LinkContractsToProperties";
 
 const queryClient = new QueryClient();
 
