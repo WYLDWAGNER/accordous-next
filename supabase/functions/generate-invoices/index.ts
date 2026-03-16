@@ -50,6 +50,24 @@ Deno.serve(async (req) => {
 
     console.log(`Generating invoices - Mode: ${mode}, User: ${user.id}, Reference: ${reference_month}`);
 
+    // Get account_id for the user
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('account_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch user profile' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const accountId = profile?.account_id;
+    console.log(`Account ID: ${accountId}`);
+
     // Get contracts
     let contractsQuery = supabase
       .from('contracts')
@@ -61,14 +79,22 @@ Deno.serve(async (req) => {
           owner_name
         )
       `)
-      .eq('user_id', user.id)
       .eq('status', 'active');
+
+    // Filter by account if available, otherwise by user
+    if (accountId) {
+      contractsQuery = contractsQuery.eq('account_id', accountId);
+    } else {
+      contractsQuery = contractsQuery.eq('user_id', user.id);
+    }
 
     if (mode === 'single' && contract_id) {
       contractsQuery = contractsQuery.eq('id', contract_id);
     }
 
+    console.log('Fetching contracts...');
     const { data: contracts, error: contractsError } = await contractsQuery;
+    console.log(`Contracts found: ${contracts?.length || 0}, Error: ${contractsError?.message || 'none'}`);
 
     if (contractsError) {
       console.error('Error fetching contracts:', contractsError);
