@@ -330,6 +330,15 @@ const ImportarExtrato = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Gerenciar Aliases */}
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setMostrarAliases(!mostrarAliases)}>
+                <Settings2 className="h-4 w-4 mr-2" />
+                {mostrarAliases ? "Ocultar" : "Gerenciar"} Aliases
+              </Button>
+            </div>
+            {mostrarAliases && <AliasManager />}
           </>
         )}
       </div>
