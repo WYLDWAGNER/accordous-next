@@ -79,6 +79,7 @@ const chargeTypeLabels: Record<string, string> = {
   electricity: "Luz",
   gas: "Gás",
   internet: "Internet",
+  discount: "Desconto",
   other: "Outros",
 };
 
@@ -92,13 +93,13 @@ const extraChargeSchema = z.object({
   description: z.string().min(3, "Descrição muito curta").max(100, "Máximo 100 caracteres"),
   charge_type: z.enum([
     'guarantee', 'iptu', 'condo_fee', 'insurance', 
-    'water', 'electricity', 'gas', 'internet', 'other'
+    'water', 'electricity', 'gas', 'internet', 'discount', 'other'
   ]),
   frequency: z.enum(['monthly', 'yearly', 'one_time']),
   start_date: z.date({ required_error: "Data de início é obrigatória" }),
   installments: z.number().min(1).optional().nullable(),
   charge_until_end: z.boolean().default(false),
-  value_per_installment: z.number().min(0.01, "Valor deve ser maior que zero"),
+  value_per_installment: z.number().refine(val => val !== 0, "Valor não pode ser zero"),
 }).refine((data) => {
   if (!data.charge_until_end && !data.installments) {
     return false;
@@ -425,12 +426,12 @@ export function ExtraChargesDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Valor por Parcela (R$)</FormLabel>
+                        <p className="text-xs text-muted-foreground">Use valor negativo para desconto</p>
                         <FormControl>
                           <Input
                             type="number"
                             step="0.01"
-                            min="0.01"
-                            placeholder="0.00"
+                            placeholder="0.00 (negativo = desconto)"
                             {...field}
                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
@@ -489,7 +490,7 @@ export function ExtraChargesDialog({
                       <TableRow key={charge.id}>
                         <TableCell className="font-medium">{charge.description}</TableCell>
                         <TableCell>{chargeTypeLabels[charge.charge_type]}</TableCell>
-                        <TableCell>{formatCurrency(charge.value_per_installment)}</TableCell>
+                        <TableCell className={cn(charge.value_per_installment < 0 && "text-green-600")}>{formatCurrency(charge.value_per_installment)}</TableCell>
                         <TableCell>
                           {charge.charge_until_end 
                             ? "Até o fim" 
