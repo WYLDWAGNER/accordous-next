@@ -210,13 +210,16 @@ export default function ContractDetails() {
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-8 py-4">
           <div className="flex items-center gap-4 mb-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/documentos")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/contratos")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Dados do Contrato</h1>
+              <h1 className="text-2xl font-bold">
+                Dados do Contrato
+                {property && <span className="text-primary ml-2">— {property.name}</span>}
+              </h1>
               <p className="text-sm text-muted-foreground">
-                <Link to="/" className="hover:underline">Dashboard</Link> / <Link to="/documentos" className="hover:underline">Documentos</Link> / Dados do Contrato
+                <Link to="/" className="hover:underline">Dashboard</Link> / <Link to="/contratos" className="hover:underline">Contratos</Link> / Dados do Contrato
               </p>
             </div>
           </div>
