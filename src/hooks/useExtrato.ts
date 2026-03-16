@@ -58,6 +58,40 @@ export function useExtrato() {
     };
   }
 
+  async function salvarAlias(nomeExtrato: string, contractId: string, tenantName: string, linhaId: string) {
+    if (!accountId) {
+      toast.error("Conta não encontrada");
+      return;
+    }
+    setSalvandoAlias(linhaId);
+    try {
+      const { error } = await supabase
+        .from("extrato_aliases" as any)
+        .upsert({
+          account_id: accountId,
+          nome_extrato: nomeExtrato.toLowerCase().trim(),
+          contract_id: contractId,
+          tenant_name: tenantName,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "account_id,nome_extrato" });
+
+      if (error) throw error;
+
+      // Update the line locally
+      setLinhas(prev => prev.map(l =>
+        l.id === linhaId
+          ? { ...l, inquilino_matched: tenantName, contrato_id: contractId }
+          : l
+      ));
+      toast.success(`"${nomeExtrato}" vinculado a ${tenantName}`);
+    } catch (e) {
+      console.error("Erro ao salvar alias:", e);
+      toast.error("Erro ao salvar atribuição");
+    } finally {
+      setSalvandoAlias(null);
+    }
+  }
+
   async function importarArquivo(file: File) {
     setErro(null); setCarregando(true);
     try {
