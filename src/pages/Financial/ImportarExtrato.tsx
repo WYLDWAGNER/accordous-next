@@ -4,11 +4,11 @@ import { useExtrato } from "@/hooks/useExtrato";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle } from "lucide-react";
+import { TenantAssignSelect } from "@/components/Extrato/TenantAssignSelect";
 import type { StatusBaixa } from "@/lib/parseExtrato";
 
 const statusConfig: Record<StatusBaixa, { label: string; className: string }> = {
@@ -21,7 +21,7 @@ const statusConfig: Record<StatusBaixa, { label: string; className: string }> = 
 };
 
 const ImportarExtrato = () => {
-  const { linhas, carregando, erro, etapa, resumo, importarArquivo, atualizarLinha } = useExtrato();
+  const { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias } = useExtrato();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,13 +185,13 @@ const ImportarExtrato = () => {
                             <TableCell className="whitespace-nowrap text-sm">{l.data_pix || l.data_banco}</TableCell>
                             <TableCell className="text-sm max-w-[160px] truncate">{l.nome_limpo}</TableCell>
                             <TableCell>
-                              {l.inquilino_matched ? (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  {l.inquilino_matched}
-                                </Badge>
-                              ) : (
-                                <span className="text-sm text-muted-foreground italic">Não identificado</span>
-                              )}
+                              <TenantAssignSelect
+                                nomeExtrato={l.nome_limpo}
+                                currentMatch={l.inquilino_matched}
+                                contratos={contratos}
+                                onAssign={(contractId, tenantName) => salvarAlias(l.nome_limpo, contractId, tenantName, l.id)}
+                                saving={salvandoAlias === l.id}
+                              />
                             </TableCell>
                             <TableCell className="text-right font-semibold whitespace-nowrap">
                               {l.credito != null ? formatCurrency(l.credito) : "-"}
