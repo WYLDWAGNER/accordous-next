@@ -73,6 +73,8 @@ const DocumentsList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [importDocsOpen, setImportDocsOpen] = useState(false);
+  const [newDocOpen, setNewDocOpen] = useState(false);
+  const [attachDocOpen, setAttachDocOpen] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
