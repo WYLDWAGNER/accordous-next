@@ -275,8 +275,8 @@ const ImportarExtrato = () => {
                       <h3 className="font-semibold">Pagamentos Não Identificados ({naoIdentificados.length})</h3>
                     </div>
                     <Button variant="outline" size="sm" onClick={exportarNaoIdentificados}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Exportar CSV
+                      <FileDown className="h-4 w-4 mr-2" />
+                      Exportar PDF
                     </Button>
                   </div>
                   <div className="overflow-x-auto">
