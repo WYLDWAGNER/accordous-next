@@ -33,7 +33,7 @@ const ReportsList = () => {
       const { data, error } = await supabase
         .from("properties")
         .select("*")
-        .eq("user_id", user?.id);
+;
       if (error) throw error;
       return data;
     },
@@ -53,7 +53,7 @@ const ReportsList = () => {
             address
           )
         `)
-        .eq("user_id", user?.id);
+;
       if (error) throw error;
       return data;
     },
@@ -73,7 +73,7 @@ const ReportsList = () => {
             address
           )
         `)
-        .eq("user_id", user?.id);
+        ;
       if (error) throw error;
       return data;
     },

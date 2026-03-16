@@ -86,7 +86,6 @@ export default function ContractDetails() {
         .from("contracts")
         .select("*")
         .eq("id", id)
-        .eq("user_id", user?.id)
         .single();
 
       if (contractError) throw contractError;

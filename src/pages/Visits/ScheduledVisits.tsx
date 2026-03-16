@@ -128,7 +128,7 @@ const ScheduledVisits = () => {
             state
           )
         `)
-        .eq("user_id", user.id)
+        
         .order("visit_date", { ascending: true })
         .order("visit_time", { ascending: true });
 
