@@ -93,7 +93,7 @@ const extraChargeSchema = z.object({
   description: z.string().min(3, "Descrição muito curta").max(100, "Máximo 100 caracteres"),
   charge_type: z.enum([
     'guarantee', 'iptu', 'condo_fee', 'insurance', 
-    'water', 'electricity', 'gas', 'internet', 'other'
+    'water', 'electricity', 'gas', 'internet', 'discount', 'other'
   ]),
   frequency: z.enum(['monthly', 'yearly', 'one_time']),
   start_date: z.date({ required_error: "Data de início é obrigatória" }),
