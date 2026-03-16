@@ -21,6 +21,7 @@ const ContractWizard = () => {
   const { accountId } = useAccountId();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedContractNumber, setGeneratedContractNumber] = useState("");
 
   // Form data state
   const [formData, setFormData] = useState({
