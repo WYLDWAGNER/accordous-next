@@ -26,10 +26,10 @@ export function useExtrato() {
   }
 
   async function buscarClientesEFaturas() {
-    // Fetch active contracts with tenant info
+    // Fetch active contracts with tenant info and property name
     const { data: contratos } = await supabase
       .from("contracts")
-      .select("id, tenant_name, tenant_document, rental_value, payment_day, property_id, status")
+      .select("id, tenant_name, tenant_document, rental_value, payment_day, property_id, status, properties(name)")
       .eq("status", "active");
 
     // Fetch pending/overdue invoices
