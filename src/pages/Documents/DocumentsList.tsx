@@ -457,6 +457,18 @@ const DocumentsList = () => {
         open={importDocsOpen}
         onOpenChange={setImportDocsOpen}
       />
+
+      <AttachDocumentDialog
+        open={newDocOpen}
+        onOpenChange={setNewDocOpen}
+        target="property"
+      />
+
+      <AttachDocumentDialog
+        open={attachDocOpen}
+        onOpenChange={setAttachDocOpen}
+        target="contract"
+      />
     </AppLayout>
   );
 };
