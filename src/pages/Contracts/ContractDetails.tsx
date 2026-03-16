@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Download, AlertCircle, Plus, Edit, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Download, AlertCircle, Plus, Edit, Upload, Trash2, FileSignature } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
