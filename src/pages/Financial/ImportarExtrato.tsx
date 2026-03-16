@@ -112,7 +112,7 @@ const ImportarExtrato = () => {
         {etapa === "revisao" && (
           <>
             {/* Cards resumo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <Card>
                 <CardContent className="p-5 flex items-center gap-3">
                   <div className="rounded-full p-3 bg-blue-500/10">
@@ -154,6 +154,20 @@ const ImportarExtrato = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Total multas</p>
                     <p className="text-2xl font-bold text-red-600">{formatCurrency(resumo.totalMultas)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card
+                className={`border-orange-200 cursor-pointer transition-colors ${mostrarNaoIdentificados ? "ring-2 ring-orange-400" : "hover:bg-muted/30"}`}
+                onClick={() => setMostrarNaoIdentificados(!mostrarNaoIdentificados)}
+              >
+                <CardContent className="p-5 flex items-center gap-3">
+                  <div className="rounded-full p-3 bg-orange-500/10">
+                    <UserX className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Não identificados</p>
+                    <p className="text-2xl font-bold text-orange-600">{resumo.naoIdentificados}</p>
                   </div>
                 </CardContent>
               </Card>
