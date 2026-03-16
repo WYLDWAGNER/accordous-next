@@ -37,6 +37,7 @@ const ContractsList = () => {
           properties (
             name,
             address,
+            neighborhood,
             city,
             state
           )
