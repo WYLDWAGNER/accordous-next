@@ -76,6 +76,37 @@ export default function ContractDetails() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [extraChargesOpen, setExtraChargesOpen] = useState(false);
+  const [invoiceRefMonth, setInvoiceRefMonth] = useState<Date>(new Date());
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+
+  const handleGenerateInvoice = async () => {
+    if (!contract) return;
+    setGeneratingInvoice(true);
+    try {
+      const response = await supabase.functions.invoke('generate-invoices', {
+        body: {
+          mode: 'single',
+          contract_id: contract.id,
+          reference_month: format(invoiceRefMonth, 'yyyy-MM-dd'),
+          auto_billing: false
+        }
+      });
+      if (response.error) throw response.error;
+      const data = response.data;
+      if (data.created > 0) {
+        toast.success(`Fatura gerada com sucesso!`);
+        fetchContractDetails();
+      } else if (data.skipped > 0) {
+        toast.info("Fatura já existe para este mês de competência.");
+      } else if (data.errors?.length > 0) {
+        toast.error(data.errors[0].error);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao gerar fatura");
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  };
 
   useEffect(() => {
     if (user && id) {
