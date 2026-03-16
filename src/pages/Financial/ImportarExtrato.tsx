@@ -45,17 +45,29 @@ const ImportarExtrato = () => {
   const naoIdentificados = linhas.filter((l) => !l.inquilino_matched && l.status !== "NAO_ALUGUEL");
 
   const exportarNaoIdentificados = () => {
-    const header = "Data,Nome Extrato,Valor,Status,Observação\n";
-    const rows = naoIdentificados.map((l) =>
-      `"${l.data_pix || l.data_banco}","${l.nome_limpo}","${l.credito ?? ""}","${l.status}","${l.observacao || ""}"`
-    ).join("\n");
-    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "nao-identificados.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Pagamentos Não Identificados", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")}`, 14, 28);
+    doc.text(`Total: ${naoIdentificados.length} registro(s)`, 14, 34);
+
+    (doc as any).autoTable({
+      startY: 42,
+      head: [["Data", "Nome Extrato", "Valor", "Status", "Observação"]],
+      body: naoIdentificados.map((l) => [
+        l.data_pix || l.data_banco || "-",
+        l.nome_limpo,
+        l.credito != null ? formatCurrency(l.credito) : "-",
+        statusConfig[l.status]?.label ?? l.status,
+        l.observacao || "-",
+      ]),
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [234, 88, 12] },
+      alternateRowStyles: { fillColor: [255, 247, 237] },
+    });
+
+    doc.save("nao-identificados.pdf");
   };
 
   return (
