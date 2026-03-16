@@ -35,6 +35,7 @@ import AdminPayments from "./pages/Admin/AdminPayments";
 import NotificationSettings from "./pages/Notifications/NotificationSettings";
 import FinancialDashboard from "./pages/Financial/FinancialDashboard";
 import BaixaPagamentos from "./pages/Financial/BaixaPagamentos";
+import ImportarExtrato from "./pages/Financial/ImportarExtrato";
 import PortalSettings from "./pages/Properties/PortalSettings";
 import GeneralSettings from "./pages/Settings/GeneralSettings";
 import ImportConciliacao from "./pages/Settings/ImportConciliacao";
@@ -151,6 +152,11 @@ const App = () => (
             <Route path="/financeiro/baixa" element={
               <ProtectedRoute>
                 <BaixaPagamentos />
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/importar-extrato" element={
+              <ProtectedRoute>
+                <ImportarExtrato />
               </ProtectedRoute>
             } />
             <Route path="/configuracoes" element={
