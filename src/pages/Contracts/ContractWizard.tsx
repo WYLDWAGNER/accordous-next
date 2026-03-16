@@ -65,7 +65,7 @@ const ContractWizard = () => {
   });
 
   // Auto-generate contract number on mount
-  useState(() => {
+  useEffect(() => {
     const generateNumber = async () => {
       const year = new Date().getFullYear();
       const { count } = await supabase
