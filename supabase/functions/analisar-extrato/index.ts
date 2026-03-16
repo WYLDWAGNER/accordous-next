@@ -5,7 +5,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PROMPT_IA = `Você é um analista financeiro de imobiliária. Sua tarefa é conciliar pagamentos recebidos no extrato bancário com a lista de inquilinos ativos e suas faturas em aberto.
+const PROMPT_IA = `Você é um analista financeiro especialista em conciliação bancária de imobiliária. Sua tarefa é conciliar pagamentos recebidos no extrato bancário com a lista de inquilinos ativos e suas faturas em aberto.
 
 Você receberá dois blocos de dados:
 1. "pagamentos": array de créditos do extrato bancário (id, nome, data_pagamento, valor, lancamento)
@@ -13,15 +13,25 @@ Você receberá dois blocos de dados:
    - "contratos": array de contratos ativos (id, inquilino, documento, valor_aluguel, dia_vencimento)
    - "faturas_abertas": array de faturas pendentes/vencidas (id, contrato_id, mes_referencia, vencimento, valor, status, numero)
 
+REGRAS DE MATCHING DE NOMES (MUITO IMPORTANTE):
+- Faça matching FUZZY: ignore acentos, capitalização, abreviações e nomes truncados.
+- Nomes no extrato bancário frequentemente aparecem TRUNCADOS (ex: "LARISSA GABRIELA NICH" = "Larissa Gabriela Nichetti").
+- Compare os PRIMEIROS CARACTERES do sobrenome quando o nome do extrato parece cortado.
+- Se o primeiro nome E pelo menos parte do segundo nome coincidem, considere um match.
+- Nomes compostos podem aparecer parcialmente (ex: "MARIA SILVA" pode ser "Maria da Silva Santos").
+- PIX frequentemente mostra apenas o primeiro nome ou nome abreviado.
+- Se o campo "lancamento" contém "PIX" ou "TED" e o nome é parcialmente similar a um inquilino, PRIORIZE o match.
+- Em caso de dúvida entre match ou não-match, PREFIRA fazer o match e indique na observação que é um match parcial.
+
 REGRAS DE CONCILIAÇÃO:
-1. Para cada pagamento, tente encontrar o inquilino correspondente comparando o nome do extrato com os nomes dos contratos (busca fuzzy, ignorar acentos e capitalização).
+1. Para cada pagamento, tente encontrar o inquilino correspondente usando as regras de matching acima.
 2. Se encontrar o inquilino, busque a fatura aberta mais antiga dele para fazer o match.
 3. Compare o valor pago com o valor da fatura:
    - Se valor pago >= valor fatura: status "OK"
    - Se valor pago < valor fatura: status "PARCIAL" (informar diferença)
    - Se mesmo nome aparece mais de uma vez: status "DUPLICADO"
 4. Se o pagamento foi feito após o vencimento da fatura: status "ATRASADO", calcular dias_atraso e multa (10% do valor da fatura).
-5. Se não encontrar nenhum inquilino correspondente: status "NAO_ALUGUEL"
+5. Se não encontrar nenhum inquilino correspondente após todas as tentativas: status "NAO_ALUGUEL"
 6. Prioridade: CRITICO para PARCIAL ou DUPLICADO, ATENCAO para ATRASADO, NORMAL para OK e NAO_ALUGUEL.
 
 Para cada pagamento retorne:
@@ -29,7 +39,7 @@ Para cada pagamento retorne:
 - status: OK | ATRASADO | PARCIAL | DUPLICADO | NAO_ALUGUEL
 - dias_atraso: número
 - multa_devida: valor em reais
-- observacao: texto curto explicando o match (ex: "Match com João Silva - Fatura #INV-001 ref. 2025-01")
+- observacao: texto curto explicando o match (ex: "Match com João Silva - Fatura #INV-001 ref. 2025-01" ou "Match parcial: nome truncado 'JOAO SIL' ~ 'João Silva'")
 - acao_recomendada: texto curto (ex: "Dar baixa na fatura #INV-001", "Verificar pagamento duplicado", "Sem fatura correspondente")
 - prioridade: NORMAL | ATENCAO | CRITICO
 - contrato_id: id do contrato matched (ou null)
