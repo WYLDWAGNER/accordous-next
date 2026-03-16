@@ -99,7 +99,7 @@ const extraChargeSchema = z.object({
   start_date: z.date({ required_error: "Data de início é obrigatória" }),
   installments: z.number().min(1).optional().nullable(),
   charge_until_end: z.boolean().default(false),
-  value_per_installment: z.number().min(0.01, "Valor deve ser maior que zero"),
+  value_per_installment: z.number().refine(val => val !== 0, "Valor não pode ser zero"),
 }).refine((data) => {
   if (!data.charge_until_end && !data.installments) {
     return false;
