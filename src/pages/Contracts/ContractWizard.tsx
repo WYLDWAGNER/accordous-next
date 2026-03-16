@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ const ContractWizard = () => {
   const { accountId } = useAccountId();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedContractNumber, setGeneratedContractNumber] = useState("");
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -34,7 +35,7 @@ const ContractWizard = () => {
     tenant_emergency_phone: "",
     co_tenants: [] as Array<{ name: string; document: string; relationship: string }>,
     
-    // Step 2: Contract data
+    // Step 2: Contract data (contract_number is auto-generated)
     contract_number: "",
     start_date: "",
     end_date: "",
@@ -62,6 +63,21 @@ const ContractWizard = () => {
       return data;
     },
   });
+
+  // Auto-generate contract number on mount
+  useEffect(() => {
+    const generateNumber = async () => {
+      const year = new Date().getFullYear();
+      const { count } = await supabase
+        .from("contracts")
+        .select("*", { count: "exact", head: true });
+      const seq = String((count || 0) + 1).padStart(5, "0");
+      const num = `${year}-${seq}`;
+      setGeneratedContractNumber(num);
+      setFormData(prev => ({ ...prev, contract_number: num }));
+    };
+    generateNumber();
+  }, []);
 
   const steps = [
     { number: 1, title: "Dados do Inquilino", icon: User },
@@ -304,12 +320,12 @@ const ContractWizard = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="contract_number">Número do Contrato</Label>
+              <Label htmlFor="contract_number">Número do Contrato (gerado automaticamente)</Label>
               <Input
                 id="contract_number"
                 value={formData.contract_number}
-                onChange={(e) => updateFormData("contract_number", e.target.value)}
-                placeholder="Número ou identificação do contrato"
+                readOnly
+                className="bg-muted font-mono"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
