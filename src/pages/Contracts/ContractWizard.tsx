@@ -77,7 +77,7 @@ const ContractWizard = () => {
       setFormData(prev => ({ ...prev, contract_number: num }));
     };
     generateNumber();
-  });
+  }, []);
 
   const steps = [
     { number: 1, title: "Dados do Inquilino", icon: User },
