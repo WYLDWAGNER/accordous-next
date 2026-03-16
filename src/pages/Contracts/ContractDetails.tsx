@@ -324,9 +324,25 @@ export default function ContractDetails() {
             <div>
               <h3 className="font-semibold mb-3">Inquilino</h3>
               <div className="space-y-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Nome</p>
-                  <p className="font-medium">{contract.tenant_name}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Nome</p>
+                    <p className="font-medium">{contract.tenant_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Profissão</p>
+                    <p className="font-medium">{contract.tenant_profession || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">CPF/CNPJ</p>
+                    <p className="font-medium">{contract.tenant_document || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">RG</p>
+                    <p className="font-medium">{contract.tenant_rg || "N/A"}</p>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -337,6 +353,10 @@ export default function ContractDetails() {
                     <p className="text-sm text-muted-foreground">Telefone</p>
                     <p className="font-medium">{contract.tenant_phone || "N/A"}</p>
                   </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Telefone de Emergência</p>
+                  <p className="font-medium">{contract.tenant_emergency_phone || "N/A"}</p>
                 </div>
               </div>
             </div>
