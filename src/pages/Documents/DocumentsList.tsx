@@ -128,9 +128,17 @@ const DocumentsList = () => {
 
   const filteredContracts = (list: typeof contracts) => {
     return list.filter(contract => {
+      const term = searchTerm.toLowerCase();
       const matchesSearch = searchTerm === "" || 
-        contract.tenant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.properties?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        contract.tenant_name?.toLowerCase().includes(term) ||
+        contract.contract_number?.toLowerCase().includes(term) ||
+        contract.tenant_document?.toLowerCase().includes(term) ||
+        contract.tenant_email?.toLowerCase().includes(term) ||
+        contract.tenant_phone?.includes(term) ||
+        contract.properties?.name?.toLowerCase().includes(term) ||
+        contract.properties?.address?.toLowerCase().includes(term) ||
+        contract.properties?.city?.toLowerCase().includes(term) ||
+        contract.properties?.neighborhood?.toLowerCase().includes(term);
       
       const matchesStatus = statusFilter === "all" || contract.status === statusFilter;
       const matchesType = typeFilter === "all"; // Can be extended later
