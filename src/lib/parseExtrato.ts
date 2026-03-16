@@ -22,6 +22,9 @@ export interface LinhaParsed {
   prioridade: Prioridade;
   baixa_realizada: boolean;
   responsavel: string;
+  contrato_id: string | null;
+  fatura_id: string | null;
+  inquilino_matched: string | null;
 }
 
 export interface RespostaIA {
@@ -32,6 +35,9 @@ export interface RespostaIA {
   observacao: string;
   acao_recomendada: string;
   prioridade: Prioridade;
+  contrato_id?: string | null;
+  fatura_id?: string | null;
+  inquilino_matched?: string | null;
 }
 
 function parseBRL(valor: unknown): number | null {
