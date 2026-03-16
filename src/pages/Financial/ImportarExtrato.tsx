@@ -250,6 +250,58 @@ const ImportarExtrato = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Relatório Não Identificados */}
+            {mostrarNaoIdentificados && naoIdentificados.length > 0 && (
+              <Card className="border-orange-200">
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <div className="flex items-center gap-2">
+                      <UserX className="h-5 w-5 text-orange-600" />
+                      <h3 className="font-semibold">Pagamentos Não Identificados ({naoIdentificados.length})</h3>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={exportarNaoIdentificados}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar CSV
+                    </Button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Nome Extrato</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead>Vincular a</TableHead>
+                          <TableHead>Observação</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {naoIdentificados.map((l) => (
+                          <TableRow key={l.id} className="bg-orange-50/50">
+                            <TableCell className="whitespace-nowrap text-sm">{l.data_pix || l.data_banco}</TableCell>
+                            <TableCell className="text-sm font-medium">{l.nome_limpo}</TableCell>
+                            <TableCell className="text-right font-semibold whitespace-nowrap">
+                              {l.credito != null ? formatCurrency(l.credito) : "-"}
+                            </TableCell>
+                            <TableCell>
+                              <TenantAssignSelect
+                                nomeExtrato={l.nome_limpo}
+                                currentMatch={l.inquilino_matched}
+                                contratos={contratos}
+                                onAssign={(contractId, tenantName) => salvarAlias(l.nome_limpo, contractId, tenantName, l.id)}
+                                saving={salvandoAlias === l.id}
+                              />
+                            </TableCell>
+                            <TableCell className="text-sm max-w-[250px] truncate" title={l.observacao || ""}>{l.observacao || "-"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </div>
