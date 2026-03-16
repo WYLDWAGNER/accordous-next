@@ -197,6 +197,11 @@ const ContractsList = () => {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="text-lg font-semibold">{contract.tenant_name}</h3>
+                                {contract.properties?.name && (
+                                  <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                    {contract.properties.name}
+                                  </span>
+                                )}
                                 <Badge variant={getStatusBadge(contract.status).variant}>
                                   {getStatusBadge(contract.status).label}
                                 </Badge>
