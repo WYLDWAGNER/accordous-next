@@ -35,7 +35,7 @@ const ContractWizard = () => {
     tenant_emergency_phone: "",
     co_tenants: [] as Array<{ name: string; document: string; relationship: string }>,
     
-    // Step 2: Contract data
+    // Step 2: Contract data (contract_number is auto-generated)
     contract_number: "",
     start_date: "",
     end_date: "",
