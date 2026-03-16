@@ -46,11 +46,16 @@ interface Property {
   id: string;
   name: string;
   address: string;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  postal_code: string | null;
   city: string;
   state: string;
   property_type: string;
   status: string;
   useful_area: number | null;
+  built_area: number | null;
   land_area: number | null;
   owner_name: string | null;
   owner_contact: string | null;
