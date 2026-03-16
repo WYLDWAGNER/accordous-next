@@ -21,6 +21,7 @@ const ContractWizard = () => {
   const { accountId } = useAccountId();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState(propertyId || "");
   const [generatedContractNumber, setGeneratedContractNumber] = useState("");
 
   // Form data state
@@ -51,16 +52,30 @@ const ContractWizard = () => {
   });
 
   const { data: property } = useQuery({
-    queryKey: ["property", propertyId],
+    queryKey: ["property", selectedPropertyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
         .select("*")
-        .eq("id", propertyId)
+        .eq("id", selectedPropertyId)
         .single();
 
       if (error) throw error;
       return data;
+    },
+    enabled: !!selectedPropertyId,
+  });
+
+  // Fetch all properties for the selector
+  const { data: allProperties = [] } = useQuery({
+    queryKey: ["properties-for-contract"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id, name, address, city, status")
+        .order("name");
+      if (error) throw error;
+      return data || [];
     },
   });
 
@@ -127,7 +142,7 @@ const ContractWizard = () => {
       const { error } = await supabase.from("contracts").insert({
         user_id: user?.id,
         account_id: accountId,
-        property_id: propertyId,
+        property_id: selectedPropertyId || null,
         tenant_name: formData.tenant_name,
         tenant_document: formData.tenant_document || null,
         tenant_rg: formData.tenant_rg || null,
@@ -152,17 +167,19 @@ const ContractWizard = () => {
       if (error) throw error;
 
       // Update property status to rented
-      await supabase
-        .from("properties")
-        .update({ status: "rented" })
-        .eq("id", propertyId);
+      if (selectedPropertyId) {
+        await supabase
+          .from("properties")
+          .update({ status: "rented" })
+          .eq("id", selectedPropertyId);
+      }
 
       toast({
         title: "Sucesso!",
         description: "Contrato criado com sucesso",
       });
 
-      navigate(`/imoveis/${propertyId}`);
+      navigate(selectedPropertyId ? `/imoveis/${selectedPropertyId}` : "/documentos");
     } catch (error: any) {
       toast({
         title: "Erro ao criar contrato",
@@ -319,6 +336,29 @@ const ContractWizard = () => {
       case 2:
         return (
           <div className="space-y-4">
+            {/* Property selector */}
+            <div>
+              <Label htmlFor="property_select">Imóvel *</Label>
+              <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o imóvel" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allProperties.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} — {p.address}, {p.city}
+                      {p.status === "available" ? " ✅" : " (ocupado)"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPropertyId && property && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selecionado: {property.name} — {property.address}
+                </p>
+              )}
+            </div>
+
             <div>
               <Label htmlFor="contract_number">Número do Contrato (gerado automaticamente)</Label>
               <Input
