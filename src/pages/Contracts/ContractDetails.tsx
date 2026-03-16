@@ -46,11 +46,16 @@ interface Property {
   id: string;
   name: string;
   address: string;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  postal_code: string | null;
   city: string;
   state: string;
   property_type: string;
   status: string;
   useful_area: number | null;
+  built_area: number | null;
   land_area: number | null;
   owner_name: string | null;
   owner_contact: string | null;
@@ -205,13 +210,16 @@ export default function ContractDetails() {
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-8 py-4">
           <div className="flex items-center gap-4 mb-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/documentos")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/contratos")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Dados do Contrato</h1>
+              <h1 className="text-2xl font-bold">
+                Dados do Contrato
+                {property && <span className="text-primary ml-2">— {property.name}</span>}
+              </h1>
               <p className="text-sm text-muted-foreground">
-                <Link to="/" className="hover:underline">Dashboard</Link> / <Link to="/documentos" className="hover:underline">Documentos</Link> / Dados do Contrato
+                <Link to="/" className="hover:underline">Dashboard</Link> / <Link to="/contratos" className="hover:underline">Contratos</Link> / Dados do Contrato
               </p>
             </div>
           </div>
@@ -223,27 +231,43 @@ export default function ContractDetails() {
         {property ? (
           <Card>
             <CardHeader>
-              <CardTitle>Imóvel</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Imóvel
+                <Badge variant="outline" className="text-base font-semibold">{property.name}</Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Tipo</p>
                   <p className="font-medium">{property.property_type}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Disponível</p>
-                  <p className="font-medium">{property.status === "available" ? "Sim" : "Não"}</p>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="font-medium">{property.status === "available" ? "Disponível" : property.status === "rented" ? "Alugado" : property.status}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">CEP</p>
+                  <p className="font-medium">{property.postal_code || "N/A"}</p>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Endereço</p>
-                <p className="font-medium">{property.address}, {property.city}/{property.state}</p>
+                <p className="text-sm text-muted-foreground">Endereço Completo</p>
+                <p className="font-medium">
+                  {property.address}{property.number ? `, ${property.number}` : ""}
+                  {property.complement ? ` - ${property.complement}` : ""}
+                  {property.neighborhood ? `, ${property.neighborhood}` : ""}
+                  {` - ${property.city}/${property.state}`}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Área Útil</p>
                   <p className="font-medium">{property.useful_area ? `${property.useful_area} m²` : "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Área Construída</p>
+                  <p className="font-medium">{property.built_area ? `${property.built_area} m²` : "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Terreno</p>
@@ -300,9 +324,25 @@ export default function ContractDetails() {
             <div>
               <h3 className="font-semibold mb-3">Inquilino</h3>
               <div className="space-y-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Nome</p>
-                  <p className="font-medium">{contract.tenant_name}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Nome</p>
+                    <p className="font-medium">{contract.tenant_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Profissão</p>
+                    <p className="font-medium">{contract.tenant_profession || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">CPF/CNPJ</p>
+                    <p className="font-medium">{contract.tenant_document || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">RG</p>
+                    <p className="font-medium">{contract.tenant_rg || "N/A"}</p>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -313,6 +353,10 @@ export default function ContractDetails() {
                     <p className="text-sm text-muted-foreground">Telefone</p>
                     <p className="font-medium">{contract.tenant_phone || "N/A"}</p>
                   </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Telefone de Emergência</p>
+                  <p className="font-medium">{contract.tenant_emergency_phone || "N/A"}</p>
                 </div>
               </div>
             </div>
@@ -673,7 +717,7 @@ export default function ContractDetails() {
                         .from("contract-documents")
                         .upload(storagePath, file, { contentType: file.type });
                       if (upErr) { toast.error(`Erro ao enviar ${file.name}`); continue; }
-                      const existingDocs = Array.isArray(contract.extra_charges) ? [] : [];
+                      // docs array fetched below
                       const docs = Array.isArray((contract as any).documents) ? (contract as any).documents : [];
                       const newDoc = { name: file.name, path: storagePath, type: file.type, size: file.size, uploaded_at: new Date().toISOString() };
                       await supabase.from("contracts").update({ documents: [...docs, newDoc] } as any).eq("id", contract.id);
