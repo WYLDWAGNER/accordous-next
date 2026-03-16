@@ -82,8 +82,16 @@ serve(async (req) => {
     }
 
     const data = await resp.json();
-    const texto = (data.choices?.[0]?.message?.content ?? "").replace(/```json|```/g, "").trim();
-    const resultado = JSON.parse(texto);
+    let texto = (data.choices?.[0]?.message?.content ?? "").trim();
+    // Strip any markdown code fences or language tags
+    texto = texto.replace(/^```[\w]*\n?/gm, "").replace(/```$/gm, "").trim();
+    // Extract JSON array if wrapped in other text
+    const arrayMatch = texto.match(/\[[\s\S]*\]/);
+    if (!arrayMatch) {
+      console.error("AI response not valid JSON array:", texto.slice(0, 500));
+      throw new Error("Resposta da IA não contém um array JSON válido.");
+    }
+    const resultado = JSON.parse(arrayMatch[0]);
 
     return new Response(JSON.stringify({ resultado }), {
       headers: { ...CORS, "Content-Type": "application/json" },
