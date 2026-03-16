@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ImportContractDocsDialog } from "@/components/Contracts/ImportContractDocsDialog";
+import { AttachDocumentDialog } from "@/components/Documents/AttachDocumentDialog";
 
 const contractTemplates = [
   "Contrato de Prestação de Serviços de Corretagem Imobiliária",
@@ -72,6 +73,8 @@ const DocumentsList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [importDocsOpen, setImportDocsOpen] = useState(false);
+  const [newDocOpen, setNewDocOpen] = useState(false);
+  const [attachDocOpen, setAttachDocOpen] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -160,7 +163,7 @@ const DocumentsList = () => {
               <TabsContent value="contratos" className="space-y-6 mt-6">
                 {/* Action Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/contratos/novo")}>
                     <CardHeader>
                       <FileSignature className="h-8 w-8 text-primary mb-2" />
                       <CardTitle className="text-base">Criar novo Contrato ou Acordo</CardTitle>
@@ -170,7 +173,7 @@ const DocumentsList = () => {
                     </CardHeader>
                   </Card>
 
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setNewDocOpen(true)}>
                     <CardHeader>
                       <FilePlus className="h-8 w-8 text-primary mb-2" />
                       <CardTitle className="text-base">Novo Documento</CardTitle>
@@ -180,7 +183,7 @@ const DocumentsList = () => {
                     </CardHeader>
                   </Card>
 
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setAttachDocOpen(true)}>
                     <CardHeader>
                       <Paperclip className="h-8 w-8 text-primary mb-2" />
                       <CardTitle className="text-base">Anexar documento</CardTitle>
@@ -453,6 +456,18 @@ const DocumentsList = () => {
       <ImportContractDocsDialog
         open={importDocsOpen}
         onOpenChange={setImportDocsOpen}
+      />
+
+      <AttachDocumentDialog
+        open={newDocOpen}
+        onOpenChange={setNewDocOpen}
+        target="property"
+      />
+
+      <AttachDocumentDialog
+        open={attachDocOpen}
+        onOpenChange={setAttachDocOpen}
+        target="contract"
       />
     </AppLayout>
   );
