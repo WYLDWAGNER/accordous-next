@@ -8,6 +8,10 @@ export function useExtrato() {
   const [erro, setErro] = useState<string | null>(null);
   const [etapa, setEtapa] = useState<"idle"|"parse"|"ia"|"revisao">("idle");
 
+  function normalizeName(name: string): string {
+    return name.replace(/\s+/g, ' ').trim();
+  }
+
   async function buscarClientesEFaturas() {
     // Fetch active contracts with tenant info
     const { data: contratos } = await supabase
@@ -24,7 +28,7 @@ export function useExtrato() {
     return {
       contratos: (contratos || []).map(c => ({
         id: c.id,
-        inquilino: c.tenant_name,
+        inquilino: normalizeName(c.tenant_name),
         documento: c.tenant_document,
         valor_aluguel: c.rental_value,
         dia_vencimento: c.payment_day,
