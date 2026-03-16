@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ImportContractDocsDialog } from "@/components/Contracts/ImportContractDocsDialog";
+import { AttachDocumentDialog } from "@/components/Documents/AttachDocumentDialog";
 
 const contractTemplates = [
   "Contrato de Prestação de Serviços de Corretagem Imobiliária",
