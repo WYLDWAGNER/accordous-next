@@ -130,12 +130,15 @@ export function useExtrato() {
     setLinhas((prev) => prev.map((l) => l.id === id ? { ...l, ...campos } : l));
   }
 
+  const naoIdentificados = linhas.filter((l) => !l.inquilino_matched && l.status !== "NAO_ALUGUEL");
+
   const resumo = {
     total: linhas.length,
     criticos: linhas.filter((l) => l.prioridade === "CRITICO").length,
     comMulta: linhas.filter((l) => l.multa_devida > 0).length,
     totalMultas: linhas.reduce((acc, l) => acc + l.multa_devida, 0),
     baixasFeitas: linhas.filter((l) => l.baixa_realizada).length,
+    naoIdentificados: naoIdentificados.length,
   };
 
   return { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias };
