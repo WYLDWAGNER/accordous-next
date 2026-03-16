@@ -158,6 +158,7 @@ const App = () => (
               <ProtectedRoute>
                 <ImportarExtrato />
               </ProtectedRoute>
+            } />
             <Route path="/configuracoes" element={
               <ProtectedRoute>
                 <GeneralSettings />
