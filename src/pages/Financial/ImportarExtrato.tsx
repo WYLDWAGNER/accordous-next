@@ -161,14 +161,14 @@ const ImportarExtrato = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Data</TableHead>
-                        <TableHead>Nome</TableHead>
+                        <TableHead>Nome Extrato</TableHead>
+                        <TableHead>Inquilino</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
                         <TableHead className="text-right">Multa</TableHead>
                         <TableHead className="text-center">Dias atraso</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Observação</TableHead>
                         <TableHead className="text-center">Baixa</TableHead>
-                        <TableHead>Responsável</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
