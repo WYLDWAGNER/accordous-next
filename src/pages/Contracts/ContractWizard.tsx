@@ -23,6 +23,7 @@ const ContractWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState(propertyId || "");
   const [generatedContractNumber, setGeneratedContractNumber] = useState("");
+  const [showAllProperties, setShowAllProperties] = useState(false);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -337,23 +338,37 @@ const ContractWizard = () => {
         return (
           <div className="space-y-4">
             {/* Property selector */}
-            <div>
-              <Label htmlFor="property_select">Imóvel *</Label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="property_select">Imóvel *</Label>
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => setShowAllProperties(prev => !prev)}
+                >
+                  {showAllProperties ? "Mostrar apenas disponíveis" : "Mostrar todos os imóveis"}
+                </button>
+              </div>
               <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o imóvel" />
                 </SelectTrigger>
                 <SelectContent>
-                  {allProperties.map(p => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} — {p.address}, {p.city}
-                      {p.status === "available" ? " ✅" : " (ocupado)"}
-                    </SelectItem>
-                  ))}
+                  {allProperties
+                    .filter(p => showAllProperties || p.status === "available")
+                    .map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name} — {p.address}, {p.city}
+                        {p.status !== "available" && " (ocupado)"}
+                      </SelectItem>
+                    ))}
+                  {!showAllProperties && allProperties.filter(p => p.status === "available").length === 0 && (
+                    <p className="text-sm text-muted-foreground px-3 py-2">Nenhum imóvel disponível</p>
+                  )}
                 </SelectContent>
               </Select>
               {selectedPropertyId && property && (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground">
                   Selecionado: {property.name} — {property.address}
                 </p>
               )}
