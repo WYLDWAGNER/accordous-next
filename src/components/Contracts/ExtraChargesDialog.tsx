@@ -79,6 +79,7 @@ const chargeTypeLabels: Record<string, string> = {
   electricity: "Luz",
   gas: "Gás",
   internet: "Internet",
+  discount: "Desconto",
   other: "Outros",
 };
 
