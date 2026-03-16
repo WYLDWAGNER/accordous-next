@@ -336,6 +336,29 @@ const ContractWizard = () => {
       case 2:
         return (
           <div className="space-y-4">
+            {/* Property selector */}
+            <div>
+              <Label htmlFor="property_select">Imóvel *</Label>
+              <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o imóvel" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allProperties.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} — {p.address}, {p.city}
+                      {p.status === "available" ? " ✅" : " (ocupado)"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPropertyId && property && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selecionado: {property.name} — {property.address}
+                </p>
+              )}
+            </div>
+
             <div>
               <Label htmlFor="contract_number">Número do Contrato (gerado automaticamente)</Label>
               <Input
