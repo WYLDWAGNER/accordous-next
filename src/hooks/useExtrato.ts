@@ -105,6 +105,7 @@ export function useExtrato() {
 
       // Fetch client and invoice context
       const contexto = await buscarClientesEFaturas();
+      setContratos(contexto.contratos);
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke(
         "analisar-extrato",
