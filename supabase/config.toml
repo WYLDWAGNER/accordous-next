@@ -13,7 +13,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.generate-invoices]
-verify_jwt = true
+verify_jwt = false
 
 [functions.license-verify]
 verify_jwt = true
