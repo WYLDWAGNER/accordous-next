@@ -111,6 +111,7 @@ export async function parseExtrato(file: File): Promise<LinhaParsed[]> {
         observacao: "", acao_recomendada: "",
         prioridade: "NORMAL" as Prioridade,
         baixa_realizada: false, responsavel: "",
+        contrato_id: null, fatura_id: null, inquilino_matched: null,
       } satisfies LinhaParsed;
     })
     .filter(Boolean) as LinhaParsed[];
