@@ -164,26 +164,10 @@ Deno.serve(async (req) => {
         
         dueDate.setDate(paymentDay);
 
-        // Calculate guarantee installment if applicable
-        let guaranteeInstallment = 0;
-        let guaranteeInstallmentNumber = null;
-
-        if (contract.guarantee_type && contract.guarantee_value && Number(contract.guarantee_value) > 0) {
-          // Assuming 12 installments for guarantee
-          guaranteeInstallment = Number(contract.guarantee_value) / 12;
-          
-          // Calculate installment number based on contract start date
-          const startDate = new Date(contract.start_date);
-          const monthsDiff = (refMonth.getFullYear() - startDate.getFullYear()) * 12 + 
-                           (refMonth.getMonth() - startDate.getMonth());
-          guaranteeInstallmentNumber = monthsDiff + 1;
-          
-          // Only add if within 12 months
-          if (guaranteeInstallmentNumber > 12) {
-            guaranteeInstallment = 0;
-            guaranteeInstallmentNumber = null;
-          }
-        }
+        // Guarantee installments are now managed via extra_charges (cobranças adicionais)
+        // No automatic guarantee calculation - the user controls this directly
+        const guaranteeInstallment = 0;
+        const guaranteeInstallmentNumber = null;
 
         // Calculate extra charges for this month
         const extraCharges = [];
