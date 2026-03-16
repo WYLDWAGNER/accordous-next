@@ -1,0 +1,1 @@
+DELETE FROM contracts WHERE id IN ('cdf707f7-0600-4a31-889b-4d890a56c2a5', '0ef9a0b9-33bc-47c0-ba22-fc08a8a07406')
