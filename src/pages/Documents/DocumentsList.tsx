@@ -183,7 +183,7 @@ const DocumentsList = () => {
                     </CardHeader>
                   </Card>
 
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setAttachDocOpen(true)}>
                     <CardHeader>
                       <Paperclip className="h-8 w-8 text-primary mb-2" />
                       <CardTitle className="text-base">Anexar documento</CardTitle>
