@@ -434,6 +434,47 @@ export default function ContractDetails() {
           </CardContent>
         </Card>
 
+        {/* Anexar Contrato Assinado - CTA destacado */}
+        {(!Array.isArray((contract as any).documents) || !(contract as any).documents.some((d: any) => d.name?.toLowerCase().includes("assinado"))) && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-6">
+              <FileSignature className="h-10 w-10 text-primary flex-shrink-0" />
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="font-semibold text-lg">Anexar Contrato Assinado</h3>
+                <p className="text-sm text-muted-foreground">Faça upload do PDF do contrato assinado digitalmente</p>
+              </div>
+              <label htmlFor="upload-signed" className="cursor-pointer flex-shrink-0">
+                <Button size="lg" asChild>
+                  <span>
+                    <Upload className="mr-2 h-5 w-5" />
+                    Enviar PDF Assinado
+                  </span>
+                </Button>
+                <input
+                  id="upload-signed"
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={async (e) => {
+                    if (!e.target.files?.[0] || !user?.id) return;
+                    const file = e.target.files[0];
+                    const storagePath = `${user.id}/${contract.id}/${Date.now()}_assinado_${file.name}`;
+                    const { error: upErr } = await supabase.storage
+                      .from("contract-documents")
+                      .upload(storagePath, file, { contentType: file.type });
+                    if (upErr) { toast.error("Erro ao enviar"); return; }
+                    const docs = Array.isArray((contract as any).documents) ? (contract as any).documents : [];
+                    const newDoc = { name: `[ASSINADO] ${file.name}`, path: storagePath, type: file.type, size: file.size, uploaded_at: new Date().toISOString() };
+                    await supabase.from("contracts").update({ documents: [...docs, newDoc] } as any).eq("id", contract.id);
+                    toast.success("Contrato assinado anexado com sucesso!");
+                    fetchContractDetails();
+                  }}
+                />
+              </label>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Documentos Anexos */}
         <Card>
           <CardHeader>
