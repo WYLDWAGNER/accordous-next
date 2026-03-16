@@ -10,6 +10,7 @@ interface ContratoContexto {
   documento: string | null;
   valor_aluguel: number;
   dia_vencimento: number | null;
+  imovel_nome: string | null;
 }
 
 export function useExtrato() {
@@ -26,10 +27,10 @@ export function useExtrato() {
   }
 
   async function buscarClientesEFaturas() {
-    // Fetch active contracts with tenant info
+    // Fetch active contracts with tenant info and property name
     const { data: contratos } = await supabase
       .from("contracts")
-      .select("id, tenant_name, tenant_document, rental_value, payment_day, property_id, status")
+      .select("id, tenant_name, tenant_document, rental_value, payment_day, property_id, status, properties(name)")
       .eq("status", "active");
 
     // Fetch pending/overdue invoices
@@ -39,12 +40,13 @@ export function useExtrato() {
       .in("status", ["pending", "overdue"]);
 
     return {
-      contratos: (contratos || []).map(c => ({
+      contratos: (contratos || []).map((c: any) => ({
         id: c.id,
         inquilino: normalizeName(c.tenant_name),
         documento: c.tenant_document,
         valor_aluguel: c.rental_value,
         dia_vencimento: c.payment_day,
+        imovel_nome: c.properties?.name || null,
       })),
       faturas_abertas: (faturas || []).map(f => ({
         id: f.id,

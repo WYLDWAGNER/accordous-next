@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Save, UserCheck } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown, Save, UserCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Contrato {
   id: string;
@@ -10,6 +12,7 @@ interface Contrato {
   documento: string | null;
   valor_aluguel: number;
   dia_vencimento: number | null;
+  imovel_nome?: string | null;
 }
 
 interface TenantAssignSelectProps {
@@ -21,6 +24,7 @@ interface TenantAssignSelectProps {
 }
 
 export function TenantAssignSelect({ nomeExtrato, currentMatch, contratos, onAssign, saving }: TenantAssignSelectProps) {
+  const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string>("");
 
   if (currentMatch) {
@@ -31,6 +35,13 @@ export function TenantAssignSelect({ nomeExtrato, currentMatch, contratos, onAss
     );
   }
 
+  const selectedContrato = contratos.find(c => c.id === selected);
+
+  const handleSelect = (contratoId: string) => {
+    setSelected(contratoId);
+    setOpen(false);
+  };
+
   const handleAssign = () => {
     const contrato = contratos.find(c => c.id === selected);
     if (contrato) {
@@ -39,25 +50,52 @@ export function TenantAssignSelect({ nomeExtrato, currentMatch, contratos, onAss
   };
 
   return (
-    <div className="flex items-center gap-1.5 min-w-[220px]">
-      <Select value={selected} onValueChange={setSelected}>
-        <SelectTrigger className="h-8 text-xs w-[180px]">
-          <SelectValue placeholder="Atribuir inquilino..." />
-        </SelectTrigger>
-        <SelectContent>
-          {contratos.map(c => (
-            <SelectItem key={c.id} value={c.id} className="text-xs">
-              <div className="flex flex-col">
-                <span className="font-medium">{c.inquilino}</span>
-                <span className="text-muted-foreground">
-                  R$ {c.valor_aluguel?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  {c.documento ? ` · ${c.documento}` : ""}
-                </span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="flex items-center gap-1.5 min-w-[260px]">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="h-8 w-[220px] justify-between text-xs font-normal"
+          >
+            <span className="truncate">
+              {selectedContrato
+                ? `${selectedContrato.inquilino}${selectedContrato.imovel_nome ? ` · ${selectedContrato.imovel_nome}` : ""}`
+                : "Buscar inquilino..."}
+            </span>
+            <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[320px] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Digite o nome do inquilino..." className="h-9" />
+            <CommandList>
+              <CommandEmpty>Nenhum inquilino encontrado.</CommandEmpty>
+              <CommandGroup>
+                {contratos.map(c => (
+                  <CommandItem
+                    key={c.id}
+                    value={`${c.inquilino} ${c.imovel_nome || ""} ${c.documento || ""}`}
+                    onSelect={() => handleSelect(c.id)}
+                    className="flex items-start gap-2 py-2"
+                  >
+                    <Check className={cn("h-4 w-4 mt-0.5 shrink-0", selected === c.id ? "opacity-100" : "opacity-0")} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium text-sm truncate">{c.inquilino}</span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {c.imovel_nome ? `${c.imovel_nome} · ` : ""}
+                        R$ {c.valor_aluguel?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        {c.documento ? ` · ${c.documento}` : ""}
+                      </span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
       {selected && (
         <Button
           size="icon"
