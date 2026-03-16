@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { useExtrato } from "@/hooks/useExtrato";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle } from "lucide-react";
+import { Upload, Loader2, AlertTriangle, FileSpreadsheet, DollarSign, AlertCircle, UserX, Download } from "lucide-react";
 import { TenantAssignSelect } from "@/components/Extrato/TenantAssignSelect";
 import type { StatusBaixa } from "@/lib/parseExtrato";
 
