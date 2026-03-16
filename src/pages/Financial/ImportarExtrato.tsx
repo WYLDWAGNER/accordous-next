@@ -161,14 +161,14 @@ const ImportarExtrato = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Data</TableHead>
-                        <TableHead>Nome</TableHead>
+                        <TableHead>Nome Extrato</TableHead>
+                        <TableHead>Inquilino</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
                         <TableHead className="text-right">Multa</TableHead>
                         <TableHead className="text-center">Dias atraso</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Observação</TableHead>
                         <TableHead className="text-center">Baixa</TableHead>
-                        <TableHead>Responsável</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -183,12 +183,15 @@ const ImportarExtrato = () => {
                         return (
                           <TableRow key={l.id} className={rowBg}>
                             <TableCell className="whitespace-nowrap text-sm">{l.data_pix || l.data_banco}</TableCell>
+                            <TableCell className="text-sm max-w-[160px] truncate">{l.nome_limpo}</TableCell>
                             <TableCell>
-                              <Input
-                                value={l.nome_limpo}
-                                onChange={(e) => atualizarLinha(l.id, { nome_limpo: e.target.value })}
-                                className="h-8 text-sm min-w-[160px]"
-                              />
+                              {l.inquilino_matched ? (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  {l.inquilino_matched}
+                                </Badge>
+                              ) : (
+                                <span className="text-sm text-muted-foreground italic">Não identificado</span>
+                              )}
                             </TableCell>
                             <TableCell className="text-right font-semibold whitespace-nowrap">
                               {l.credito != null ? formatCurrency(l.credito) : "-"}
@@ -202,19 +205,11 @@ const ImportarExtrato = () => {
                                 {cfg.label}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-sm max-w-[200px] truncate">{l.observacao || "-"}</TableCell>
+                            <TableCell className="text-sm max-w-[250px] truncate" title={l.observacao || ""}>{l.observacao || "-"}</TableCell>
                             <TableCell className="text-center">
                               <Checkbox
                                 checked={l.baixa_realizada}
                                 onCheckedChange={(v) => atualizarLinha(l.id, { baixa_realizada: !!v })}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                value={l.responsavel}
-                                onChange={(e) => atualizarLinha(l.id, { responsavel: e.target.value })}
-                                className="h-8 text-sm min-w-[120px]"
-                                placeholder="Nome"
                               />
                             </TableCell>
                           </TableRow>

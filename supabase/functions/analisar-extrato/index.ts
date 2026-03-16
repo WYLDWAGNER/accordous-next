@@ -5,17 +5,50 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PROMPT_IA = `Você analisa pagamentos de aluguel residencial. Vencimento: dia 6 de cada mês. Multa por atraso: 10% sobre o valor. Regras de status: OK (pago até dia 6), ATRASADO (pago após dia 6), PARCIAL (valor menor que 500 reais), NAO_ALUGUEL (valor maior que 5000 reais), DUPLICADO (mesmo nome aparece mais de uma vez no array recebido). Prioridade: CRITICO para PARCIAL ou DUPLICADO, ATENCAO para ATRASADO, NORMAL para os demais. Retorne APENAS um array JSON com os mesmos ids recebidos acrescidos dos campos: status, dias_atraso, multa_devida, observacao, acao_recomendada, prioridade. Nenhum texto fora do JSON.`;
+const PROMPT_IA = `Você é um analista financeiro de imobiliária. Sua tarefa é conciliar pagamentos recebidos no extrato bancário com a lista de inquilinos ativos e suas faturas em aberto.
+
+Você receberá dois blocos de dados:
+1. "pagamentos": array de créditos do extrato bancário (id, nome, data_pagamento, valor, lancamento)
+2. "contexto": objeto com:
+   - "contratos": array de contratos ativos (id, inquilino, documento, valor_aluguel, dia_vencimento)
+   - "faturas_abertas": array de faturas pendentes/vencidas (id, contrato_id, mes_referencia, vencimento, valor, status, numero)
+
+REGRAS DE CONCILIAÇÃO:
+1. Para cada pagamento, tente encontrar o inquilino correspondente comparando o nome do extrato com os nomes dos contratos (busca fuzzy, ignorar acentos e capitalização).
+2. Se encontrar o inquilino, busque a fatura aberta mais antiga dele para fazer o match.
+3. Compare o valor pago com o valor da fatura:
+   - Se valor pago >= valor fatura: status "OK"
+   - Se valor pago < valor fatura: status "PARCIAL" (informar diferença)
+   - Se mesmo nome aparece mais de uma vez: status "DUPLICADO"
+4. Se o pagamento foi feito após o vencimento da fatura: status "ATRASADO", calcular dias_atraso e multa (10% do valor da fatura).
+5. Se não encontrar nenhum inquilino correspondente: status "NAO_ALUGUEL"
+6. Prioridade: CRITICO para PARCIAL ou DUPLICADO, ATENCAO para ATRASADO, NORMAL para OK e NAO_ALUGUEL.
+
+Para cada pagamento retorne:
+- id (mesmo id recebido)
+- status: OK | ATRASADO | PARCIAL | DUPLICADO | NAO_ALUGUEL
+- dias_atraso: número
+- multa_devida: valor em reais
+- observacao: texto curto explicando o match (ex: "Match com João Silva - Fatura #INV-001 ref. 2025-01")
+- acao_recomendada: texto curto (ex: "Dar baixa na fatura #INV-001", "Verificar pagamento duplicado", "Sem fatura correspondente")
+- prioridade: NORMAL | ATENCAO | CRITICO
+- contrato_id: id do contrato matched (ou null)
+- fatura_id: id da fatura matched (ou null)
+- inquilino_matched: nome do inquilino encontrado (ou null)
+
+Retorne APENAS um array JSON. Nenhum texto fora do JSON.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
   try {
-    const { pagamentos } = await req.json();
+    const { pagamentos, contexto } = await req.json();
     if (!pagamentos?.length) throw new Error("Nenhum pagamento recebido.");
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
+
+    const userContent = JSON.stringify({ pagamentos, contexto: contexto || { contratos: [], faturas_abertas: [] } });
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -27,7 +60,7 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: PROMPT_IA },
-          { role: "user", content: JSON.stringify(pagamentos) },
+          { role: "user", content: userContent },
         ],
       }),
     });

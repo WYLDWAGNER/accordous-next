@@ -22,6 +22,9 @@ export interface LinhaParsed {
   prioridade: Prioridade;
   baixa_realizada: boolean;
   responsavel: string;
+  contrato_id: string | null;
+  fatura_id: string | null;
+  inquilino_matched: string | null;
 }
 
 export interface RespostaIA {
@@ -32,6 +35,9 @@ export interface RespostaIA {
   observacao: string;
   acao_recomendada: string;
   prioridade: Prioridade;
+  contrato_id?: string | null;
+  fatura_id?: string | null;
+  inquilino_matched?: string | null;
 }
 
 function parseBRL(valor: unknown): number | null {
@@ -105,6 +111,7 @@ export async function parseExtrato(file: File): Promise<LinhaParsed[]> {
         observacao: "", acao_recomendada: "",
         prioridade: "NORMAL" as Prioridade,
         baixa_realizada: false, responsavel: "",
+        contrato_id: null, fatura_id: null, inquilino_matched: null,
       } satisfies LinhaParsed;
     })
     .filter(Boolean) as LinhaParsed[];
