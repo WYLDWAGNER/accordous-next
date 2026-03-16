@@ -717,7 +717,7 @@ export default function ContractDetails() {
                         .from("contract-documents")
                         .upload(storagePath, file, { contentType: file.type });
                       if (upErr) { toast.error(`Erro ao enviar ${file.name}`); continue; }
-                      const existingDocs = Array.isArray(contract.extra_charges) ? [] : [];
+                      // docs array fetched below
                       const docs = Array.isArray((contract as any).documents) ? (contract as any).documents : [];
                       const newDoc = { name: file.name, path: storagePath, type: file.type, size: file.size, uploaded_at: new Date().toISOString() };
                       await supabase.from("contracts").update({ documents: [...docs, newDoc] } as any).eq("id", contract.id);
