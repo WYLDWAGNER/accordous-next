@@ -136,5 +136,5 @@ export function useExtrato() {
     baixasFeitas: linhas.filter((l) => l.baixa_realizada).length,
   };
 
-  return { linhas, carregando, erro, etapa, resumo, importarArquivo, atualizarLinha };
+  return { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias };
 }
