@@ -491,7 +491,7 @@ export function ExtraChargesDialog({
                       <TableRow key={charge.id}>
                         <TableCell className="font-medium">{charge.description}</TableCell>
                         <TableCell>{chargeTypeLabels[charge.charge_type]}</TableCell>
-                        <TableCell>{formatCurrency(charge.value_per_installment)}</TableCell>
+                        <TableCell className={cn(charge.value_per_installment < 0 && "text-green-600")}>{formatCurrency(charge.value_per_installment)}</TableCell>
                         <TableCell>
                           {charge.charge_until_end 
                             ? "Até o fim" 
