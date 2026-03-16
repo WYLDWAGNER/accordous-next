@@ -167,10 +167,12 @@ const ContractWizard = () => {
       if (error) throw error;
 
       // Update property status to rented
-      await supabase
-        .from("properties")
-        .update({ status: "rented" })
-        .eq("id", propertyId);
+      if (selectedPropertyId) {
+        await supabase
+          .from("properties")
+          .update({ status: "rented" })
+          .eq("id", selectedPropertyId);
+      }
 
       toast({
         title: "Sucesso!",
