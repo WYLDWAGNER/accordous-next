@@ -154,6 +154,10 @@ const App = () => (
                 <BaixaPagamentos />
               </ProtectedRoute>
             } />
+            <Route path="/financeiro/importar-extrato" element={
+              <ProtectedRoute>
+                <ImportarExtrato />
+              </ProtectedRoute>
             <Route path="/configuracoes" element={
               <ProtectedRoute>
                 <GeneralSettings />
