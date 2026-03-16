@@ -40,6 +40,21 @@ const ImportarExtrato = () => {
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
   const criticosSemBaixa = linhas.filter((l) => l.prioridade === "CRITICO" && !l.baixa_realizada).length;
+  const naoIdentificados = linhas.filter((l) => !l.inquilino_matched && l.status !== "NAO_ALUGUEL");
+
+  const exportarNaoIdentificados = () => {
+    const header = "Data,Nome Extrato,Valor,Status,Observação\n";
+    const rows = naoIdentificados.map((l) =>
+      `"${l.data_pix || l.data_banco}","${l.nome_limpo}","${l.credito ?? ""}","${l.status}","${l.observacao || ""}"`
+    ).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "nao-identificados.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <AppLayout title="Importar Extrato Bancário">
