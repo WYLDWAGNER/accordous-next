@@ -442,6 +442,51 @@ export type Database = {
           },
         ]
       }
+      extrato_aliases: {
+        Row: {
+          account_id: string
+          contract_id: string
+          created_at: string
+          id: string
+          nome_extrato: string
+          tenant_name: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          nome_extrato: string
+          tenant_name: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          nome_extrato?: string
+          tenant_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extrato_aliases_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extrato_aliases_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           account_id: string | null
