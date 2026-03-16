@@ -51,7 +51,15 @@ const menuItems = [
   { icon: Calendar, label: "Visitas Agendadas", path: "/visitas" },
   { icon: ClipboardCheck, label: "Vistorias", path: "/vistorias" },
   { icon: Receipt, label: "Faturas", path: "/faturas" },
-  { icon: Wallet, label: "Financeiro", path: "/financeiro" },
+  {
+    icon: Wallet,
+    label: "Financeiro",
+    submenu: [
+      { label: "Dashboard", path: "/financeiro" },
+      { label: "Baixa de Pagamentos", path: "/financeiro/baixa" },
+      { label: "Importar Extrato", path: "/financeiro/importar-extrato" },
+    ],
+  },
   { icon: Bell, label: "Notificações", path: "/notificacoes" },
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
   {
