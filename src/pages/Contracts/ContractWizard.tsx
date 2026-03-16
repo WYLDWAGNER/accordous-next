@@ -64,6 +64,21 @@ const ContractWizard = () => {
     },
   });
 
+  // Auto-generate contract number on mount
+  useState(() => {
+    const generateNumber = async () => {
+      const year = new Date().getFullYear();
+      const { count } = await supabase
+        .from("contracts")
+        .select("*", { count: "exact", head: true });
+      const seq = String((count || 0) + 1).padStart(5, "0");
+      const num = `${year}-${seq}`;
+      setGeneratedContractNumber(num);
+      setFormData(prev => ({ ...prev, contract_number: num }));
+    };
+    generateNumber();
+  });
+
   const steps = [
     { number: 1, title: "Dados do Inquilino", icon: User },
     { number: 2, title: "Dados do Contrato", icon: FileCheck },
