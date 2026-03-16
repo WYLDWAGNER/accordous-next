@@ -77,7 +77,7 @@ export const Sidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
   const { isSuperAdmin } = useSuperAdminCheck();
-  const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis", "Super Admin", "Configurações"]);
+  const [openMenus, setOpenMenus] = useState<string[]>(["Imóveis", "Super Admin", "Configurações", "Financeiro"]);
   const { open } = useSidebar();
 
   const toggleMenu = (label: string) => {
