@@ -390,14 +390,151 @@ export default function ContractDetails() {
           </CardContent>
         </Card>
 
+        {/* Cobranças Adicionais */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Cobranças Adicionais
+              <Button variant="outline" size="sm" onClick={() => setExtraChargesOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Gerenciar Cobranças
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const charges = Array.isArray(contract.extra_charges)
+                ? (contract.extra_charges as Array<{ id: string; description: string; value_per_installment: number; charge_type: string; frequency: string; installments: number | null; charge_until_end: boolean; status: string }>).filter(c => c.status === "active")
+                : [];
+              if (charges.length === 0) {
+                return <p className="text-muted-foreground text-sm">Nenhuma cobrança adicional cadastrada. Clique em "Gerenciar Cobranças" para adicionar água, luz, condomínio, descontos, etc.</p>;
+              }
+              const chargeTypeLabels: Record<string, string> = {
+                guarantee: "Garantia/Caução", iptu: "IPTU", condo_fee: "Condomínio", insurance: "Seguro",
+                water: "Água", electricity: "Luz", gas: "Gás", internet: "Internet", discount: "Desconto", other: "Outros",
+              };
+              const frequencyLabels: Record<string, string> = { monthly: "Mensal", yearly: "Anual", one_time: "Única" };
+              const totalCharges = charges.reduce((sum, c) => sum + c.value_per_installment, 0);
+              return (
+                <div className="space-y-3">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Frequência</TableHead>
+                        <TableHead>Parcelas</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {charges.map((charge) => (
+                        <TableRow key={charge.id}>
+                          <TableCell className="font-medium">{charge.description}</TableCell>
+                          <TableCell>{chargeTypeLabels[charge.charge_type] || charge.charge_type}</TableCell>
+                          <TableCell>{frequencyLabels[charge.frequency] || charge.frequency}</TableCell>
+                          <TableCell>{charge.charge_until_end ? "Até o fim" : `${charge.installments}x`}</TableCell>
+                          <TableCell className={cn("text-right font-medium", charge.value_per_installment < 0 ? "text-green-600" : "")}>
+                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(charge.value_per_installment)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="flex justify-between items-center pt-2 border-t">
+                    <span className="text-sm text-muted-foreground">Subtotal Cobranças Adicionais</span>
+                    <span className={cn("font-semibold", totalCharges < 0 ? "text-green-600" : "")}>
+                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalCharges)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
+        {/* Resumo para Geração de Fatura */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Gerar Nova Fatura
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const charges = Array.isArray(contract.extra_charges)
+                ? (contract.extra_charges as Array<{ description: string; value_per_installment: number; status: string }>).filter(c => c.status === "active")
+                : [];
+              const extraTotal = charges.reduce((sum, c) => sum + c.value_per_installment, 0);
+              const totalFatura = Number(contract.rental_value) + extraTotal;
+
+              return (
+                <div className="space-y-4">
+                  <div className="rounded-lg border bg-background p-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Aluguel:</span>
+                      <span className="font-medium">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(contract.rental_value)}</span>
+                    </div>
+                    {charges.map((c, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span className={cn("text-muted-foreground", c.value_per_installment < 0 && "text-green-600")}>{c.description}:</span>
+                        <span className={cn("font-medium", c.value_per_installment < 0 && "text-green-600")}>
+                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c.value_per_installment)}
+                        </span>
+                      </div>
+                    ))}
+                    <Separator />
+                    <div className="flex justify-between font-semibold text-base">
+                      <span>Total Estimado:</span>
+                      <span>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalFatura)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 items-center">
+                    <div className="flex-1 space-y-1">
+                      <Label className="text-sm">Mês de Competência</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {format(invoiceRefMonth, "MMMM 'de' yyyy", { locale: ptBR })}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={invoiceRefMonth}
+                            onSelect={(date) => date && setInvoiceRefMonth(date)}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <Button
+                      size="lg"
+                      className="mt-5"
+                      disabled={generatingInvoice}
+                      onClick={handleGenerateInvoice}
+                    >
+                      {generatingInvoice ? "Gerando..." : "Gerar Fatura"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
         {/* Faturas */}
         <Card>
           <CardHeader>
-            <CardTitle>Faturas</CardTitle>
+            <CardTitle>Faturas Geradas</CardTitle>
           </CardHeader>
           <CardContent>
             {invoices.length === 0 ? (
-              <p className="text-muted-foreground">Nenhuma fatura encontrada</p>
+              <p className="text-muted-foreground">Nenhuma fatura encontrada. Use o botão acima para gerar a primeira fatura.</p>
             ) : (
               <Table>
                 <TableHeader>
