@@ -145,5 +145,5 @@ export function useExtrato() {
     naoIdentificados: naoIdentificados.length,
   };
 
-  return { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, salvarAlias };
+  return { linhas, carregando, erro, etapa, resumo, contratos, salvandoAlias, importarArquivo, atualizarLinha, removerLinha, salvarAlias };
 }
