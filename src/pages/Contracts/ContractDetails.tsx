@@ -861,6 +861,33 @@ export default function ContractDetails() {
         existingAddendums={(contract as any).addendums || []}
         onUpdate={fetchContractDetails}
       />
+
+      <TerminateContractDialog
+        open={terminateOpen}
+        onOpenChange={setTerminateOpen}
+        contractId={contract.id}
+        contractStatus={contract.status}
+        propertyId={contract.property_id}
+        onUpdate={fetchContractDetails}
+      />
+
+      <LegalAnalysisDialog
+        open={legalAnalysisOpen}
+        onOpenChange={setLegalAnalysisOpen}
+        contract={contract}
+        overdueInvoices={invoices.filter((i) => i.status === "overdue").length}
+      />
+
+      <ChangeAccountDialog
+        open={changeAccountOpen}
+        onOpenChange={setChangeAccountOpen}
+        contractId={contract.id}
+        currentTenantName={contract.tenant_name}
+        currentTenantEmail={contract.tenant_email}
+        currentTenantPhone={contract.tenant_phone}
+        currentTenantDocument={contract.tenant_document}
+        onUpdate={fetchContractDetails}
+      />
     </div>
   );
 }
