@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ExtraChargesDialog } from "@/components/Contracts/ExtraChargesDialog";
 import { AddendumDialog } from "@/components/Contracts/AddendumDialog";
+import { TerminateContractDialog } from "@/components/Contracts/TerminateContractDialog";
+import { LegalAnalysisDialog } from "@/components/Contracts/LegalAnalysisDialog";
+import { ChangeAccountDialog } from "@/components/Contracts/ChangeAccountDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +86,9 @@ export default function ContractDetails() {
   const [loading, setLoading] = useState(true);
   const [extraChargesOpen, setExtraChargesOpen] = useState(false);
   const [addendumOpen, setAddendumOpen] = useState(false);
+  const [terminateOpen, setTerminateOpen] = useState(false);
+  const [legalAnalysisOpen, setLegalAnalysisOpen] = useState(false);
+  const [changeAccountOpen, setChangeAccountOpen] = useState(false);
   const [invoiceRefMonth, setInvoiceRefMonth] = useState<Date>(new Date());
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
 
@@ -808,7 +814,7 @@ export default function ContractDetails() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setTerminateOpen(true)}>
                 <AlertCircle className="mr-2 h-4 w-4" />
                 Encerrar contrato
               </Button>
@@ -816,11 +822,11 @@ export default function ContractDetails() {
                 <Plus className="mr-2 h-4 w-4" />
                 Aditamentos
               </Button>
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setLegalAnalysisOpen(true)}>
                 <FileText className="mr-2 h-4 w-4" />
                 Análise jurídica
               </Button>
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setChangeAccountOpen(true)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Alterar conta
               </Button>
@@ -853,6 +859,33 @@ export default function ContractDetails() {
         currentEndDate={contract.end_date}
         currentPaymentDay={contract.payment_day}
         existingAddendums={(contract as any).addendums || []}
+        onUpdate={fetchContractDetails}
+      />
+
+      <TerminateContractDialog
+        open={terminateOpen}
+        onOpenChange={setTerminateOpen}
+        contractId={contract.id}
+        contractStatus={contract.status}
+        propertyId={contract.property_id}
+        onUpdate={fetchContractDetails}
+      />
+
+      <LegalAnalysisDialog
+        open={legalAnalysisOpen}
+        onOpenChange={setLegalAnalysisOpen}
+        contract={contract}
+        overdueInvoices={invoices.filter((i) => i.status === "overdue").length}
+      />
+
+      <ChangeAccountDialog
+        open={changeAccountOpen}
+        onOpenChange={setChangeAccountOpen}
+        contractId={contract.id}
+        currentTenantName={contract.tenant_name}
+        currentTenantEmail={contract.tenant_email}
+        currentTenantPhone={contract.tenant_phone}
+        currentTenantDocument={contract.tenant_document}
         onUpdate={fetchContractDetails}
       />
     </div>
