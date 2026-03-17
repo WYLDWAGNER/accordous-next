@@ -844,6 +844,17 @@ export default function ContractDetails() {
         existingCharges={contract.extra_charges || []}
         onUpdate={fetchContractDetails}
       />
+
+      <AddendumDialog
+        open={addendumOpen}
+        onOpenChange={setAddendumOpen}
+        contractId={contract.id}
+        currentRentalValue={contract.rental_value}
+        currentEndDate={contract.end_date}
+        currentPaymentDay={contract.payment_day}
+        existingAddendums={(contract as any).addendums || []}
+        onUpdate={fetchContractDetails}
+      />
     </div>
   );
 }
