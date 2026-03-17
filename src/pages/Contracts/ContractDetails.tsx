@@ -86,6 +86,9 @@ export default function ContractDetails() {
   const [loading, setLoading] = useState(true);
   const [extraChargesOpen, setExtraChargesOpen] = useState(false);
   const [addendumOpen, setAddendumOpen] = useState(false);
+  const [terminateOpen, setTerminateOpen] = useState(false);
+  const [legalAnalysisOpen, setLegalAnalysisOpen] = useState(false);
+  const [changeAccountOpen, setChangeAccountOpen] = useState(false);
   const [invoiceRefMonth, setInvoiceRefMonth] = useState<Date>(new Date());
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
 
