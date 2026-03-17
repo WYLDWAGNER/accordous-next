@@ -812,7 +812,7 @@ export default function ContractDetails() {
                 <AlertCircle className="mr-2 h-4 w-4" />
                 Encerrar contrato
               </Button>
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setAddendumOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Aditamentos
               </Button>
