@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ExtraChargesDialog } from "@/components/Contracts/ExtraChargesDialog";
+import { AddendumDialog } from "@/components/Contracts/AddendumDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,7 @@ export default function ContractDetails() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [extraChargesOpen, setExtraChargesOpen] = useState(false);
+  const [addendumOpen, setAddendumOpen] = useState(false);
   const [invoiceRefMonth, setInvoiceRefMonth] = useState<Date>(new Date());
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
 
@@ -810,7 +812,7 @@ export default function ContractDetails() {
                 <AlertCircle className="mr-2 h-4 w-4" />
                 Encerrar contrato
               </Button>
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setAddendumOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Aditamentos
               </Button>
@@ -840,6 +842,17 @@ export default function ContractDetails() {
         contractId={contract.id}
         contractEndDate={contract.end_date}
         existingCharges={contract.extra_charges || []}
+        onUpdate={fetchContractDetails}
+      />
+
+      <AddendumDialog
+        open={addendumOpen}
+        onOpenChange={setAddendumOpen}
+        contractId={contract.id}
+        currentRentalValue={contract.rental_value}
+        currentEndDate={contract.end_date}
+        currentPaymentDay={contract.payment_day}
+        existingAddendums={(contract as any).addendums || []}
         onUpdate={fetchContractDetails}
       />
     </div>

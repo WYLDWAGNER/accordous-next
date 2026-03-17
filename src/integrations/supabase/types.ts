@@ -237,6 +237,7 @@ export type Database = {
       contracts: {
         Row: {
           account_id: string | null
+          addendums: Json | null
           adjustment_index: string | null
           co_tenants: Json | null
           contract_number: string | null
@@ -266,6 +267,7 @@ export type Database = {
         }
         Insert: {
           account_id?: string | null
+          addendums?: Json | null
           adjustment_index?: string | null
           co_tenants?: Json | null
           contract_number?: string | null
@@ -295,6 +297,7 @@ export type Database = {
         }
         Update: {
           account_id?: string | null
+          addendums?: Json | null
           adjustment_index?: string | null
           co_tenants?: Json | null
           contract_number?: string | null
