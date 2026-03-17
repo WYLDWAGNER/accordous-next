@@ -814,7 +814,7 @@ export default function ContractDetails() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setTerminateOpen(true)}>
                 <AlertCircle className="mr-2 h-4 w-4" />
                 Encerrar contrato
               </Button>
@@ -822,11 +822,11 @@ export default function ContractDetails() {
                 <Plus className="mr-2 h-4 w-4" />
                 Aditamentos
               </Button>
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setLegalAnalysisOpen(true)}>
                 <FileText className="mr-2 h-4 w-4" />
                 Análise jurídica
               </Button>
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={() => setChangeAccountOpen(true)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Alterar conta
               </Button>
